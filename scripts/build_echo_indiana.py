@@ -98,6 +98,7 @@ COLUMNS = [
     # --- Other EPA programs' IDs for this facility (used to cross-check the TRI and GHG joins) ---
     ("tri_ids",              "TRI_IDS",                     "codes"),  # Toxics Release Inventory facility IDs
     ("ghg_ids",              "GHG_IDS",                     "codes"),  # Greenhouse Gas Reporting Program IDs
+    ("npdes_ids",            "NPDES_IDS",                   "codes"),  # Clean Water Act discharge permit numbers
     # --- Link to EPA's full report for this facility ---
     ("epa_report_url",       "DFR_URL",                     "text"),
 ]

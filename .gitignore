@@ -8,6 +8,12 @@ data/raw/*
 # Zip archives anywhere in the project (downloads, accidental copies)
 *.zip
 
+# --- Processed database ------------------------------------------------------
+# indiana.sqlite holds the same tables as the CSVs next to it, but outgrew GitHub's
+# 100 MB file limit. The CSVs are committed; rebuild the database with
+# `python3 scripts/build_all.py`.
+data/processed/*.sqlite
+
 # --- Python --------------------------------------------------------------
 __pycache__/
 *.pyc

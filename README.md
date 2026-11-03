@@ -5,7 +5,8 @@ Zoom in, click a facility, and see what it is, what it releases, and its
 compliance record.
 
 > **Status:** Phase 1 complete (EPA ECHO data → clean database → basic map).
-> Phase 2 data gathered (toxic releases + greenhouse gases, linked to facilities); not on the map yet.
+> Phase 2 data gathered (toxic releases, risk scores, greenhouse gases, air emissions, water
+> discharges and violations, all linked to facilities); not on the map yet.
 
 ## Project layout
 
@@ -15,12 +16,17 @@ PolluterMap/
 │   ├── raw/          Files downloaded straight from EPA, untouched.
 │   │                 Large and re-downloadable, so NOT committed to git.
 │   └── processed/    Cleaned, Indiana-only outputs our scripts produce:
-│                     one CSV per table, plus indiana.sqlite holding all of them.
+│                     one CSV per table (committed), plus indiana.sqlite holding all
+│                     of them (rebuilt locally; too big for GitHub).
 ├── scripts/          Python scripts that download and clean the data.
 │   ├── build_all.py            Runs everything below, in order.
 │   ├── build_echo_indiana.py   ECHO facilities + compliance (run first).
+│   ├── build_frs_indiana.py    FRS crosswalk: every EPA program's IDs → registry_id.
 │   ├── build_tri_indiana.py    Toxics Release Inventory, linked to facilities.
 │   ├── build_ghg_indiana.py    Greenhouse gas emissions, linked to facilities.
+│   ├── build_nei_indiana.py    National Emissions Inventory (PM2.5, SO2, NOx...).
+│   ├── build_water_indiana.py  Water discharges (loadings) and permit-limit violations.
+│   ├── build_rsei_indiana.py   RSEI toxicity- and exposure-weighted risk scores.
 │   ├── export_map_data.py      Database → GeoJSON for the map.
 │   └── common.py               Shared helpers (downloading, Excel reading, database).
 ├── site/             The static web map (plain HTML/JS/CSS, no build step).
@@ -52,12 +58,17 @@ EPA website  ──download──▶  data/raw/  ──clean & filter──▶  
 | 1 | [Census NAICS code lists](https://www.census.gov/naics/) (2017 + 2022) | Turns industry codes into names. |
 | 2 | [EPA Toxics Release Inventory](https://www.epa.gov/toxics-release-inventory-tri-program/tri-basic-data-files-calendar-years-1987-present) | Indiana, 2015–2024. Pounds of each toxic chemical released to air, water and land. |
 | 2 | [EPA Greenhouse Gas Reporting Program](https://www.epa.gov/ghgreporting/data-sets) | Indiana large emitters, 2011–2023 totals + 2023 breakdown by gas. 2024 not released by EPA. |
+| 2 | [EPA Facility Registry Service](https://www.epa.gov/frs/epa-state-combined-csv-download-files) | Indiana crosswalk of program IDs → Registry ID. Used to link NEI and water permits. |
+| 2 | [EPA RSEI](https://www.epa.gov/rsei/ways-get-rsei-results) v2.3.12 | Risk scores for TRI releases (toxicity × exposure × people), 2013–2022 — the newest RSEI covers only through 2022. |
+| 2 | [EPA National Emissions Inventory](https://www.epa.gov/air-emissions-inventories/2023-air-emissions-data) 2023 | Air pollutants (PM2.5, SO2, NOx, CO, VOC, ammonia, lead, ~180 toxic air pollutants) for 948 Indiana facilities. |
+| 2 | [ECHO Water Pollutant Loading Tool](https://echo.epa.gov/trends/loading-tool) + [NPDES violations](https://echo.epa.gov/tools/data-downloads/icis-npdes-dmr-and-limit-data-set) | Yearly pounds and toxic-weighted pounds discharged per pollutant (2015–2025), and every permit-limit exceedance since 2015. |
 
 (More sources are added in later phases.)
 
 ## What's in the database
 
-`data/processed/indiana.sqlite` (each table also saved as a CSV next to it).
+`data/processed/indiana.sqlite` (each table also saved as a CSV next to it; the
+`.sqlite` file isn't in git — run `build_all.py` to create it).
 Everything links on **`registry_id`** — EPA's Facility Registry ID.
 
 | Table | One row per | Made by |
@@ -67,6 +78,15 @@ Everything links on **`registry_id`** — EPA's Facility Registry ID.
 | `tri_facility_years` | facility × year, with totals (air/water/land, carcinogens, PFAS…) | `build_tri_indiana.py` |
 | `ghg_facilities` | greenhouse-gas reporting facility, with 2023 breakdown by gas | `build_ghg_indiana.py` |
 | `ghg_emissions_by_year` | facility × year total (metric tons CO2e) | `build_ghg_indiana.py` |
+| `frs_program_links` | registry ID × program × program ID (39 EPA programs) | `build_frs_indiana.py` |
+| `nei_facilities` | air-emissions facility, with headline pollutants as columns (2023) | `build_nei_indiana.py` |
+| `nei_emissions` | facility × pollutant (2023) | `build_nei_indiana.py` |
+| `water_permits` | water discharge permit (receiving water, watershed, impaired?) | `build_water_indiana.py` |
+| `water_loadings` | permit × outfall × pollutant × year: pounds and toxic-weighted pounds (TWPE) | `build_water_indiana.py` |
+| `water_exceedances` | each time a discharge broke a permit limit (since 2015) | `build_water_indiana.py` |
+| `water_permit_years` | permit × year totals: pounds, TWPE, exceedances, late reports | `build_water_indiana.py` |
+| `rsei_facility_years` | TRI facility × year: RSEI score, cancer/non-cancer score, hazard | `build_rsei_indiana.py` |
+| `rsei_chemical_years` | TRI facility × chemical × year scores | `build_rsei_indiana.py` |
 | `metadata` | source × fact (URL, data date, build date) | all |
 
 Example — Indiana's top toxic releasers in 2024, with their compliance status:
@@ -78,26 +98,28 @@ sqlite3 -header -column data/processed/indiana.sqlite "SELECT t.facility_name, t
 ## Running locally from scratch
 
 **You need:** Python 3 (tested on 3.14) and an internet connection. No packages
-to install, no accounts, no API keys. About 1 GB of free disk space.
+to install, no accounts, no API keys. About 2 GB of free disk space.
 
 On a Mac, check that Python is installed with `python3 --version`. If it isn't,
 install it from [python.org](https://www.python.org/downloads/).
 
 All commands are run from the project folder (`cd PolluterMap`).
 
-### 1. Build all the data (~2–3 minutes the first time)
+### 1. Build all the data
 
 ```bash
 python3 scripts/build_all.py
 ```
 
-This downloads ~500 MB from EPA and the Census Bureau into `data/raw/`, filters
+This downloads ~1 GB from EPA and the Census Bureau into `data/raw/` (the RSEI
+file alone is 430 MB and EPA's server is slow — allow up to an hour the first
+time), filters
 everything to Indiana, links it together, and writes the CSVs and
 `data/processed/indiana.sqlite`, then `site/data/facilities.geojson` for the map.
 
 Running it again reuses the downloaded files. To get EPA's latest data first,
-add `--force`. Each script can also be run on its own (`build_echo_indiana.py`
-must have run at least once before the TRI and GHG scripts).
+add `--force`. Each script can also be run on its own, in the order listed in
+`build_all.py` (later ones link to tables made by earlier ones).
 
 ### 2. View the map
 
@@ -141,3 +163,24 @@ Found in Phase 2:
 - **GHG:** 2023 is the newest public year. EPA hasn't released 2024 and has proposed ending
   reporting for most industries. Pipelines, gas utilities and fuel suppliers are reported per
   company, not per site, so they're not included.
+
+Found while adding RSEI, NEI and water data:
+
+- **Duplicate Registry IDs.** EPA sometimes gives one plant several Registry IDs (e.g. Haynes
+  International in Kokomo has 4+ ECHO records at one address, two flagged "major"). The build
+  scripts link each source to the ID our ECHO table uses where possible, but a plant's data can
+  still be split across records. ~105 addresses have both a "major" record and a separate TRI
+  record. Merging them is a judgment call left for the map design step.
+- **NEI** doesn't report Registry IDs; it's linked through the FRS crosswalk. 373 of 948 NEI
+  facilities (mostly airports and rail yards) aren't in ECHO's facility list at all.
+- **RSEI** lags TRI: the newest RSEI (v2.3.12, March 2024) covers TRI through 2022. RSEI scores
+  are for comparing facilities, not measured health risk. RSEI's `pounds_incl_transfers` also
+  counts waste shipped off-site for recycling, so it's ~2.5× TRI's "total releases" — use TRI
+  for pounds and RSEI for scores.
+- **Water loadings:** EPA's Loading Tool can't calculate a load for ~half of reported pollutant
+  rows (e.g. only concentration or flow was measured); those are skipped. EPA flags some loads
+  as potential outliers (`potential_outlier`); worth excluding from rankings.
+- **Clean Air Markets** (power plant hourly emissions) was not added: its downloads now require
+  an API key. NEI + GHG cover the same plants' annual pollution.
+- **Database size:** with all sources, `indiana.sqlite` outgrew GitHub's 100 MB file limit, so
+  only the CSVs are committed.
