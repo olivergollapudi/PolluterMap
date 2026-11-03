@@ -20,9 +20,12 @@
     #controls label { display: block; margin: 3px 0; cursor: pointer; }
     #count, #source { color: #555; font-size: 12px; margin-top: 6px; }
     #notice { color: #8a4b00; font-size: 12px; margin-top: 6px; max-width: 260px; }
-    .maplibregl-popup-content { font-size: 13px; max-width: 280px; }
+    .maplibregl-popup { z-index: 2; }   /* above the controls box */
+    .maplibregl-popup-content { font-size: 13px; max-height: 40vh; overflow-y: auto; }
     .maplibregl-popup-content h2 { font-size: 15px; margin: 0 0 6px; padding-right: 14px; }
+    .maplibregl-popup-content h3 { font-size: 13px; margin: 10px 0 2px; border-top: 1px solid #ddd; padding-top: 6px; }
     .maplibregl-popup-content p { margin: 3px 0; }
+    .maplibregl-popup-content .note { color: #666; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -81,6 +84,7 @@
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     let allFeatures = [];   // kept so we can count what's visible
+    let sources = {};       // year and number of ranked facilities for each data source
 
     // ---- 2. Which dots to show, based on the controls -----------------------
     // MapLibre "filter expressions" are little JSON formulas the map evaluates for every dot.
@@ -113,8 +117,9 @@
       dotsStarted = true;
       const geojson = await (await fetch("data/facilities.geojson")).json();
       allFeatures = geojson.features;
+      sources = geojson.sources || {};
       document.getElementById("source").textContent =
-        `Source: EPA ECHO, data as of ${geojson.source_data_date}`;
+        `Sources: EPA ECHO (as of ${geojson.source_data_date}), TRI, RSEI, GHGRP, NEI, water discharge reports`;
 
       map.addSource("facilities", { type: "geojson", data: geojson });
       map.addLayer({
@@ -158,6 +163,80 @@
       return p;
     }
 
+    function heading(text) {
+      const h = document.createElement("h3");
+      h.textContent = text;
+      return h;
+    }
+
+    function note(text) {
+      const p = document.createElement("p");
+      p.className = "note";
+      p.textContent = text;
+      return p;
+    }
+
+    const fmt = (n) => Math.round(n).toLocaleString();
+    // "#3 of 722 in Indiana"
+    const rank = (r, src) => r ? ` (#${r} of ${sources[src]?.ranked?.toLocaleString() ?? "?"} in Indiana)` : "";
+    const year = (src) => sources[src]?.year ?? "";
+
+    // One section per extra data source -- only shown when the facility has that data.
+    function extraSections(f) {
+      const out = [];
+
+      if (f.tri_lb !== undefined) {   // toxic releases
+        out.push(heading(`Toxic chemical releases (TRI ${year("tri")})`));
+        if (f.tri_lb > 0) {
+          out.push(line("Released", `${fmt(f.tri_lb)} lbs${rank(f.tri_rank, "tri")}`));
+          out.push(line("Where", `air ${fmt(f.tri_air_lb || 0)} · water ${fmt(f.tri_water_lb || 0)} · ` +
+                                 `land ${fmt(f.tri_land_lb || 0)} · sent off-site ${fmt(f.tri_offsite_lb || 0)} lbs`));
+          if (f.tri_carcinogen_lb > 0) out.push(line("Of which cancer-causing", `${fmt(f.tri_carcinogen_lb)} lbs`));
+          if (f.tri_top_chemical) out.push(line("Largest", f.tri_top_chemical.split(" (")[0]));
+        } else {
+          out.push(p("Reported, but no release amounts"));
+        }
+        if (f.tri_form_a > 0) out.push(note(`${f.tri_form_a} chemical(s) filed on EPA's short form, which doesn't state amounts.`));
+      }
+
+      if (f.rsei_score !== undefined) {   // risk-weighted toxics
+        out.push(heading(`Toxic risk score (EPA RSEI ${year("rsei")})`));
+        out.push(line("Risk rank", `#${f.rsei_rank} of ${sources.rsei?.ranked?.toLocaleString()} in Indiana`));
+        if (f.rsei_cancer_pct !== undefined) out.push(line("From cancer-causing chemicals", `${f.rsei_cancer_pct}%`));
+        out.push(note("Weighs each release by toxicity and how many people may be exposed. A screening estimate, not a measured health risk."));
+      }
+
+      if (f.ghg_t !== undefined) {   // greenhouse gases
+        out.push(heading(`Greenhouse gases (${year("ghg")})`));
+        out.push(line("Emitted", `${fmt(f.ghg_t)} metric tons CO2-equivalent${rank(f.ghg_rank, "ghg")}`));
+      }
+
+      if (f.nei_pm25_t !== undefined || f.nei_so2_t !== undefined || f.nei_nox_t !== undefined) {   // air pollutants
+        out.push(heading(`Air pollutants (EPA NEI ${year("nei")})`));
+        if (f.nei_pm25_t !== undefined) out.push(line("Fine particles (PM2.5)", `${f.nei_pm25_t.toLocaleString()} tons${rank(f.nei_pm25_rank, "nei")}`));
+        if (f.nei_so2_t !== undefined) out.push(line("Sulfur dioxide", `${f.nei_so2_t.toLocaleString()} tons`));
+        if (f.nei_nox_t !== undefined) out.push(line("Nitrogen oxides", `${f.nei_nox_t.toLocaleString()} tons`));
+        if (f.nei_hap_lb > 0) out.push(line("Toxic air pollutants", `${fmt(f.nei_hap_lb)} lbs`));
+      }
+
+      if (f.water_twpe !== undefined || f.water_exceedances > 0) {   // water
+        out.push(heading(`Water discharges (${year("water")})`));
+        if (f.water_twpe > 0) out.push(line("Toxic-weighted discharge", `${fmt(f.water_twpe)} lb-equivalents${rank(f.water_twpe_rank, "water")}`));
+        if (f.water_lb > 0) out.push(line("All pollutants", `${fmt(f.water_lb)} lbs`));
+        out.push(line("Permit limits exceeded", `${f.water_exceedances || 0} time(s)`));
+        if (f.water_late_reports > 0) out.push(line("Late or missing reports", f.water_late_reports));
+        if (f.water_impaired) out.push(line("Discharges into impaired water", f.water_impaired));
+      }
+
+      return out;
+    }
+
+    function p(text) {
+      const el = document.createElement("p");
+      el.textContent = text;
+      return el;
+    }
+
     map.on("click", "facilities", (e) => {
       const f = e.features[0].properties;   // note: MapLibre returns the properties we stored
       const box = document.createElement("div");
@@ -174,6 +253,7 @@
       box.append(line("Compliance", status));
       box.append(line("Major facility", f.major ? "Yes" : "No"));
       if (!f.active) box.append(line("Permits", "Inactive"));
+      box.append(...extraSections(f));
 
       if (f.report_url) {
         const a = document.createElement("a");
@@ -186,7 +266,7 @@
         box.append(p);
       }
 
-      new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setDOMContent(box).addTo(map);
+      new maplibregl.Popup({ maxWidth: "320px" }).setLngLat(e.features[0].geometry.coordinates).setDOMContent(box).addTo(map);
     });
 
     map.on("mouseenter", "facilities", () => map.getCanvas().style.cursor = "pointer");

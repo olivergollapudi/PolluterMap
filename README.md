@@ -35,7 +35,9 @@ PolluterMap/
 │   │                 show on a plain background.
 │   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
 │   │                 page doesn't depend on an outside download site.
-│   └── data/         GeoJSON exported from data/processed/ for the map.
+│   └── data/         GeoJSON exported from data/processed/ for the map. Each facility
+│                     carries its newest year of TRI, RSEI, GHG, NEI and water data
+│                     (when it has them) and its Indiana rank, shown in the popup.
 ├── .gitignore        Tells git which files to skip (raw downloads, etc.).
 └── README.md         This file.
 ```
