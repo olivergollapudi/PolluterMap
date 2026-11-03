@@ -45,9 +45,23 @@
   <script type="module">
     // ---- 1. Create the map --------------------------------------------------
     // The basemap (streets, labels) comes from OpenFreeMap: free, no account or API key.
-    // If it can't be reached (offline, or a network filter blocks it), fall back to a plain
-    // background so the facility dots still show.
+    // If it can't be reached (offline, or a network filter blocks it), try OpenStreetMap's own
+    // tile server (also no key; fine for light use with attribution). If that fails too, use a
+    // plain background so the facility dots still show.
     const BASEMAP_URL = "https://tiles.openfreemap.org/styles/positron";
+    const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const OSM_STYLE = {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster", tiles: [OSM_TILES], tileSize: 256, maxzoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        },
+      },
+      // Mostly gray and a bit faded, so the red facility dots stand out.
+      layers: [{ id: "osm", type: "raster", source: "osm",
+                 paint: { "raster-saturation": -0.8, "raster-opacity": 0.7 } }],
+    };
     const PLAIN_STYLE = {
       version: 8,
       sources: {},
@@ -60,19 +74,31 @@
       notice.hidden = false;
     }
 
+    // Fetch a URL, giving up after a few seconds. no-store: really ask the server, rather than
+    // trusting a copy the browser saved earlier.
+    async function reachable(url) {
+      const timeout = new AbortController();
+      setTimeout(() => timeout.abort(), 6000);
+      const response = await fetch(url, { signal: timeout.signal, cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response;
+    }
+
     async function chooseStyle() {
       try {
-        const timeout = new AbortController();
-        setTimeout(() => timeout.abort(), 8000);   // give up after 8 seconds
-        // no-store: really ask the server, rather than trusting a copy the browser saved earlier
-        const response = await fetch(BASEMAP_URL, { signal: timeout.signal, cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
+        return await (await reachable(BASEMAP_URL)).json();
       } catch (err) {
-        console.warn("Basemap unavailable, using plain background:", err);
-        showBasemapNotice();
-        return PLAIN_STYLE;
+        console.warn("OpenFreeMap basemap unavailable:", err);
       }
+      try {
+        await reachable(OSM_TILES.replace("{z}/{x}/{y}", "6/16/24"));   // one tile over Indiana
+        console.info("Using backup basemap: OpenStreetMap tiles");
+        return OSM_STYLE;
+      } catch (err) {
+        console.warn("OpenStreetMap tiles unavailable, using plain background:", err);
+      }
+      showBasemapNotice();
+      return PLAIN_STYLE;
     }
 
     const map = new maplibregl.Map({

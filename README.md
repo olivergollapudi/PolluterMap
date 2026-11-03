@@ -30,9 +30,10 @@ PolluterMap/
 │   ├── export_map_data.py      Database → GeoJSON for the map.
 │   └── common.py               Shared helpers (downloading, Excel reading, database).
 ├── site/             The static web map (plain HTML/JS/CSS, no build step).
-│   ├── index.html    The map page (MapLibre GL JS + OpenFreeMap basemap). If the basemap
-│   │                 can't load (offline, or a network filter blocks it), the dots still
-│   │                 show on a plain background.
+│   ├── index.html    The map page (MapLibre GL JS + OpenFreeMap basemap). If OpenFreeMap
+│   │                 can't load (offline, or a network filter blocks it), it falls back to
+│   │                 OpenStreetMap's own tiles, then to a plain background; the dots
+│   │                 always show.
 │   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
 │   │                 page doesn't depend on an outside download site.
 │   └── data/         GeoJSON exported from data/processed/ for the map. Each facility
@@ -188,5 +189,9 @@ Found while adding RSEI, NEI and water data:
   as potential outliers (`potential_outlier`); worth excluding from rankings.
 - **Clean Air Markets** (power plant hourly emissions) was not added: its downloads now require
   an API key. NEI + GHG cover the same plants' annual pollution.
+- **Backup basemaps:** CARTO's free basemap was considered but not used — its terms (Sept 2026)
+  require an API key. The OpenStreetMap tile fallback needs no key but is only meant for light
+  use with attribution; re-check the [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/)
+  before public launch.
 - **Database size:** with all sources, `indiana.sqlite` outgrew GitHub's 100 MB file limit, so
   only the CSVs are committed.
