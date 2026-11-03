@@ -11,7 +11,8 @@ What this does, in order:
   4. Cleans values: Y/N flags, ISO dates, numbers, tidy county names, and drops
      the placeholder industry code 11111.
   5. Adds an "industry" name looked up from the facility's first NAICS code.
-  6. Writes data/processed/echo_indiana.csv and data/processed/echo_indiana.sqlite.
+  6. Writes data/processed/echo_indiana.csv and the "facilities" table in
+     data/processed/indiana.sqlite (the shared database; see common.py).
 
 Uses only Python's standard library -- nothing to pip install.
 
@@ -23,17 +24,17 @@ import argparse
 import csv
 import io
 import re
-import sqlite3
 import sys
-import urllib.request
-import xml.etree.ElementTree as ET
 import zipfile
 from datetime import date, datetime
-from pathlib import Path
+
+from common import DB_PATH, RAW_DIR, PROCESSED_DIR, ROOT, STATE, connect, download, read_xlsx_rows, \
+    replace_table, set_metadata, write_csv
+
+DB_PATH_REL = DB_PATH.relative_to(ROOT)
 
 ECHO_URL = "https://echo.epa.gov/files/echodownloads/echo_exporter.zip"
 CSV_NAME_IN_ZIP = "ECHO_EXPORTER.csv"
-STATE = "IN"
 
 # ECHO mixes codes from several NAICS editions, so we load two. 2022 titles win where both exist.
 NAICS_URLS = {
@@ -44,11 +45,8 @@ NAICS_URLS = {
 # mines... almost all hazardous-waste records. It's a filler value, so we treat it as "no code".
 PLACEHOLDER_NAICS = {"11111"}
 
-ROOT = Path(__file__).resolve().parent.parent
-RAW_DIR = ROOT / "data" / "raw"
 RAW_ZIP = RAW_DIR / "echo_exporter.zip"
-OUT_CSV = ROOT / "data" / "processed" / "echo_indiana.csv"
-OUT_DB = ROOT / "data" / "processed" / "echo_indiana.sqlite"
+OUT_CSV = PROCESSED_DIR / "echo_indiana.csv"
 
 # Rough box around Indiana. Used only to flag suspicious coordinates, not to drop rows.
 INDIANA_BOX = {"lat_min": 37.5, "lat_max": 42.0, "lon_min": -88.3, "lon_max": -84.6}
@@ -58,7 +56,7 @@ INDIANA_BOX = {"lat_min": 37.5, "lat_max": 42.0, "lon_min": -88.3, "lon_max": -8
 # EPA's meaning for every column is in data/raw/echo_exporter_columns.xlsx.
 COLUMNS = [
     # --- Identity & location ---
-    ("registry_id",          "REGISTRY_ID",                 "text"),   # FRS ID; Phase 2 joins on this
+    ("registry_id",          "REGISTRY_ID",                 "text"),   # FRS ID; TRI and GHG join on this
     ("name",                 "FAC_NAME",                    "text"),
     ("street",               "FAC_STREET",                  "text"),
     ("city",                 "FAC_CITY",                    "text"),
@@ -97,6 +95,9 @@ COLUMNS = [
     ("last_penalty_usd",     "FAC_LAST_PENALTY_AMT",        "money"),
     ("federal_cases_5yr",    "FEC_NUMBER_OF_CASES",         "int"),
     ("federal_case_penalties_usd", "FEC_TOTAL_PENALTIES",   "money"),  # federal enforcement cases
+    # --- Other EPA programs' IDs for this facility (used to cross-check the TRI and GHG joins) ---
+    ("tri_ids",              "TRI_IDS",                     "codes"),  # Toxics Release Inventory facility IDs
+    ("ghg_ids",              "GHG_IDS",                     "codes"),  # Greenhouse Gas Reporting Program IDs
     # --- Link to EPA's full report for this facility ---
     ("epa_report_url",       "DFR_URL",                     "text"),
 ]
@@ -108,48 +109,12 @@ SQL_TYPES = {"text": "TEXT", "county": "TEXT", "codes": "TEXT", "naics": "TEXT",
              "int": "INTEGER", "float": "REAL", "money": "REAL", "date": "TEXT"}
 
 
-# ---------------------------------------------------------------- download
-
-def download(url, dest, force=False):
-    if dest.exists() and not force:
-        print(f"Using existing download: {dest.relative_to(ROOT)}  (use --force to re-download)")
-        return
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_name(dest.name + ".part")
-    print(f"Downloading {url}")
-    # census.gov rejects Python's default user agent, so identify as a normal client.
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (PolluterMap data script)"})
-    with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
-        total = int(resp.headers.get("Content-Length") or 0)
-        done = 0
-        while chunk := resp.read(1 << 20):
-            out.write(chunk)
-            done += len(chunk)
-            if total:
-                print(f"\r  {done * 100 // total:3d}% of {total / 1e6:.0f} MB", end="", flush=True)
-    tmp.replace(dest)  # only rename once complete, so a half download is never mistaken for a real one
-    print("\n  done.")
-
-
 # ---------------------------------------------------------------- industry names
 
 def read_naics_xlsx(path):
-    """Return {code: title} from a Census NAICS .xlsx (code in column B, title in column C).
-    Excel files are zipped XML, so the standard library can read them without extra packages."""
-    ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
-    with zipfile.ZipFile(path) as z:
-        shared = ["".join(t.text or "" for t in si.iter(f"{{{ns['m']}}}t"))
-                  for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall("m:si", ns)]
-        sheet = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
+    """Return {code: title} from a Census NAICS .xlsx (code in column B, title in column C)."""
     titles = {}
-    for row in sheet.iter(f"{{{ns['m']}}}row"):
-        cells = {}
-        for c in row.findall("m:c", ns):
-            v = c.find("m:v", ns)
-            if v is None:
-                continue
-            col = re.match(r"[A-Z]+", c.get("r")).group()
-            cells[col] = shared[int(v.text)] if c.get("t") == "s" else v.text
+    for cells in read_xlsx_rows(path):
         code, title = cells.get("B", "").strip(), cells.get("C", "").strip()
         if re.fullmatch(r"\d{2,6}|\d{2}-\d{2}", code) and title:
             # Census appends a superscript "T" to some titles (a trilateral-agreement marker).
@@ -253,35 +218,16 @@ def source_data_date():
 
 def write_outputs(rows):
     fields = [ours for ours, _, _ in COLUMNS] + DERIVED
-    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
+    write_csv(OUT_CSV, fields, rows)
 
-    with open(OUT_CSV, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
-        w.writeheader()
-        w.writerows(rows)
-
-    # Build the database in a temp file and swap it in, so a crash never leaves a half-built DB.
-    tmp_db = OUT_DB.with_suffix(".sqlite.tmp")
-    tmp_db.unlink(missing_ok=True)
-    con = sqlite3.connect(tmp_db)
-    col_defs = ",\n  ".join([f"{ours} {SQL_TYPES[kind]}" for ours, _, kind in COLUMNS] + [f"{d} TEXT" for d in DERIVED])
-    con.execute(f"CREATE TABLE facilities (\n  {col_defs}\n)")
-    placeholders = ", ".join("?" for _ in fields)
-    con.executemany(f"INSERT INTO facilities ({', '.join(fields)}) VALUES ({placeholders})",
-                    ([r[k] for k in fields] for r in rows))
+    con = connect()
+    columns = [(ours, SQL_TYPES[kind]) for ours, _, kind in COLUMNS] + [(d, "TEXT") for d in DERIVED]
     # UNIQUE (not PRIMARY KEY) because blank IDs are allowed; SQLite lets many NULLs coexist in a UNIQUE column.
-    con.execute("CREATE UNIQUE INDEX idx_registry_id ON facilities (registry_id)")
-    con.execute("CREATE INDEX idx_major ON facilities (is_major)")
-    con.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT)")
-    con.executemany("INSERT INTO metadata VALUES (?, ?)", [
-        ("source_url", ECHO_URL),
-        ("source_data_date", source_data_date()),
-        ("built_on", date.today().isoformat()),
-        ("state", STATE),
-    ])
+    replace_table(con, "facilities", columns, rows, indexes=["UNIQUE (registry_id)", "(is_major)"])
+    set_metadata(con, "echo", {"source_url": ECHO_URL, "source_data_date": source_data_date()})
     con.commit()
     con.close()
-    tmp_db.replace(OUT_DB)
+    print(f"  table 'facilities' in {DB_PATH_REL}")
 
 
 def main():
@@ -305,10 +251,8 @@ def main():
         sys.exit(f"ERROR: {len(ids) - len(set(ids))} duplicate registry IDs in {STATE}; expected one row per facility.")
     print(f"  {len(rows) - len(ids)} facilities have no Registry ID yet (kept, ID left blank).")
 
+    print(f"Writing {len(rows):,} {STATE} facilities:")
     write_outputs(rows)
-    print(f"Wrote {len(rows):,} {STATE} facilities to:")
-    print(f"  {OUT_CSV.relative_to(ROOT)}  ({OUT_CSV.stat().st_size / 1e6:.1f} MB)")
-    print(f"  {OUT_DB.relative_to(ROOT)}  ({OUT_DB.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ with a geometry (here, a single point: [longitude, latitude] -- note the order)
 and a set of "properties" (the facts shown in the popup).
 
 What this does:
-  1. Reads data/processed/echo_indiana.sqlite (made by build_echo_indiana.py).
+  1. Reads the facilities table from data/processed/indiana.sqlite (made by build_echo_indiana.py).
   2. Skips the few facilities whose coordinates fall outside Indiana.
   3. Keeps only the fields the map needs, so the file stays small.
   4. Writes site/data/facilities.geojson.
@@ -17,10 +17,9 @@ Run from the project root, after build_echo_indiana.py:
 
 import json
 import sqlite3
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-DB = ROOT / "data" / "processed" / "echo_indiana.sqlite"
+from common import DB_PATH, ROOT
+
 OUT = ROOT / "site" / "data" / "facilities.geojson"
 
 PROGRAMS = [("air_program", "Air"), ("water_program", "Water"),
@@ -28,11 +27,11 @@ PROGRAMS = [("air_program", "Air"), ("water_program", "Water"),
 
 
 def main():
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
     rows = con.execute("SELECT * FROM facilities WHERE coords_in_indiana = 'Y'").fetchall()
     skipped = con.execute("SELECT COUNT(*) FROM facilities WHERE coords_in_indiana = 'N'").fetchone()[0]
-    data_date = con.execute("SELECT value FROM metadata WHERE key = 'source_data_date'").fetchone()[0]
+    data_date = con.execute("SELECT value FROM metadata WHERE source = 'echo' AND key = 'source_data_date'").fetchone()[0]
 
     features = []
     for r in rows:
