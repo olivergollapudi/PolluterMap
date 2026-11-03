@@ -1,0 +1,20 @@
+# --- Raw EPA downloads ---------------------------------------------------
+# These are large (the national ECHO file is hundreds of MB) and can always be
+# re-downloaded, so keep them out of git. The .gitkeep file keeps the empty
+# folder in the repo so the layout is obvious to anyone who clones it.
+data/raw/*
+!data/raw/.gitkeep
+
+# Zip archives anywhere in the project (downloads, accidental copies)
+*.zip
+
+# --- Python --------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- OS / editor clutter ---------------------------------------------------
+.DS_Store
+.vscode/
+.idea/

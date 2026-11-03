@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indiana Polluter Map</title>
+  <!-- MapLibre GL JS: free, open-source map library. Pinned to an exact version so it never changes under us. -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #fff; }
+    #map { position: absolute; inset: 0; }
+    #controls {
+      position: absolute; top: 10px; left: 10px; z-index: 1;
+      background: #fff; padding: 10px 12px; border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 14px; max-width: calc(100% - 44px);
+    }
+    #controls h1 { font-size: 16px; margin: 0 0 6px; }
+    #controls label { display: block; margin: 3px 0; cursor: pointer; }
+    #count, #source { color: #555; font-size: 12px; margin-top: 6px; }
+    .maplibregl-popup-content { font-size: 13px; max-width: 280px; }
+    .maplibregl-popup-content h2 { font-size: 15px; margin: 0 0 6px; padding-right: 14px; }
+    .maplibregl-popup-content p { margin: 3px 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="controls">
+    <h1>Indiana regulated facilities</h1>
+    <label><input type="radio" name="scope" value="major" checked> Major facilities only</label>
+    <label><input type="radio" name="scope" value="all"> All facilities</label>
+    <label><input type="checkbox" id="inactive"> Include inactive facilities</label>
+    <div id="count">Loading…</div>
+    <div id="source"></div>
+  </div>
+
+  <script>
+    // ---- 1. Create the map --------------------------------------------------
+    // The basemap (streets, labels) comes from OpenFreeMap: free, no account or API key.
+    const map = new maplibregl.Map({
+      container: "map",
+      style: "https://tiles.openfreemap.org/styles/positron",
+      bounds: [[-88.1, 37.77], [-84.78, 41.76]],   // Indiana: [west, south], [east, north]
+      fitBoundsOptions: { padding: 20 },
+    });
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    let allFeatures = [];   // kept so we can count what's visible
+
+    // ---- 2. Which dots to show, based on the controls -----------------------
+    // MapLibre "filter expressions" are little JSON formulas the map evaluates for every dot.
+    function currentFilter() {
+      const scope = document.querySelector('input[name="scope"]:checked').value;
+      const includeInactive = document.getElementById("inactive").checked;
+      const conditions = ["all"];
+      if (scope === "major") conditions.push(["==", ["get", "major"], true]);
+      if (!includeInactive) conditions.push(["==", ["get", "active"], true]);
+      return conditions;
+    }
+
+    function updateFilter() {
+      map.setFilter("facilities", currentFilter());
+      const scope = document.querySelector('input[name="scope"]:checked').value;
+      const includeInactive = document.getElementById("inactive").checked;
+      const n = allFeatures.filter(f =>
+        (scope !== "major" || f.properties.major) && (includeInactive || f.properties.active)
+      ).length;
+      document.getElementById("count").textContent = `Showing ${n.toLocaleString()} facilities`;
+    }
+
+    document.querySelectorAll("#controls input").forEach(el => el.addEventListener("change", updateFilter));
+
+    // ---- 3. Load our data and draw it as dots ------------------------------
+    map.on("load", async () => {
+      const geojson = await (await fetch("data/facilities.geojson")).json();
+      allFeatures = geojson.features;
+      document.getElementById("source").textContent =
+        `Source: EPA ECHO, data as of ${geojson.source_data_date}`;
+
+      map.addSource("facilities", { type: "geojson", data: geojson });
+      map.addLayer({
+        id: "facilities",
+        type: "circle",
+        source: "facilities",
+        filter: currentFilter(),
+        paint: {
+          // Bigger dots for major facilities, and bigger for everything as you zoom in.
+          "circle-radius": ["interpolate", ["linear"], ["zoom"],
+            6, ["case", ["get", "major"], 3.5, 1.5],
+            12, ["case", ["get", "major"], 8, 5]],
+          "circle-color": "#c0392b",
+          "circle-opacity": 0.8,
+          "circle-stroke-color": "#fff",
+          "circle-stroke-width": 0.5,
+        },
+        layout: { "circle-sort-key": ["case", ["get", "major"], 1, 0] },  // majors draw on top
+      });
+      updateFilter();
+    });
+
+    // ---- 4. Click a dot -> popup -------------------------------------------
+    // Built with DOM nodes + textContent (not HTML strings) so odd characters in names display safely.
+    function line(label, value) {
+      const p = document.createElement("p");
+      const b = document.createElement("b");
+      b.textContent = label + ": ";
+      p.append(b, value);
+      return p;
+    }
+
+    map.on("click", "facilities", (e) => {
+      const f = e.features[0].properties;   // note: MapLibre returns the properties we stored
+      const box = document.createElement("div");
+
+      const h = document.createElement("h2");
+      h.textContent = f.name;
+      box.append(h);
+      if (f.address) box.append(line("Address", f.address));
+      box.append(line("Industry", f.industry || "Not reported"));
+      box.append(line("Regulated for", f.programs || "None listed"));
+
+      let status = f.status || "Not available";
+      if (f.qtrs_violation > 0) status += ` (in violation ${f.qtrs_violation} of the last 12 quarters)`;
+      box.append(line("Compliance", status));
+      box.append(line("Major facility", f.major ? "Yes" : "No"));
+      if (!f.active) box.append(line("Permits", "Inactive"));
+
+      if (f.report_url) {
+        const a = document.createElement("a");
+        a.href = f.report_url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Full EPA facility report ↗";
+        const p = document.createElement("p");
+        p.append(a);
+        box.append(p);
+      }
+
+      new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setDOMContent(box).addTo(map);
+    });
+
+    map.on("mouseenter", "facilities", () => map.getCanvas().style.cursor = "pointer");
+    map.on("mouseleave", "facilities", () => map.getCanvas().style.cursor = "");
+  </script>
+</body>
+</html>
