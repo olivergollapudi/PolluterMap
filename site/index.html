@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Indiana Polluter Map</title>
-  <!-- MapLibre GL JS: free, open-source map library. Pinned to an exact version so it never changes under us. -->
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <!-- MapLibre GL JS: free, open-source map library. A copy (version 4.7.1, from the official npm
+       package) is stored in vendor/, so the page doesn't depend on an outside download site. -->
+  <link rel="stylesheet" href="vendor/maplibre-gl-4.7.1/maplibre-gl.css">
+  <script src="vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
   <style>
     html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #fff; }
     #map { position: absolute; inset: 0; }
@@ -18,6 +19,7 @@
     #controls h1 { font-size: 16px; margin: 0 0 6px; }
     #controls label { display: block; margin: 3px 0; cursor: pointer; }
     #count, #source { color: #555; font-size: 12px; margin-top: 6px; }
+    #notice { color: #8a4b00; font-size: 12px; margin-top: 6px; max-width: 260px; }
     .maplibregl-popup-content { font-size: 13px; max-width: 280px; }
     .maplibregl-popup-content h2 { font-size: 15px; margin: 0 0 6px; padding-right: 14px; }
     .maplibregl-popup-content p { margin: 3px 0; }
@@ -33,14 +35,46 @@
     <label><input type="checkbox" id="inactive"> Include inactive facilities</label>
     <div id="count">Loading…</div>
     <div id="source"></div>
+    <div id="notice" hidden></div>
   </div>
 
-  <script>
+  <!-- type="module" lets the code below "await" the basemap check before creating the map. -->
+  <script type="module">
     // ---- 1. Create the map --------------------------------------------------
     // The basemap (streets, labels) comes from OpenFreeMap: free, no account or API key.
+    // If it can't be reached (offline, or a network filter blocks it), fall back to a plain
+    // background so the facility dots still show.
+    const BASEMAP_URL = "https://tiles.openfreemap.org/styles/positron";
+    const PLAIN_STYLE = {
+      version: 8,
+      sources: {},
+      layers: [{ id: "background", type: "background", paint: { "background-color": "#f2f1ed" } }],
+    };
+
+    function showBasemapNotice() {
+      const notice = document.getElementById("notice");
+      notice.textContent = "Background map couldn't load on this network, so streets and labels are hidden. Facilities are still shown.";
+      notice.hidden = false;
+    }
+
+    async function chooseStyle() {
+      try {
+        const timeout = new AbortController();
+        setTimeout(() => timeout.abort(), 8000);   // give up after 8 seconds
+        // no-store: really ask the server, rather than trusting a copy the browser saved earlier
+        const response = await fetch(BASEMAP_URL, { signal: timeout.signal, cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (err) {
+        console.warn("Basemap unavailable, using plain background:", err);
+        showBasemapNotice();
+        return PLAIN_STYLE;
+      }
+    }
+
     const map = new maplibregl.Map({
       container: "map",
-      style: "https://tiles.openfreemap.org/styles/positron",
+      style: await chooseStyle(),
       bounds: [[-88.1, 37.77], [-84.78, 41.76]],   // Indiana: [west, south], [east, north]
       fitBoundsOptions: { padding: 20 },
     });
@@ -60,6 +94,7 @@
     }
 
     function updateFilter() {
+      if (!map.getLayer("facilities")) return;   // dots not drawn yet
       map.setFilter("facilities", currentFilter());
       const scope = document.querySelector('input[name="scope"]:checked').value;
       const includeInactive = document.getElementById("inactive").checked;
@@ -72,7 +107,10 @@
     document.querySelectorAll("#controls input").forEach(el => el.addEventListener("change", updateFilter));
 
     // ---- 3. Load our data and draw it as dots ------------------------------
-    map.on("load", async () => {
+    let dotsStarted = false;
+    async function addFacilities() {
+      if (dotsStarted) return;   // only once, whichever event gets here first
+      dotsStarted = true;
       const geojson = await (await fetch("data/facilities.geojson")).json();
       allFeatures = geojson.features;
       document.getElementById("source").textContent =
@@ -97,7 +135,18 @@
         layout: { "circle-sort-key": ["case", ["get", "major"], 1, 0] },  // majors draw on top
       });
       updateFilter();
-    });
+    }
+    map.on("load", addFacilities);
+
+    // Safety net: if the basemap's own pieces (street tiles, fonts, icons) get stuck, the map
+    // never reports "load". After 15 seconds, switch to the plain background and draw the dots.
+    setTimeout(() => {
+      if (dotsStarted) return;
+      console.warn("Map still loading after 15s; switching to plain background.");
+      showBasemapNotice();
+      map.once("style.load", addFacilities);
+      map.setStyle(PLAIN_STYLE);
+    }, 15000);
 
     // ---- 4. Click a dot -> popup -------------------------------------------
     // Built with DOM nodes + textContent (not HTML strings) so odd characters in names display safely.

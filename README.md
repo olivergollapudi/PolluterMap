@@ -30,7 +30,11 @@ PolluterMap/
 │   ├── export_map_data.py      Database → GeoJSON for the map.
 │   └── common.py               Shared helpers (downloading, Excel reading, database).
 ├── site/             The static web map (plain HTML/JS/CSS, no build step).
-│   ├── index.html    The map page (MapLibre GL JS + OpenFreeMap basemap).
+│   ├── index.html    The map page (MapLibre GL JS + OpenFreeMap basemap). If the basemap
+│   │                 can't load (offline, or a network filter blocks it), the dots still
+│   │                 show on a plain background.
+│   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
+│   │                 page doesn't depend on an outside download site.
 │   └── data/         GeoJSON exported from data/processed/ for the map.
 ├── .gitignore        Tells git which files to skip (raw downloads, etc.).
 └── README.md         This file.
