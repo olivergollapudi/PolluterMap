@@ -1,0 +1,99 @@
+sector,pollutant,outcome,deaths_per_ton_low,deaths_per_ton_high,geography,unit
+brick,NOX,ozone_mortality,0.000327,0.00721,EPA NORTH region,premature deaths per short ton emitted
+brick,NOX,pm25_mortality,0.00335,0.00712,EPA NORTH region,premature deaths per short ton emitted
+brick,PM,pm25_mortality,0.021,0.0443,EPA NORTH region,premature deaths per short ton emitted
+brick,SO2,pm25_mortality,0.00467,0.00994,EPA NORTH region,premature deaths per short ton emitted
+brick,VOC,ozone_mortality,0.000109,0.00242,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NH3,pm25_mortality,0.00792,0.0168,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NOX,ozone_mortality,0.000307,0.00678,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NOX,pm25_mortality,0.0019,0.00407,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,PM,pm25_mortality,0.0152,0.0326,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,SO2,pm25_mortality,0.00428,0.00916,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,VOC,ozone_mortality,8.23e-05,0.00182,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,NOX,ozone_mortality,0.000244,0.0054,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,NOX,pm25_mortality,0.00241,0.00514,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,PM,pm25_mortality,0.0265,0.0558,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,SO2,pm25_mortality,0.00481,0.0104,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,VOC,ozone_mortality,0.000175,0.00386,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone_mortality,0.000306,0.00677,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25_mortality,0.00256,0.00545,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25_mortality,0.00527,0.0113,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone_mortality,4.46e-05,0.000985,EPA NORTH region,premature deaths per short ton emitted
+electricity generating units,NOX,ozone_mortality,0.000566,0.0125,IN,premature deaths per short ton emitted
+electricity generating units,NOX,pm25_mortality,0.0013,0.00279,IN,premature deaths per short ton emitted
+electricity generating units,PM,pm25_mortality,0.00854,0.0185,IN,premature deaths per short ton emitted
+electricity generating units,SO2,pm25_mortality,0.00734,0.0159,IN,premature deaths per short ton emitted
+ferroalloys,NOX,ozone_mortality,0.000367,0.00812,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,NOX,pm25_mortality,0.00185,0.00392,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,PM,pm25_mortality,0.0165,0.0351,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,SO2,pm25_mortality,0.00408,0.00873,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,VOC,ozone_mortality,2.32e-05,0.000513,EPA NORTH region,premature deaths per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone_mortality,0.000405,0.00895,EPA NORTH region,premature deaths per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone_mortality,4.15e-05,0.000917,EPA NORTH region,premature deaths per short ton emitted
+industrial boilers,NH3,pm25_mortality,0.00846,0.0183,IN,premature deaths per short ton emitted
+industrial boilers,NOX,ozone_mortality,0.000219,0.00484,IN,premature deaths per short ton emitted
+industrial boilers,NOX,pm25_mortality,0.00259,0.00556,IN,premature deaths per short ton emitted
+industrial boilers,PM,pm25_mortality,0.0258,0.0558,IN,premature deaths per short ton emitted
+industrial boilers,SO2,pm25_mortality,0.00509,0.011,IN,premature deaths per short ton emitted
+industrial boilers,VOC,ozone_mortality,0.000139,0.00307,IN,premature deaths per short ton emitted
+integrated iron and steel,NOX,ozone_mortality,0.000264,0.00585,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,NOX,pm25_mortality,0.00272,0.00579,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,PM,pm25_mortality,0.041,0.0884,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,SO2,pm25_mortality,0.00507,0.0109,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,VOC,ozone_mortality,6.83e-05,0.00151,EPA NORTH region,premature deaths per short ton emitted
+internal combustion engines,NOX,ozone_mortality,0.000289,0.00639,IN,premature deaths per short ton emitted
+internal combustion engines,NOX,pm25_mortality,0.00307,0.00659,IN,premature deaths per short ton emitted
+internal combustion engines,VOC,ozone_mortality,0.000184,0.00406,IN,premature deaths per short ton emitted
+iron and steel foundries,NOX,ozone_mortality,0.000323,0.00714,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,NOX,pm25_mortality,0.00245,0.00522,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,PM,pm25_mortality,0.0227,0.0483,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,SO2,pm25_mortality,0.00458,0.00981,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,VOC,ozone_mortality,3.58e-05,0.000791,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NH3,pm25_mortality,0.00179,0.00377,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NOX,ozone_mortality,0.000214,0.00473,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NOX,pm25_mortality,0.00135,0.00287,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,PM,pm25_mortality,0.0128,0.027,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,SO2,pm25_mortality,0.00245,0.00525,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,VOC,ozone_mortality,8.1e-06,0.000179,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,NOX,ozone_mortality,0.000244,0.00539,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,NOX,pm25_mortality,0.0018,0.00385,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,PM,pm25_mortality,0.0163,0.0347,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,SO2,pm25_mortality,0.00395,0.0085,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,VOC,ozone_mortality,6.96e-05,0.00154,EPA NORTH region,premature deaths per short ton emitted
+paint stripping / misc surface coating,VOC,ozone_mortality,3.22e-05,0.000711,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,NOX,ozone_mortality,0.000379,0.00838,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,SO2,pm25_mortality,0.00418,0.00893,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,VOC,ozone_mortality,3.27e-05,0.000722,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NH3,pm25_mortality,0.00548,0.0115,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NOX,ozone_mortality,0.000249,0.0055,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NOX,pm25_mortality,0.00109,0.00232,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,PM,pm25_mortality,0.023,0.0488,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,SO2,pm25_mortality,0.00289,0.00616,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,VOC,ozone_mortality,2.31e-05,0.000511,EPA NORTH region,premature deaths per short ton emitted
+refineries,NH3,pm25_mortality,0.0123,0.0265,EPA NORTH region,premature deaths per short ton emitted
+refineries,NOX,ozone_mortality,0.000237,0.00523,EPA NORTH region,premature deaths per short ton emitted
+refineries,NOX,pm25_mortality,0.00263,0.00562,EPA NORTH region,premature deaths per short ton emitted
+refineries,PM,pm25_mortality,0.032,0.0694,EPA NORTH region,premature deaths per short ton emitted
+refineries,SO2,pm25_mortality,0.00494,0.0106,EPA NORTH region,premature deaths per short ton emitted
+refineries,VOC,ozone_mortality,4.67e-05,0.00103,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NH3,pm25_mortality,0.0206,0.0436,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NOX,ozone_mortality,0.000135,0.00298,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NOX,pm25_mortality,0.00303,0.00644,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,PM,pm25_mortality,0.0362,0.0768,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,SO2,pm25_mortality,0.00343,0.00734,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,VOC,ozone_mortality,7.88e-05,0.00174,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,NOX,ozone_mortality,0.000418,0.00923,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,NOX,pm25_mortality,0.00271,0.00577,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,SO2,pm25_mortality,0.00402,0.00869,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,VOC,ozone_mortality,4.7e-05,0.00104,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NH3,pm25_mortality,0.00683,0.0147,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NOX,ozone_mortality,0.000236,0.00522,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NOX,pm25_mortality,0.00199,0.00424,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,PM,pm25_mortality,0.0118,0.0253,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,SO2,pm25_mortality,0.00359,0.00773,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,VOC,ozone_mortality,2.28e-05,0.000504,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,NOX,ozone_mortality,0.000198,0.00438,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,NOX,pm25_mortality,0.000838,0.00178,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,PM,pm25_mortality,0.00558,0.0117,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,SO2,pm25_mortality,0.00296,0.00632,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,VOC,ozone_mortality,0.000128,0.00284,EPA NORTH region,premature deaths per short ton emitted

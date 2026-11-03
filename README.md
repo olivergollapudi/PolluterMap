@@ -68,6 +68,9 @@ EPA website  ──download──▶  data/raw/  ──clean & filter──▶  
 | 2 | [EPA Facility Registry Service](https://www.epa.gov/frs/epa-state-combined-csv-download-files) | Indiana crosswalk of program IDs → Registry ID. Used to link NEI and water permits. |
 | 2 | [EPA RSEI](https://www.epa.gov/rsei/ways-get-rsei-results) v2.3.12 | Risk scores for TRI releases (toxicity × exposure × people), 2013–2022 — the newest RSEI covers only through 2022. |
 | 2 | [EPA National Emissions Inventory](https://www.epa.gov/air-emissions-inventories/2023-air-emissions-data) 2023 | Air pollutants (PM2.5, SO2, NOx, CO, VOC, ammonia, lead, ~180 toxic air pollutants) for 948 Indiana facilities. |
+| 2 | [EPA benefit-per-ton estimates](https://www.epa.gov/benmap/sector-based-pm25-and-ozone-benefit-ton-estimates) | Premature deaths per ton of air pollutant, by sector, Indiana/North region (2023 BPT, analysis year 2025). |
+| 2 | [EPA social cost of greenhouse gases](https://www.epa.gov/system/files/documents/2023-12/epa_scghg_2023_report_final.pdf) (2023) | Dollars of climate damage per ton of CO2, methane, N2O (Table A.5.1). |
+| 2 | [EPA mortality risk valuation](https://www.epa.gov/environmental-economics/mortality-risk-valuation), [GHG equivalencies](https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator-calculations-and-references), [IPCC AR6 WGIII Ch. 12](https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf), [BLS CPI-U](https://www.bls.gov/cpi/) | Value of a statistical life; everyday comparisons; carbon-removal cost; inflation. |
 | 2 | [ECHO Water Pollutant Loading Tool](https://echo.epa.gov/trends/loading-tool) + [NPDES violations](https://echo.epa.gov/tools/data-downloads/icis-npdes-dmr-and-limit-data-set) | Yearly pounds and toxic-weighted pounds discharged per pollutant (2015–2025), and every permit-limit exceedance since 2015. |
 
 (More sources are added in later phases.)
@@ -94,6 +97,33 @@ Everything links on **`registry_id`** — EPA's Facility Registry ID.
 | `water_permit_years` | permit × year totals: pounds, TWPE, exceedances, late reports | `build_water_indiana.py` |
 | `rsei_facility_years` | TRI facility × year: RSEI score, cancer/non-cancer score, hazard | `build_rsei_indiana.py` |
 | `rsei_chemical_years` | TRI facility × chemical × year scores | `build_rsei_indiana.py` |
+| `impact_factors` | one published factor (social cost of carbon, value of a statistical life, removal cost, everyday-equivalence) with unit, dollar year and source | `build_impact_factors.py` |
+| `health_factors` | sector × pollutant × outcome: EPA premature deaths per ton (low, high) for Indiana | `build_impact_factors.py` |
+| `cpi` | year → Consumer Price Index, for converting dollars | `build_impact_factors.py` |
+| `facility_impacts` | facility (2023): estimated deaths, health and climate damage in dollars, cost to remove its CO2, everyday comparisons | `build_impacts_indiana.py` |
+
+### How the impact estimates work
+
+All dollars are 2024 dollars; every estimate has a low / central / high range.
+
+- **Health (deaths and dollars):** tons of fine particles (PM2.5), SO2, NOx, ammonia and VOCs
+  (NEI 2023) × EPA's *benefit-per-ton* estimates of premature deaths per ton for the
+  facility's industrial sector in Indiana (or EPA's North region). Covers deaths from fine-particle
+  and ozone pollution. Dollars = deaths × EPA's value of a statistical life ($7.4M in 2006 dollars,
+  $11.5M in 2024 dollars). Facilities outside EPA's 21 sectors use the Indiana "industrial
+  boilers" values (`health_sector_basis = 'proxy'`).
+- **Climate:** each greenhouse gas (GHGRP 2023) × EPA's 2023 social cost of that gas
+  ($204 per ton of CO2 in 2020 dollars at the central 2% rate; 2.5% and 1.5% give the low and high).
+- **Cost to reverse:** CO2-equivalent × the IPCC's projected cost of direct air capture at scale
+  ($100–300 per ton); today's prices are higher.
+- **Everyday comparisons:** CO2-equivalent ÷ EPA's Greenhouse Gas Equivalencies factors
+  (e.g. 4.29 tons per car per year).
+
+**Not included:** toxic chemicals (TRI/RSEI) and water discharges have no accepted dollar-per-ton
+method; nonfatal illness (asthma, hospital visits) is left out, so health dollars are conservative.
+Facilities whose estimate rests on a value EPA flags as a possible outlier are marked in
+`epa_outlier_values`. Estimates are screening-level, for comparing facilities — not a measured count
+of deaths caused by any one plant.
 | `metadata` | source × fact (URL, data date, build date) | all |
 
 Example — Indiana's top toxic releasers in 2024, with their compliance status:
@@ -195,3 +225,17 @@ Found while adding RSEI, NEI and water data:
   before public launch.
 - **Database size:** with all sources, `indiana.sqlite` outgrew GitHub's 100 MB file limit, so
   only the CSVs are committed.
+
+Found while adding impact estimates:
+
+- **Split records again:** only 118 of 186 greenhouse-gas reporters share a Registry ID with their
+  own air-emissions (NEI) record — e.g. the Gibson coal plant's two records have identical
+  coordinates but different IDs. `build_impacts_indiana.py` merges records at the same location
+  (within 1 km) and notes it in `merged_records` (45 merges).
+- **EPA outlier flags:** EPA flags the PM2.5 value of six of Indiana's largest emitters (the big
+  steel mills and two coal plants) as a "National" outlier — unusually high compared with facilities
+  nationwide, which isn't necessarily wrong for plants this size. Those estimates are marked.
+- **Social cost of carbon:** EPA's 2023 values are no longer used in federal rulemaking (2025),
+  but remain the most recent peer-reviewed U.S. government estimate.
+- **Carbon-removal prices:** current market prices are higher than the IPCC's at-scale projection;
+  the market surveys (CDR.fyi) couldn't be checked from the network used to build this.

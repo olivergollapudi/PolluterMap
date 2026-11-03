@@ -7,7 +7,9 @@ Rebuild everything, in the right order:
   5. NEI air emissions
   6. Water discharges and permit violations
   7. RSEI risk scores (links through TRI)
-  8. Map data (site/data/facilities.geojson)
+  8. Impact factors (health, climate, removal cost, everyday comparisons, inflation)
+  9. Per-facility impact estimates (dollars, deaths, comparisons)
+ 10. Map data (site/data/facilities.geojson)
 
     python3 scripts/build_all.py           # reuse downloaded files
     python3 scripts/build_all.py --force   # re-download everything from EPA/Census first
@@ -19,12 +21,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 STEPS = ["build_echo_indiana.py", "build_frs_indiana.py", "build_tri_indiana.py", "build_ghg_indiana.py",
-         "build_nei_indiana.py", "build_water_indiana.py", "build_rsei_indiana.py", "export_map_data.py"]
+         "build_nei_indiana.py", "build_water_indiana.py", "build_rsei_indiana.py", "build_impact_factors.py",
+         "build_impacts_indiana.py", "export_map_data.py"]
 
 for script in STEPS:
     print(f"\n=== {script}")
     args = [sys.executable, str(HERE / script)]
-    if "--force" in sys.argv[1:] and script != "export_map_data.py":
+    if "--force" in sys.argv[1:] and script not in ("build_impacts_indiana.py", "export_map_data.py"):
         args.append("--force")
     if subprocess.run(args).returncode != 0:
         sys.exit(f"Stopped: {script} failed.")
