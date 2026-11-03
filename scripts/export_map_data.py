@@ -125,6 +125,28 @@ def source_summaries(con):
             extra[k]["water_impaired"] = (r[1] or "yes")[:80]
     meta["water"] = {"year": water_year, "ranked": len(twpe_rank)}
 
+    # --- Estimated harm (build_impacts_indiana.py): deaths, health + climate dollars, comparisons
+    imp_year = one(con, "SELECT value FROM metadata WHERE source = 'impacts' AND key = 'year'")
+    imp_dollars = one(con, "SELECT value FROM metadata WHERE source = 'impacts' AND key = 'dollar_year'")
+    impacts = by_registry(con, """
+        SELECT registry_id, total_usd_central, total_usd_low, total_usd_high, deaths_central, deaths_low, deaths_high,
+               health_usd_central, climate_usd_central, climate_usd_low, climate_usd_high,
+               removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, epa_outlier_values
+        FROM facility_impacts WHERE registry_id IS NOT NULL""")
+    harm_rank = ranks({k: r[1] for k, r in impacts.items()})
+    for k, r in impacts.items():
+        extra[k].update({
+            "harm_usd": r0(r[1]), "harm_lo": r0(r[2]), "harm_hi": r0(r[3]),
+            "deaths": None if not r[4] else round(r[4], 2), "deaths_lo": None if not r[5] else round(r[5], 2),
+            "deaths_hi": None if not r[6] else round(r[6], 2),
+            "health_usd": r0(r[7]) or None, "climate_usd": r0(r[8]) or None,
+            "climate_lo": r0(r[9]) or None, "climate_hi": r0(r[10]) or None,
+            "removal_lo": r0(r[11]) or None, "removal_hi": r0(r[12]) or None,
+            "eq_cars": r0(r[13]) or None, "eq_homes": r0(r[14]) or None, "eq_acres": r0(r[15]) or None,
+            "harm_outlier": "Y" if r[16] else None, "harm_rank": harm_rank.get(k),
+        })
+    meta["impacts"] = {"year": int(imp_year), "dollar_year": int(imp_dollars), "ranked": len(harm_rank)}
+
     # Drop empty values so the file stays small
     for k in extra:
         extra[k] = {p: v for p, v in extra[k].items() if v not in (None, "")}
@@ -156,6 +178,7 @@ def main():
                 "status": r["compliance_status"],
                 "qtrs_violation": r["qtrs_in_noncompliance_3yr"],
                 "report_url": (r["epa_report_url"] or "").replace("http://", "https://", 1),
+                **({"penalties_usd": r0(pen)} if (pen := (r["penalties_5yr_usd"] or 0) + (r["federal_case_penalties_usd"] or 0)) else {}),
                 **extra.get(r["registry_id"], {}),
             },
         })
@@ -167,7 +190,8 @@ def main():
     majors = sum(f["properties"]["major"] for f in features)
     active = sum(f["properties"]["active"] for f in features)
     print(f"Wrote {len(features):,} facilities ({majors:,} major, {active:,} active) to {OUT.relative_to(ROOT)}")
-    for src, prop in [("tri", "tri_lb"), ("rsei", "rsei_score"), ("ghg", "ghg_t"), ("nei", "nei_pm25_t"), ("water", "water_twpe")]:
+    for src, prop in [("tri", "tri_lb"), ("rsei", "rsei_score"), ("ghg", "ghg_t"), ("nei", "nei_pm25_t"),
+                      ("water", "water_twpe"), ("impacts", "harm_usd")]:
         n = sum(prop in f["properties"] for f in features)
         print(f"  {src} {meta[src]['year']}: on {n:,} dots ({meta[src]['ranked']:,} ranked in Indiana)")
     print(f"  {OUT.stat().st_size / 1e6:.1f} MB; skipped {skipped} with coordinates outside Indiana")

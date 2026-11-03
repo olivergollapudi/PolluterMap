@@ -11,34 +11,81 @@
   <style>
     html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #fff; }
     #map { position: absolute; inset: 0; }
-    #controls {
-      position: absolute; top: 10px; left: 10px; z-index: 1;
-      background: #fff; padding: 10px 12px; border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 14px; max-width: calc(100% - 44px);
+    .panel {
+      position: absolute; z-index: 1; background: #fff; border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 14px;
     }
+    #controls { top: 10px; left: 10px; padding: 10px 12px; max-width: min(300px, calc(100% - 64px)); }
     #controls h1 { font-size: 16px; margin: 0 0 6px; }
     #controls label { display: block; margin: 3px 0; cursor: pointer; }
+    #controls .group { margin-top: 8px; padding-top: 6px; border-top: 1px solid #ddd; }
+    #controls .group-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+    #controls select { font: inherit; font-size: 13px; width: 100%; }
     #count, #source { color: #555; font-size: 12px; margin-top: 6px; }
-    #notice { color: #8a4b00; font-size: 12px; margin-top: 6px; max-width: 260px; }
-    .maplibregl-popup { z-index: 2; }   /* above the controls box */
+    #notice { color: #8a4b00; font-size: 12px; margin-top: 6px; }
+    #legend { font-size: 12px; color: #555; margin-top: 4px; }
+    #legend .bar { height: 8px; border-radius: 2px; margin: 2px 0;
+      background: linear-gradient(to right, rgba(255,237,160,.7), #feb24c, #fd8d3c, #f03b20, #bd0026); }
+    #legend .ends { display: flex; justify-content: space-between; }
+
+    #top { right: 10px; bottom: 30px; width: 300px; max-height: 45vh; display: flex; flex-direction: column; }
+    #top h2 { font-size: 14px; margin: 0; padding: 8px 12px 6px; border-bottom: 1px solid #ddd; }
+    #top h2 small { display: block; font-weight: normal; color: #666; font-size: 11px; }
+    #toplist { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+    #toplist li { display: grid; grid-template-columns: 24px 1fr auto; gap: 6px; align-items: baseline;
+      padding: 5px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 13px; }
+    #toplist li:hover, #toplist li:focus { background: #fdf0ef; outline: none; }
+    #toplist .n { color: #999; text-align: right; }
+    #toplist .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #toplist .city { display: block; color: #777; font-size: 11px; }
+    #toplist .v { font-weight: 600; white-space: nowrap; }
+    #toplist .empty { display: block; color: #777; cursor: default; }
+    @media (max-width: 700px) {
+      #top { left: 10px; right: 10px; width: auto; max-height: 32vh; }
+    }
+
+    .maplibregl-popup { z-index: 2; }   /* above the panels */
     .maplibregl-popup-content { font-size: 13px; max-height: 40vh; overflow-y: auto; }
     .maplibregl-popup-content h2 { font-size: 15px; margin: 0 0 6px; padding-right: 14px; }
     .maplibregl-popup-content h3 { font-size: 13px; margin: 10px 0 2px; border-top: 1px solid #ddd; padding-top: 6px; }
     .maplibregl-popup-content p { margin: 3px 0; }
     .maplibregl-popup-content .note { color: #666; font-size: 11px; }
+    .maplibregl-popup-content .harm { color: #8b1a10; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <div id="controls">
+  <div id="controls" class="panel">
     <h1>Indiana regulated facilities</h1>
     <label><input type="radio" name="scope" value="major" checked> Major facilities only</label>
     <label><input type="radio" name="scope" value="all"> All facilities</label>
     <label><input type="checkbox" id="inactive"> Include inactive facilities</label>
     <div id="count">Loading…</div>
+
+    <div class="group">
+      <div class="group-title">Show</div>
+      <label><input type="radio" name="view" value="dots" checked> Dots</label>
+      <label><input type="radio" name="view" value="heat"> Heatmap</label>
+      <div id="legend" hidden>
+        <div class="bar"></div>
+        <div class="ends"><span>lower</span><span id="legend-label">estimated harm</span><span>higher</span></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-title"><label for="metric" style="display:inline;margin:0">Rank by</label></div>
+      <select id="metric"></select>
+      <label><input type="checkbox" id="show-top" checked> Top 20 in view</label>
+    </div>
+
     <div id="source"></div>
     <div id="notice" hidden></div>
+  </div>
+
+  <div id="top" class="panel">
+    <h2><span id="top-title">Top 20 in view</span><small id="top-sub"></small></h2>
+    <ol id="toplist"></ol>
   </div>
 
   <!-- type="module" lets the code below "await" the basemap check before creating the map. -->
@@ -105,14 +152,41 @@
       container: "map",
       style: await chooseStyle(),
       bounds: [[-88.1, 37.77], [-84.78, 41.76]],   // Indiana: [west, south], [east, north]
-      fitBoundsOptions: { padding: 20 },
+      // On wide screens, leave room for the controls (left) and Top 20 list (right).
+      fitBoundsOptions: { padding: window.innerWidth > 900 ? { top: 20, bottom: 20, left: 330, right: 330 } : 20 },
     });
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-    let allFeatures = [];   // kept so we can count what's visible
+    let allFeatures = [];   // kept so we can count and rank what's visible
     let sources = {};       // year and number of ranked facilities for each data source
 
-    // ---- 2. Which dots to show, based on the controls -----------------------
+    // ---- 2. Number formatting -------------------------------------------------
+    const fmt = (n) => Math.round(n).toLocaleString();
+    function money(n) {
+      if (n >= 1e9) return `$${(n / 1e9).toFixed(n >= 1e10 ? 0 : 1)} billion`;
+      if (n >= 1e6) return `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} million`;
+      if (n >= 1e3) return `$${fmt(n / 1e3)}K`;
+      return `$${fmt(n)}`;
+    }
+    const shortMoney = (n) => money(n).replace(" billion", "B").replace(" million", "M");
+    const big = (n) => n >= 1e6 ? `${(n / 1e6).toFixed(1)} million` : fmt(n);
+    const deathsText = (n) => n >= 10 ? fmt(n) : n.toFixed(1);
+
+    // ---- 3. What the heatmap and Top 20 rank by -------------------------------
+    // Each metric is a property in facilities.geojson (see scripts/export_map_data.py).
+    const METRICS = {
+      harm_usd:    { label: "Estimated total harm ($ per year)", short: shortMoney, legend: "estimated harm" },
+      deaths:      { label: "Estimated premature deaths per year", short: (n) => deathsText(n), legend: "estimated deaths" },
+      climate_usd: { label: "Climate damage ($ per year)", short: shortMoney, legend: "climate damage" },
+      tri_lb:      { label: "Toxic chemical releases (lbs)", short: (n) => `${big(n)} lbs`, legend: "toxic releases" },
+      rsei_score:  { label: "Toxic risk score (EPA RSEI)", short: (n) => fmt(n), legend: "toxic risk" },
+    };
+    const metricSelect = document.getElementById("metric");
+    for (const [key, m] of Object.entries(METRICS)) metricSelect.add(new Option(m.label, key));
+    const metric = () => metricSelect.value;
+    const maxOf = {};   // largest value of each metric, to scale the heatmap
+
+    // ---- 4. Which dots to show, based on the controls -----------------------
     // MapLibre "filter expressions" are little JSON formulas the map evaluates for every dot.
     function currentFilter() {
       const scope = document.querySelector('input[name="scope"]:checked').value;
@@ -134,20 +208,123 @@
       document.getElementById("count").textContent = `Showing ${n.toLocaleString()} facilities`;
     }
 
-    document.querySelectorAll("#controls input").forEach(el => el.addEventListener("change", updateFilter));
+    // ---- 5. Heatmap ---------------------------------------------------------------
+    // Glows where the chosen metric is concentrated. Weighted by the square root so one giant
+    // plant doesn't drown out everything else. Fades into dots when you zoom in close.
+    function heatWeight() {
+      const m = metric();
+      return ["/", ["sqrt", ["coalesce", ["get", m], 0]], Math.sqrt(maxOf[m] || 1)];
+    }
 
-    // ---- 3. Load our data and draw it as dots ------------------------------
+    function setView() {
+      if (!map.getLayer("heat")) return;
+      const heat = document.querySelector('input[name="view"]:checked').value === "heat";
+      map.setLayoutProperty("heat", "visibility", heat ? "visible" : "none");
+      // In heatmap mode the ordinary dots only appear once you're zoomed in to town level.
+      map.setPaintProperty("facilities", "circle-opacity",
+        heat ? ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.8] : 0.8);
+      map.setPaintProperty("facilities", "circle-stroke-opacity",
+        heat ? ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1] : 1);
+      document.getElementById("legend").hidden = !heat;
+    }
+
+    function setMetric() {
+      if (!map.getLayer("heat")) return;
+      map.setFilter("heat", [">", ["coalesce", ["get", metric()], 0], 0]);
+      map.setPaintProperty("heat", "heatmap-weight", heatWeight());
+      document.getElementById("legend-label").textContent = METRICS[metric()].legend;
+      updateTop();
+    }
+
+    // ---- 6. Top 20 in view ----------------------------------------------------------
+    // Every time the map stops moving, rank the facilities currently on screen.
+    // Includes all facilities with data, whatever the "major only" filter says.
+    let topFeatures = [];
+
+    function updateTop() {
+      const panel = document.getElementById("top");
+      const showTop = document.getElementById("show-top").checked;
+      panel.hidden = !showTop;
+      if (!map.getSource("top")) return;
+      const m = metric();
+      const b = map.getBounds();
+      topFeatures = showTop ? allFeatures
+        .filter(f => f.properties[m] > 0 && b.contains(f.geometry.coordinates))
+        .sort((a, c) => c.properties[m] - a.properties[m])
+        .slice(0, 20) : [];
+      map.getSource("top").setData({ type: "FeatureCollection", features: topFeatures });
+
+      document.getElementById("top-title").textContent = `Top ${topFeatures.length || 20} in view`;
+      document.getElementById("top-sub").textContent = `by ${METRICS[m].label.toLowerCase()}`;
+      const list = document.getElementById("toplist");
+      list.replaceChildren();
+      if (!topFeatures.length) {
+        const li = document.createElement("li");
+        li.innerHTML = '<span class="empty">No facilities with this data in view. Zoom out or pan.</span>';
+        list.append(li);
+        return;
+      }
+      topFeatures.forEach((f, i) => {
+        const li = document.createElement("li");
+        li.tabIndex = 0;
+        const n = document.createElement("span"); n.className = "n"; n.textContent = i + 1;
+        const name = document.createElement("span"); name.className = "name"; name.textContent = f.properties.name;
+        const city = document.createElement("span"); city.className = "city";
+        city.textContent = (f.properties.address || "").split(", ").pop();
+        name.append(city);
+        const v = document.createElement("span"); v.className = "v"; v.textContent = METRICS[m].short(f.properties[m]);
+        li.append(n, name, v);
+        li.addEventListener("mouseenter", () => map.setFilter("top-hover", ["==", ["get", "_i"], f.properties._i]));
+        li.addEventListener("mouseleave", () => map.setFilter("top-hover", ["==", ["get", "_i"], -1]));
+        const open = () => {
+          map.flyTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 12) });
+          map.once("moveend", () => showPopup(f.properties, f.geometry.coordinates));
+        };
+        li.addEventListener("click", open);
+        li.addEventListener("keydown", (e) => { if (e.key === "Enter") open(); });
+        list.append(li);
+      });
+    }
+
+    document.querySelectorAll('#controls input[name="scope"], #inactive').forEach(el => el.addEventListener("change", updateFilter));
+    document.querySelectorAll('#controls input[name="view"]').forEach(el => el.addEventListener("change", setView));
+    metricSelect.addEventListener("change", setMetric);
+    document.getElementById("show-top").addEventListener("change", updateTop);
+    map.on("moveend", updateTop);
+
+    // ---- 7. Load our data and draw it -------------------------------------------------
     let dotsStarted = false;
     async function addFacilities() {
       if (dotsStarted) return;   // only once, whichever event gets here first
       dotsStarted = true;
       const geojson = await (await fetch("data/facilities.geojson")).json();
+      geojson.features.forEach((f, i) => { f.properties._i = i; });   // an id for highlighting
       allFeatures = geojson.features;
       sources = geojson.sources || {};
+      for (const m of Object.keys(METRICS)) {
+        maxOf[m] = Math.max(0, ...allFeatures.map(f => f.properties[m] || 0));
+      }
       document.getElementById("source").textContent =
-        `Sources: EPA ECHO (as of ${geojson.source_data_date}), TRI, RSEI, GHGRP, NEI, water discharge reports`;
+        `Sources: EPA ECHO (as of ${geojson.source_data_date}), TRI, RSEI, GHGRP, NEI, water discharge reports; ` +
+        `harm estimates from EPA and IPCC factors`;
 
       map.addSource("facilities", { type: "geojson", data: geojson });
+      map.addLayer({
+        id: "heat",
+        type: "heatmap",
+        source: "facilities",
+        layout: { visibility: "none" },
+        filter: [">", ["coalesce", ["get", metric()], 0], 0],
+        paint: {
+          "heatmap-weight": heatWeight(),
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 5, 2.5, 9, 4, 12, 6],
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 18, 9, 36, 12, 55],
+          "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"],
+            0, "rgba(255,237,160,0)", 0.05, "rgba(255,237,160,0.6)", 0.2, "#feb24c",
+            0.4, "#fd8d3c", 0.6, "#f03b20", 0.85, "#bd0026", 1, "#67000d"],
+          "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.9, 12.5, 0],
+        },
+      });
       map.addLayer({
         id: "facilities",
         type: "circle",
@@ -165,7 +342,36 @@
         },
         layout: { "circle-sort-key": ["case", ["get", "major"], 1, 0] },  // majors draw on top
       });
+
+      // The current Top 20: larger, darker dots drawn above everything else.
+      map.addSource("top", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({
+        id: "top-dots",
+        type: "circle",
+        source: "top",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 6, 12, 11],
+          "circle-color": "#7b1010",
+          "circle-stroke-color": "#fff",
+          "circle-stroke-width": 1.5,
+        },
+      });
+      map.addLayer({
+        id: "top-hover",
+        type: "circle",
+        source: "top",
+        filter: ["==", ["get", "_i"], -1],
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 11, 12, 17],
+          "circle-color": "rgba(0,0,0,0)",
+          "circle-stroke-color": "#111",
+          "circle-stroke-width": 3,
+        },
+      });
+
       updateFilter();
+      setView();
+      setMetric();
     }
     map.on("load", addFacilities);
 
@@ -179,7 +385,7 @@
       map.setStyle(PLAIN_STYLE);
     }, 15000);
 
-    // ---- 4. Click a dot -> popup -------------------------------------------
+    // ---- 8. Click a dot -> popup -------------------------------------------
     // Built with DOM nodes + textContent (not HTML strings) so odd characters in names display safely.
     function line(label, value) {
       const p = document.createElement("p");
@@ -189,9 +395,10 @@
       return p;
     }
 
-    function heading(text) {
+    function heading(text, className) {
       const h = document.createElement("h3");
       h.textContent = text;
+      if (className) h.className = className;
       return h;
     }
 
@@ -202,10 +409,33 @@
       return p;
     }
 
-    const fmt = (n) => Math.round(n).toLocaleString();
+    function p(text) {
+      const el = document.createElement("p");
+      el.textContent = text;
+      return el;
+    }
+
     // "#3 of 722 in Indiana"
     const rank = (r, src) => r ? ` (#${r} of ${sources[src]?.ranked?.toLocaleString() ?? "?"} in Indiana)` : "";
     const year = (src) => sources[src]?.year ?? "";
+
+    // Estimated harm: dollars, deaths, comparisons (scripts/build_impacts_indiana.py).
+    function harmSection(f) {
+      if (f.harm_usd === undefined) return [];
+      const out = [heading(`Estimated yearly harm (${year("impacts")}, in ${sources.impacts?.dollar_year} dollars)`, "harm")];
+      out.push(line("Total", `${money(f.harm_usd)} a year (range ${money(f.harm_lo)}–${money(f.harm_hi)})${rank(f.harm_rank, "impacts")}`));
+      out.push(line("That's per day", money(f.harm_usd / 365)));
+      if (f.deaths) out.push(line("Premature deaths from its air pollution",
+        `about ${deathsText(f.deaths)} a year (range ${deathsText(f.deaths_lo)}–${deathsText(f.deaths_hi)})`));
+      if (f.health_usd) out.push(line("Health damage", money(f.health_usd)));
+      if (f.climate_usd) out.push(line("Climate damage", `${money(f.climate_usd)} (range ${money(f.climate_lo)}–${money(f.climate_hi)})`));
+      if (f.removal_lo) out.push(line("Cost to remove its CO2 from the air", `${money(f.removal_lo)}–${money(f.removal_hi)}`));
+      if (f.eq_cars) out.push(line("Same CO2 as", `${big(f.eq_cars)} cars driven for a year, or ${big(f.eq_homes)} homes' energy use`));
+      out.push(line("Penalties in the last 5 years", f.penalties_usd ? money(f.penalties_usd) : "$0 on this record"));
+      if (f.harm_outlier) out.push(note("EPA flags one of this facility's emission figures as unusually high compared with facilities nationwide."));
+      out.push(note("Screening estimates using EPA and IPCC factors, for comparing facilities. Air-pollution deaths and climate damage only; toxic chemicals and water pollution aren't included."));
+      return out;
+    }
 
     // One section per extra data source -- only shown when the facility has that data.
     function extraSections(f) {
@@ -257,14 +487,7 @@
       return out;
     }
 
-    function p(text) {
-      const el = document.createElement("p");
-      el.textContent = text;
-      return el;
-    }
-
-    map.on("click", "facilities", (e) => {
-      const f = e.features[0].properties;   // note: MapLibre returns the properties we stored
+    function showPopup(f, coordinates) {
       const box = document.createElement("div");
 
       const h = document.createElement("h2");
@@ -279,7 +502,7 @@
       box.append(line("Compliance", status));
       box.append(line("Major facility", f.major ? "Yes" : "No"));
       if (!f.active) box.append(line("Permits", "Inactive"));
-      box.append(...extraSections(f));
+      box.append(...harmSection(f), ...extraSections(f));
 
       if (f.report_url) {
         const a = document.createElement("a");
@@ -287,16 +510,26 @@
         a.target = "_blank";
         a.rel = "noopener";
         a.textContent = "Full EPA facility report ↗";
-        const p = document.createElement("p");
-        p.append(a);
-        box.append(p);
+        const para = document.createElement("p");
+        para.append(a);
+        box.append(para);
       }
 
-      new maplibregl.Popup({ maxWidth: "320px" }).setLngLat(e.features[0].geometry.coordinates).setDOMContent(box).addTo(map);
-    });
+      // focusAfterOpen: false -- otherwise MapLibre focuses the report link at the bottom and the
+      // popup opens scrolled down past the facility name.
+      new maplibregl.Popup({ maxWidth: "320px", focusAfterOpen: false })
+        .setLngLat(coordinates).setDOMContent(box).addTo(map);
+    }
 
-    map.on("mouseenter", "facilities", () => map.getCanvas().style.cursor = "pointer");
-    map.on("mouseleave", "facilities", () => map.getCanvas().style.cursor = "");
+    // Top-20 dots sit above the ordinary dots, so check them first; one popup per click.
+    map.on("click", (e) => {
+      const hits = map.queryRenderedFeatures(e.point, { layers: ["top-dots", "facilities"].filter(l => map.getLayer(l)) });
+      if (hits.length) showPopup(hits[0].properties, hits[0].geometry.coordinates);
+    });
+    for (const layer of ["facilities", "top-dots"]) {
+      map.on("mouseenter", layer, () => map.getCanvas().style.cursor = "pointer");
+      map.on("mouseleave", layer, () => map.getCanvas().style.cursor = "");
+    }
   </script>
 </body>
 </html>

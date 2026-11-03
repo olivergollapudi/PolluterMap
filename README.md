@@ -37,8 +37,8 @@ PolluterMap/
 │   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
 │   │                 page doesn't depend on an outside download site.
 │   └── data/         GeoJSON exported from data/processed/ for the map. Each facility
-│                     carries its newest year of TRI, RSEI, GHG, NEI and water data
-│                     (when it has them) and its Indiana rank, shown in the popup.
+│                     carries its newest year of TRI, RSEI, GHG, NEI and water data,
+│                     its estimated harm (when it has them) and its Indiana rank.
 ├── .gitignore        Tells git which files to skip (raw downloads, etc.).
 └── README.md         This file.
 ```
@@ -159,6 +159,18 @@ add `--force`. Each script can also be run on its own, in the order listed in
 `build_all.py` (later ones link to tables made by earlier ones).
 
 ### 2. View the map
+
+What the map can do:
+
+- **Dots or Heatmap** ("Show"). The heatmap glows where the chosen measure is concentrated and
+  fades into clickable dots once you zoom in to town level.
+- **Rank by** estimated total harm ($), estimated deaths, climate damage ($), toxic releases (lbs)
+  or toxic risk score. Drives both the heatmap and the Top 20 list.
+- **Top 20 in view** — re-ranked every time you pan or zoom (all of Indiana zoomed out, a single
+  neighborhood zoomed in). The 20 get larger dark dots; click a row to fly there and open it.
+  The heatmap and Top 20 include every facility with data, whatever the "major only" filter says.
+- **Click a dot** for its profile: compliance, estimated yearly harm, toxic releases, risk score,
+  greenhouse gases, air pollutants and water discharges.
 
 ```bash
 python3 -m http.server 8000 --directory site
