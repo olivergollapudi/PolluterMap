@@ -27,26 +27,40 @@ DB_PATH = PROCESSED_DIR / "indiana.sqlite"
 
 # ---------------------------------------------------------------- downloading
 
-def download(url, dest, force=False):
-    """Save url to dest, unless dest already exists (force=True re-downloads)."""
+def download(url, dest, force=False, attempts=3):
+    """Save url to dest, unless dest already exists (force=True re-downloads).
+
+    Checks that the whole file arrived (EPA's servers sometimes drop the connection mid-file)
+    and retries a few times before giving up."""
     if dest.exists() and not force:
         print(f"Using existing download: {dest.relative_to(ROOT)}  (use --force to re-download)")
         return
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_name(dest.name + ".part")
-    print(f"Downloading {url}")
     # census.gov rejects Python's default user agent, so identify as a normal client.
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (PolluterMap data script)"})
-    with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
-        total = int(resp.headers.get("Content-Length") or 0)
-        done = 0
-        while chunk := resp.read(1 << 20):
-            out.write(chunk)
-            done += len(chunk)
-            if total:
-                print(f"\r  {done * 100 // total:3d}% of {total / 1e6:.0f} MB", end="", flush=True)
-    tmp.replace(dest)  # only rename once complete, so a half download is never mistaken for a real one
-    print("\n  done.")
+    for attempt in range(1, attempts + 1):
+        print(f"Downloading {url}" + (f" (attempt {attempt} of {attempts})" if attempt > 1 else ""))
+        try:
+            with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
+                total = int(resp.headers.get("Content-Length") or 0)
+                done = 0
+                while chunk := resp.read(1 << 20):
+                    out.write(chunk)
+                    done += len(chunk)
+                    if total:
+                        print(f"\r  {done * 100 // total:3d}% of {total / 1e6:.0f} MB", end="", flush=True)
+            if total and done != total:
+                raise OSError(f"connection dropped: got {done:,} of {total:,} bytes")
+        except OSError as e:
+            print(f"\n  download failed: {e}")
+            tmp.unlink(missing_ok=True)
+            if attempt == attempts:
+                raise SystemExit(f"ERROR: could not download {url} after {attempts} attempts")
+            continue
+        tmp.replace(dest)  # only rename once complete, so a half download is never mistaken for a real one
+        print("\n  done.")
+        return
 
 
 # ---------------------------------------------------------------- Excel (.xlsx)

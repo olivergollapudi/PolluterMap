@@ -6,8 +6,10 @@ recorded next to the value in the `impact_factors` table. Where a source only ex
 PDF or web page, the values are typed in below with the exact table they come from.
 
 What it collects:
-  1. Health harm of air pollution -- EPA "benefit per ton" estimates: premature deaths
-     per (short) ton of fine particles (PM2.5), SO2, NOx, ammonia (NH3) and VOCs, by
+  1. Health harm of air pollution -- EPA "benefit per ton" estimates: premature deaths,
+     and nonfatal illness (lung cancers, heart attacks, strokes, new asthma cases, ER visits,
+     hospital admissions, lost work/school days), per (short) ton of fine particles (PM2.5),
+     SO2, NOx, ammonia (NH3) and VOCs, by
      industrial sector, for Indiana (power plants, boilers, engines) or EPA's "North" region
      (all other sectors; Indiana is in it). Low and high estimates come from two different
      medical studies. Downloaded as spreadsheets.
@@ -23,7 +25,7 @@ What it collects:
 
 Writes, into data/processed/ (CSV + table of the same name in indiana.sqlite):
   impact_factors   one row per scalar factor, with unit, dollar year and source
-  health_factors   sector x pollutant x outcome: deaths per ton (low, high)
+  health_factors   sector x pollutant x pathway x outcome: cases per ton (low, high)
   cpi              year -> CPI-U annual average
 
     python3 scripts/build_impact_factors.py
@@ -46,6 +48,38 @@ BPT_FILES = {"pm": "2025_bpt_pm_incidence_results_newhif_wegu.xlsx",
 BPT_SOURCE = ("EPA, Estimating the Benefit per Ton of Reducing Directly-Emitted PM2.5, PM2.5 Precursors and "
               "Ozone Precursors from 21 Sectors (2023 BPT incidence-per-ton results, analysis year 2025)")
 REGION = "NORTH"     # EPA's BPT region containing Indiana (East North Central); see TSD Figure 2
+
+# EPA health endpoints we keep, grouped into plain-language outcomes. Skipped: inhaler (albuterol) use,
+# individual asthma symptoms (overlap each other), hay fever, "minor restricted activity days", and the
+# respiratory admission variants that overlap "HA All Respiratory".
+PM_ENDPOINTS = {
+    "Mortality  All Cause": "deaths",
+    "Incidence  Lung Cancer": "lung_cancers",
+    "Acute Myocardial Infarction  Nonfatal": "heart_attacks",
+    "Incidence  Stroke": "strokes",
+    "Incidence  Out of Hospital Cardiac Arrest": "cardiac_arrests",
+    "Incidence  Asthma": "new_asthma_cases",
+    "ER visits  All Cardiac Outcomes": "er_visits",
+    "ER visits  respiratory": "er_visits",
+    "HA  All Respiratory": "hospital_admissions",
+    "HA  Cardio-  Cerebro- and Peripheral Vascular Disease": "hospital_admissions",
+    "HA  Alzheimers Disease": "hospital_admissions",
+    "HA  Parkinsons Disease": "hospital_admissions",
+    "Work Loss Days": "lost_work_days",
+}
+OZONE_ENDPOINTS = {
+    "Mortality  Respiratory": "deaths",
+    "Incidence  Asthma": "new_asthma_cases",
+    "ER visits  respiratory": "er_visits",
+    "HA  All Respiratory": "hospital_admissions",
+    "School Loss Days  All Cause": "lost_school_days",
+}
+OUTCOME_UNITS = {
+    "deaths": "premature deaths", "lung_cancers": "new lung cancer cases", "heart_attacks": "nonfatal heart attacks",
+    "strokes": "strokes", "cardiac_arrests": "out-of-hospital cardiac arrests", "new_asthma_cases": "new asthma cases",
+    "er_visits": "emergency room visits", "hospital_admissions": "hospital admissions",
+    "lost_work_days": "lost work days", "lost_school_days": "lost school days",
+}
 
 BLS_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
 CPI_SERIES = "CUUR0000SA0"   # CPI-U, U.S. city average, all items, not seasonally adjusted
@@ -80,6 +114,18 @@ FACTORS = [
      "https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf", ""),
     ("removal_cost_full_high", 386, "USD per metric ton CO2", None, "IPCC AR6 WGIII Ch.12 (full range)",
      "https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf", ""),
+    # Bressler (2021) "The mortality cost of carbon", Nature Communications 12:4467, Table 1, baseline
+    # emissions scenario: expected temperature-related excess deaths worldwide, 2020-2100, per metric ton
+    # of CO2 emitted in 2020 (central 2.26e-4 = one death per 4,434 tons).
+    ("mcc_central", 2.26e-4, "excess deaths worldwide (2020-2100) per metric ton CO2", None,
+     "Bressler 2021, The mortality cost of carbon, Nature Communications 12:4467 (baseline scenario)",
+     "https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/",
+     "Temperature-related deaths only (not disease, food, flooding, conflict); applied here to CO2-equivalent."),
+    ("mcc_low", -1.71e-4, "excess deaths worldwide (2020-2100) per metric ton CO2", None,
+     "Bressler 2021 (low estimate)", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/",
+     "Below zero (fewer cold deaths outweigh heat deaths); the impact estimates use 0 as the floor."),
+    ("mcc_high", 6.78e-4, "excess deaths worldwide (2020-2100) per metric ton CO2", None,
+     "Bressler 2021 (high estimate)", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/", ""),
     ("gwp_ch4", 25, "t CO2e per t CH4", None, "IPCC AR4 100-year GWP, as used by EPA GHGRP",
      "https://www.epa.gov/ghgreporting/data-sets", "Used to turn reported methane CO2e back into tons of methane."),
     ("gwp_n2o", 298, "t CO2e per t N2O", None, "IPCC AR4 100-year GWP, as used by EPA GHGRP",
@@ -148,50 +194,49 @@ def read_bpt():
     pm = IMPACT_RAW / BPT_FILES["pm"]
     o3 = IMPACT_RAW / BPT_FILES["o3"]
 
-    # Fine particles (PM2.5) formed from direct PM2.5, SO2, NOx and NH3: all-cause mortality.
-    for level in ("low", "high"):
-        for r in sheet_dicts(pm, f"most_sectors_{level}"):
-            if r["sectorname"].endswith(f"- {REGION}") and r["Endpoint"].startswith("Mortality"):
-                sector = r["sectorname"].rsplit(" - ", 1)[0]
-                for pol in ("PM", "SO2", "NOX", "NH3"):
-                    out[(sector, pol, "pm25_mortality")][level] = per_ton(r.get(pol))
-                    out[(sector, pol, "pm25_mortality")]["geography"] = f"EPA {REGION} region"
-        for sheet, sector, key in ((f"boilers_{level}", "industrial boilers", "State"),
-                                   (f"ICE_{level}", "internal combustion engines", "State"),
-                                   (f"EGU_{level}", "electricity generating units", "State.Region")):
-            for r in sheet_dicts(pm, sheet):
-                if r.get(key) == STATE and r["Endpoint"].startswith("Mortality"):
-                    for pol, col in (("PM", "PM"), ("PM", "PM2.5"), ("SO2", "SO2"), ("NOX", "NOX"), ("NOX", "NOx"), ("NH3", "NH3")):
+    # Each pollutant forms fine particles (PM2.5) and/or ozone in the air. EPA pairs its low PM2.5
+    # estimate with short-term ozone effects, and its high PM2.5 estimate with long-term ozone effects.
+    pathways = [
+        ("pm25", pm, (("low", "low"), ("high", "high")), (("PM", "PM"), ("PM", "PM2.5"), ("SO2", "SO2"),
+                                                          ("NOX", "NOX"), ("NOX", "NOx"), ("NH3", "NH3"))),
+        ("ozone", o3, (("low", "short"), ("high", "long")), (("NOX", "NOX"), ("VOC", "VOC"))),
+    ]
+    for pathway, path, levels, pollutants in pathways:
+        endpoints = PM_ENDPOINTS if pathway == "pm25" else OZONE_ENDPOINTS
+        for level, sheet_level in levels:
+            # sector-wide values for EPA's North region, then Indiana-specific ones for 3 sectors
+            sheets = [(f"most_sectors_{sheet_level}", None, None)] + [
+                (f"{prefix}_{sheet_level}", sector, key) for prefix, sector, key in
+                (("boilers", "industrial boilers", "State"), ("ICE", "internal combustion engines", "State"),
+                 ("EGU", "electricity generating units", "State.Region"))]
+            for sheet, state_sector, key in sheets:
+                for r in sheet_dicts(path, sheet):
+                    if state_sector:
+                        if r.get(key) != STATE:
+                            continue
+                        sector, geography = state_sector, STATE
+                    elif r["sectorname"].endswith(f"- {REGION}"):
+                        sector, geography = r["sectorname"].rsplit(" - ", 1)[0], f"EPA {REGION} region"
+                    else:
+                        continue
+                    # EGU sheets add " per short ton" to the endpoint name
+                    outcome = endpoints.get(r["Endpoint"].removesuffix(" per short ton").strip())
+                    if not outcome:
+                        continue
+                    for pol, col in pollutants:
                         if col in r:
-                            out[(sector, pol, "pm25_mortality")][level] = per_ton(r.get(col))
-                            out[(sector, pol, "pm25_mortality")]["geography"] = STATE
-
-    # Ozone formed from NOx and VOC: respiratory mortality. EPA pairs short-term effects with
-    # the low PM estimate and long-term effects with the high one.
-    for level, ozone in (("low", "short"), ("high", "long")):
-        for r in sheet_dicts(o3, f"most_sectors_{ozone}"):
-            if r["sectorname"].endswith(f"- {REGION}") and "ortality" in r["Endpoint"]:
-                sector = r["sectorname"].rsplit(" - ", 1)[0]
-                for pol in ("NOX", "VOC"):
-                    out[(sector, pol, "ozone_mortality")][level] = per_ton(r.get(pol))
-                    out[(sector, pol, "ozone_mortality")]["geography"] = f"EPA {REGION} region"
-        for sheet, sector, key in ((f"boilers_{ozone}", "industrial boilers", "State"),
-                                   (f"ICE_{ozone}", "internal combustion engines", "State"),
-                                   (f"EGU_{ozone}", "electricity generating units", "State.Region")):
-            for r in sheet_dicts(o3, sheet):
-                if r.get(key) == STATE and "ortality" in r["Endpoint"]:
-                    for pol in ("NOX", "VOC"):
-                        if pol in r:
-                            out[(sector, pol, "ozone_mortality")][level] = per_ton(r.get(pol))
-                            out[(sector, pol, "ozone_mortality")]["geography"] = STATE
+                            entry = out[(sector, pol, pathway, outcome)]
+                            # several EPA endpoints can feed one outcome (e.g. hospital admissions)
+                            entry[level] = (entry.get(level) or 0.0) + (per_ton(r.get(col)) or 0.0)
+                            entry["geography"] = geography
 
     rows = []
-    for (sector, pol, outcome), v in sorted(out.items()):
-        if v.get("low") is None and v.get("high") is None:
+    for (sector, pol, pathway, outcome), v in sorted(out.items()):
+        if not v.get("low") and not v.get("high"):
             continue
-        rows.append({"sector": sector, "pollutant": pol, "outcome": outcome,
-                     "deaths_per_ton_low": v.get("low"), "deaths_per_ton_high": v.get("high"),
-                     "geography": v["geography"], "unit": "premature deaths per short ton emitted"})
+        rows.append({"sector": sector, "pollutant": pol, "pathway": pathway, "outcome": outcome,
+                     "cases_per_ton_low": v.get("low"), "cases_per_ton_high": v.get("high"),
+                     "geography": v["geography"], "unit": f"{OUTCOME_UNITS[outcome]} per short ton emitted"})
     return rows
 
 
@@ -224,8 +269,8 @@ def main():
 
     fac_cols = [("key", "TEXT"), ("value", "REAL"), ("unit", "TEXT"), ("dollar_year", "INTEGER"),
                 ("source", "TEXT"), ("url", "TEXT"), ("note", "TEXT")]
-    health_cols = [("sector", "TEXT"), ("pollutant", "TEXT"), ("outcome", "TEXT"), ("deaths_per_ton_low", "REAL"),
-                   ("deaths_per_ton_high", "REAL"), ("geography", "TEXT"), ("unit", "TEXT")]
+    health_cols = [("sector", "TEXT"), ("pollutant", "TEXT"), ("pathway", "TEXT"), ("outcome", "TEXT"),
+                   ("cases_per_ton_low", "REAL"), ("cases_per_ton_high", "REAL"), ("geography", "TEXT"), ("unit", "TEXT")]
     cpi_cols = [("year", "INTEGER"), ("cpi_u", "REAL"), ("months", "INTEGER")]
 
     print("Writing:")
@@ -234,7 +279,7 @@ def main():
     write_csv(PROCESSED_DIR / "impact_cpi.csv", [c for c, _ in cpi_cols], cpi)
     con = connect()
     replace_table(con, "impact_factors", fac_cols, factors, indexes=["UNIQUE (key)"])
-    replace_table(con, "health_factors", health_cols, health, indexes=["UNIQUE (sector, pollutant, outcome)"])
+    replace_table(con, "health_factors", health_cols, health, indexes=["UNIQUE (sector, pollutant, pathway, outcome)"])
     replace_table(con, "cpi", cpi_cols, cpi, indexes=["UNIQUE (year)"])
     set_metadata(con, "impact_factors", {"bpt_source": BPT_SOURCE, "bpt_url": BPT_BASE, "dollar_year": DOLLAR_YEAR})
     con.commit()

@@ -4,6 +4,9 @@ removal_cost_low,100,USD per metric ton CO2,,IPCC AR6 WGIII Ch.12 Executive Summ
 removal_cost_high,300,USD per metric ton CO2,,IPCC AR6 WGIII Ch.12 (as above),https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf,
 removal_cost_full_low,84,USD per metric ton CO2,,IPCC AR6 WGIII Ch.12 (full range),https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf,
 removal_cost_full_high,386,USD per metric ton CO2,,IPCC AR6 WGIII Ch.12 (full range),https://www.ipcc.ch/report/ar6/wg3/downloads/report/IPCC_AR6_WGIII_Chapter12.pdf,
+mcc_central,0.000226,excess deaths worldwide (2020-2100) per metric ton CO2,,"Bressler 2021, The mortality cost of carbon, Nature Communications 12:4467 (baseline scenario)",https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/,"Temperature-related deaths only (not disease, food, flooding, conflict); applied here to CO2-equivalent."
+mcc_low,-0.000171,excess deaths worldwide (2020-2100) per metric ton CO2,,Bressler 2021 (low estimate),https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/,Below zero (fewer cold deaths outweigh heat deaths); the impact estimates use 0 as the floor.
+mcc_high,0.000678,excess deaths worldwide (2020-2100) per metric ton CO2,,Bressler 2021 (high estimate),https://pmc.ncbi.nlm.nih.gov/articles/PMC8322393/,
 gwp_ch4,25,t CO2e per t CH4,,"IPCC AR4 100-year GWP, as used by EPA GHGRP",https://www.epa.gov/ghgreporting/data-sets,Used to turn reported methane CO2e back into tons of methane.
 gwp_n2o,298,t CO2e per t N2O,,"IPCC AR4 100-year GWP, as used by EPA GHGRP",https://www.epa.gov/ghgreporting/data-sets,
 eq_car_year,4.29,t CO2e per gasoline passenger vehicle per year,,EPA Greenhouse Gas Equivalencies Calculator,https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator-calculations-and-references,2022 data

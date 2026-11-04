@@ -1,99 +1,723 @@
-sector,pollutant,outcome,deaths_per_ton_low,deaths_per_ton_high,geography,unit
-brick,NOX,ozone_mortality,0.000327,0.00721,EPA NORTH region,premature deaths per short ton emitted
-brick,NOX,pm25_mortality,0.00335,0.00712,EPA NORTH region,premature deaths per short ton emitted
-brick,PM,pm25_mortality,0.021,0.0443,EPA NORTH region,premature deaths per short ton emitted
-brick,SO2,pm25_mortality,0.00467,0.00994,EPA NORTH region,premature deaths per short ton emitted
-brick,VOC,ozone_mortality,0.000109,0.00242,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,NH3,pm25_mortality,0.00792,0.0168,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,NOX,ozone_mortality,0.000307,0.00678,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,NOX,pm25_mortality,0.0019,0.00407,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,PM,pm25_mortality,0.0152,0.0326,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,SO2,pm25_mortality,0.00428,0.00916,EPA NORTH region,premature deaths per short ton emitted
-cement kilns,VOC,ozone_mortality,8.23e-05,0.00182,EPA NORTH region,premature deaths per short ton emitted
-coke ovens,NOX,ozone_mortality,0.000244,0.0054,EPA NORTH region,premature deaths per short ton emitted
-coke ovens,NOX,pm25_mortality,0.00241,0.00514,EPA NORTH region,premature deaths per short ton emitted
-coke ovens,PM,pm25_mortality,0.0265,0.0558,EPA NORTH region,premature deaths per short ton emitted
-coke ovens,SO2,pm25_mortality,0.00481,0.0104,EPA NORTH region,premature deaths per short ton emitted
-coke ovens,VOC,ozone_mortality,0.000175,0.00386,EPA NORTH region,premature deaths per short ton emitted
-electric arc furnaces and argon-oxy.,NOX,ozone_mortality,0.000306,0.00677,EPA NORTH region,premature deaths per short ton emitted
-electric arc furnaces and argon-oxy.,NOX,pm25_mortality,0.00256,0.00545,EPA NORTH region,premature deaths per short ton emitted
-electric arc furnaces and argon-oxy.,SO2,pm25_mortality,0.00527,0.0113,EPA NORTH region,premature deaths per short ton emitted
-electric arc furnaces and argon-oxy.,VOC,ozone_mortality,4.46e-05,0.000985,EPA NORTH region,premature deaths per short ton emitted
-electricity generating units,NOX,ozone_mortality,0.000566,0.0125,IN,premature deaths per short ton emitted
-electricity generating units,NOX,pm25_mortality,0.0013,0.00279,IN,premature deaths per short ton emitted
-electricity generating units,PM,pm25_mortality,0.00854,0.0185,IN,premature deaths per short ton emitted
-electricity generating units,SO2,pm25_mortality,0.00734,0.0159,IN,premature deaths per short ton emitted
-ferroalloys,NOX,ozone_mortality,0.000367,0.00812,EPA NORTH region,premature deaths per short ton emitted
-ferroalloys,NOX,pm25_mortality,0.00185,0.00392,EPA NORTH region,premature deaths per short ton emitted
-ferroalloys,PM,pm25_mortality,0.0165,0.0351,EPA NORTH region,premature deaths per short ton emitted
-ferroalloys,SO2,pm25_mortality,0.00408,0.00873,EPA NORTH region,premature deaths per short ton emitted
-ferroalloys,VOC,ozone_mortality,2.32e-05,0.000513,EPA NORTH region,premature deaths per short ton emitted
-gasoline distribution bulk terminals,NOX,ozone_mortality,0.000405,0.00895,EPA NORTH region,premature deaths per short ton emitted
-gasoline distribution bulk terminals,VOC,ozone_mortality,4.15e-05,0.000917,EPA NORTH region,premature deaths per short ton emitted
-industrial boilers,NH3,pm25_mortality,0.00846,0.0183,IN,premature deaths per short ton emitted
-industrial boilers,NOX,ozone_mortality,0.000219,0.00484,IN,premature deaths per short ton emitted
-industrial boilers,NOX,pm25_mortality,0.00259,0.00556,IN,premature deaths per short ton emitted
-industrial boilers,PM,pm25_mortality,0.0258,0.0558,IN,premature deaths per short ton emitted
-industrial boilers,SO2,pm25_mortality,0.00509,0.011,IN,premature deaths per short ton emitted
-industrial boilers,VOC,ozone_mortality,0.000139,0.00307,IN,premature deaths per short ton emitted
-integrated iron and steel,NOX,ozone_mortality,0.000264,0.00585,EPA NORTH region,premature deaths per short ton emitted
-integrated iron and steel,NOX,pm25_mortality,0.00272,0.00579,EPA NORTH region,premature deaths per short ton emitted
-integrated iron and steel,PM,pm25_mortality,0.041,0.0884,EPA NORTH region,premature deaths per short ton emitted
-integrated iron and steel,SO2,pm25_mortality,0.00507,0.0109,EPA NORTH region,premature deaths per short ton emitted
-integrated iron and steel,VOC,ozone_mortality,6.83e-05,0.00151,EPA NORTH region,premature deaths per short ton emitted
-internal combustion engines,NOX,ozone_mortality,0.000289,0.00639,IN,premature deaths per short ton emitted
-internal combustion engines,NOX,pm25_mortality,0.00307,0.00659,IN,premature deaths per short ton emitted
-internal combustion engines,VOC,ozone_mortality,0.000184,0.00406,IN,premature deaths per short ton emitted
-iron and steel foundries,NOX,ozone_mortality,0.000323,0.00714,EPA NORTH region,premature deaths per short ton emitted
-iron and steel foundries,NOX,pm25_mortality,0.00245,0.00522,EPA NORTH region,premature deaths per short ton emitted
-iron and steel foundries,PM,pm25_mortality,0.0227,0.0483,EPA NORTH region,premature deaths per short ton emitted
-iron and steel foundries,SO2,pm25_mortality,0.00458,0.00981,EPA NORTH region,premature deaths per short ton emitted
-iron and steel foundries,VOC,ozone_mortality,3.58e-05,0.000791,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,NH3,pm25_mortality,0.00179,0.00377,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,NOX,ozone_mortality,0.000214,0.00473,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,NOX,pm25_mortality,0.00135,0.00287,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,PM,pm25_mortality,0.0128,0.027,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,SO2,pm25_mortality,0.00245,0.00525,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas,VOC,ozone_mortality,8.1e-06,0.000179,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas transmissions,NOX,ozone_mortality,0.000244,0.00539,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas transmissions,NOX,pm25_mortality,0.0018,0.00385,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas transmissions,PM,pm25_mortality,0.0163,0.0347,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas transmissions,SO2,pm25_mortality,0.00395,0.0085,EPA NORTH region,premature deaths per short ton emitted
-oil and natural gas transmissions,VOC,ozone_mortality,6.96e-05,0.00154,EPA NORTH region,premature deaths per short ton emitted
-paint stripping / misc surface coating,VOC,ozone_mortality,3.22e-05,0.000711,EPA NORTH region,premature deaths per short ton emitted
-primary copper smelting,NOX,ozone_mortality,0.000379,0.00838,EPA NORTH region,premature deaths per short ton emitted
-primary copper smelting,SO2,pm25_mortality,0.00418,0.00893,EPA NORTH region,premature deaths per short ton emitted
-primary copper smelting,VOC,ozone_mortality,3.27e-05,0.000722,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,NH3,pm25_mortality,0.00548,0.0115,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,NOX,ozone_mortality,0.000249,0.0055,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,NOX,pm25_mortality,0.00109,0.00232,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,PM,pm25_mortality,0.023,0.0488,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,SO2,pm25_mortality,0.00289,0.00616,EPA NORTH region,premature deaths per short ton emitted
-pulp and paper,VOC,ozone_mortality,2.31e-05,0.000511,EPA NORTH region,premature deaths per short ton emitted
-refineries,NH3,pm25_mortality,0.0123,0.0265,EPA NORTH region,premature deaths per short ton emitted
-refineries,NOX,ozone_mortality,0.000237,0.00523,EPA NORTH region,premature deaths per short ton emitted
-refineries,NOX,pm25_mortality,0.00263,0.00562,EPA NORTH region,premature deaths per short ton emitted
-refineries,PM,pm25_mortality,0.032,0.0694,EPA NORTH region,premature deaths per short ton emitted
-refineries,SO2,pm25_mortality,0.00494,0.0106,EPA NORTH region,premature deaths per short ton emitted
-refineries,VOC,ozone_mortality,4.67e-05,0.00103,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,NH3,pm25_mortality,0.0206,0.0436,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,NOX,ozone_mortality,0.000135,0.00298,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,NOX,pm25_mortality,0.00303,0.00644,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,PM,pm25_mortality,0.0362,0.0768,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,SO2,pm25_mortality,0.00343,0.00734,EPA NORTH region,premature deaths per short ton emitted
-residential woodstoves,VOC,ozone_mortality,7.88e-05,0.00174,EPA NORTH region,premature deaths per short ton emitted
-secondary lead smelters,NOX,ozone_mortality,0.000418,0.00923,EPA NORTH region,premature deaths per short ton emitted
-secondary lead smelters,NOX,pm25_mortality,0.00271,0.00577,EPA NORTH region,premature deaths per short ton emitted
-secondary lead smelters,SO2,pm25_mortality,0.00402,0.00869,EPA NORTH region,premature deaths per short ton emitted
-secondary lead smelters,VOC,ozone_mortality,4.7e-05,0.00104,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,NH3,pm25_mortality,0.00683,0.0147,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,NOX,ozone_mortality,0.000236,0.00522,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,NOX,pm25_mortality,0.00199,0.00424,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,PM,pm25_mortality,0.0118,0.0253,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,SO2,pm25_mortality,0.00359,0.00773,EPA NORTH region,premature deaths per short ton emitted
-synthetic organic chemical,VOC,ozone_mortality,2.28e-05,0.000504,EPA NORTH region,premature deaths per short ton emitted
-taconite mining,NOX,ozone_mortality,0.000198,0.00438,EPA NORTH region,premature deaths per short ton emitted
-taconite mining,NOX,pm25_mortality,0.000838,0.00178,EPA NORTH region,premature deaths per short ton emitted
-taconite mining,PM,pm25_mortality,0.00558,0.0117,EPA NORTH region,premature deaths per short ton emitted
-taconite mining,SO2,pm25_mortality,0.00296,0.00632,EPA NORTH region,premature deaths per short ton emitted
-taconite mining,VOC,ozone_mortality,0.000128,0.00284,EPA NORTH region,premature deaths per short ton emitted
+sector,pollutant,pathway,outcome,cases_per_ton_low,cases_per_ton_high,geography,unit
+brick,NOX,ozone,deaths,0.000327,0.00721,EPA NORTH region,premature deaths per short ton emitted
+brick,NOX,ozone,er_visits,0.0185,,EPA NORTH region,emergency room visits per short ton emitted
+brick,NOX,ozone,hospital_admissions,0.000856,,EPA NORTH region,hospital admissions per short ton emitted
+brick,NOX,ozone,lost_school_days,3.6,,EPA NORTH region,lost school days per short ton emitted
+brick,NOX,ozone,new_asthma_cases,0.0548,,EPA NORTH region,new asthma cases per short ton emitted
+brick,NOX,pm25,cardiac_arrests,5.29e-05,5.29e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+brick,NOX,pm25,deaths,0.00335,0.00712,EPA NORTH region,premature deaths per short ton emitted
+brick,NOX,pm25,er_visits,0.0030749999999999996,0.0030749999999999996,EPA NORTH region,emergency room visits per short ton emitted
+brick,NOX,pm25,heart_attacks,0.000205,0.000205,EPA NORTH region,nonfatal heart attacks per short ton emitted
+brick,NOX,pm25,hospital_admissions,0.002421,0.002421,EPA NORTH region,hospital admissions per short ton emitted
+brick,NOX,pm25,lost_work_days,0.409,0.409,EPA NORTH region,lost work days per short ton emitted
+brick,NOX,pm25,lung_cancers,0.000238,0.000238,EPA NORTH region,new lung cancer cases per short ton emitted
+brick,NOX,pm25,new_asthma_cases,0.00792,0.00792,EPA NORTH region,new asthma cases per short ton emitted
+brick,NOX,pm25,strokes,0.000205,0.000205,EPA NORTH region,strokes per short ton emitted
+brick,PM,pm25,cardiac_arrests,0.000312,0.000312,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+brick,PM,pm25,deaths,0.021,0.0443,EPA NORTH region,premature deaths per short ton emitted
+brick,PM,pm25,er_visits,0.01759,0.01759,EPA NORTH region,emergency room visits per short ton emitted
+brick,PM,pm25,heart_attacks,0.00129,0.00129,EPA NORTH region,nonfatal heart attacks per short ton emitted
+brick,PM,pm25,hospital_admissions,0.015609999999999999,0.015609999999999999,EPA NORTH region,hospital admissions per short ton emitted
+brick,PM,pm25,lost_work_days,2.31,2.31,EPA NORTH region,lost work days per short ton emitted
+brick,PM,pm25,lung_cancers,0.00141,0.00141,EPA NORTH region,new lung cancer cases per short ton emitted
+brick,PM,pm25,new_asthma_cases,0.0459,0.0459,EPA NORTH region,new asthma cases per short ton emitted
+brick,PM,pm25,strokes,0.00124,0.00124,EPA NORTH region,strokes per short ton emitted
+brick,SO2,pm25,cardiac_arrests,7.12e-05,7.12e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+brick,SO2,pm25,deaths,0.00467,0.00994,EPA NORTH region,premature deaths per short ton emitted
+brick,SO2,pm25,er_visits,0.00413,0.00413,EPA NORTH region,emergency room visits per short ton emitted
+brick,SO2,pm25,heart_attacks,0.000294,0.000294,EPA NORTH region,nonfatal heart attacks per short ton emitted
+brick,SO2,pm25,hospital_admissions,0.003546,0.003546,EPA NORTH region,hospital admissions per short ton emitted
+brick,SO2,pm25,lost_work_days,0.539,0.539,EPA NORTH region,lost work days per short ton emitted
+brick,SO2,pm25,lung_cancers,0.000321,0.000321,EPA NORTH region,new lung cancer cases per short ton emitted
+brick,SO2,pm25,new_asthma_cases,0.0105,0.0105,EPA NORTH region,new asthma cases per short ton emitted
+brick,SO2,pm25,strokes,0.000279,0.000279,EPA NORTH region,strokes per short ton emitted
+brick,VOC,ozone,deaths,0.000109,0.00242,EPA NORTH region,premature deaths per short ton emitted
+brick,VOC,ozone,er_visits,0.00613,,EPA NORTH region,emergency room visits per short ton emitted
+brick,VOC,ozone,hospital_admissions,0.000286,,EPA NORTH region,hospital admissions per short ton emitted
+brick,VOC,ozone,lost_school_days,1.22,,EPA NORTH region,lost school days per short ton emitted
+brick,VOC,ozone,new_asthma_cases,0.0186,,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,NH3,pm25,cardiac_arrests,0.000119,0.000119,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+cement kilns,NH3,pm25,deaths,0.00792,0.0168,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NH3,pm25,er_visits,0.00625,0.00625,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,NH3,pm25,heart_attacks,0.000493,0.000493,EPA NORTH region,nonfatal heart attacks per short ton emitted
+cement kilns,NH3,pm25,hospital_admissions,0.005843999999999999,0.005843999999999999,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,NH3,pm25,lost_work_days,0.879,0.879,EPA NORTH region,lost work days per short ton emitted
+cement kilns,NH3,pm25,lung_cancers,0.000539,0.000539,EPA NORTH region,new lung cancer cases per short ton emitted
+cement kilns,NH3,pm25,new_asthma_cases,0.0172,0.0172,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,NH3,pm25,strokes,0.000472,0.000472,EPA NORTH region,strokes per short ton emitted
+cement kilns,NOX,ozone,deaths,0.000307,0.00678,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NOX,ozone,er_visits,0.0154,,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,NOX,ozone,hospital_admissions,0.000802,,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,NOX,ozone,lost_school_days,3.23,,EPA NORTH region,lost school days per short ton emitted
+cement kilns,NOX,ozone,new_asthma_cases,0.0494,,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,NOX,pm25,cardiac_arrests,2.97e-05,2.97e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+cement kilns,NOX,pm25,deaths,0.0019,0.00407,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,NOX,pm25,er_visits,0.001652,0.001652,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,NOX,pm25,heart_attacks,0.000121,0.000121,EPA NORTH region,nonfatal heart attacks per short ton emitted
+cement kilns,NOX,pm25,hospital_admissions,0.001559,0.001559,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,NOX,pm25,lost_work_days,0.23,0.23,EPA NORTH region,lost work days per short ton emitted
+cement kilns,NOX,pm25,lung_cancers,0.000132,0.000132,EPA NORTH region,new lung cancer cases per short ton emitted
+cement kilns,NOX,pm25,new_asthma_cases,0.00464,0.00464,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,NOX,pm25,strokes,0.000115,0.000115,EPA NORTH region,strokes per short ton emitted
+cement kilns,PM,pm25,cardiac_arrests,0.000236,0.000236,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+cement kilns,PM,pm25,deaths,0.0152,0.0326,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,PM,pm25,er_visits,0.013430000000000001,0.013430000000000001,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,PM,pm25,heart_attacks,0.000974,0.000974,EPA NORTH region,nonfatal heart attacks per short ton emitted
+cement kilns,PM,pm25,hospital_admissions,0.01268,0.01268,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,PM,pm25,lost_work_days,1.82,1.82,EPA NORTH region,lost work days per short ton emitted
+cement kilns,PM,pm25,lung_cancers,0.00106,0.00106,EPA NORTH region,new lung cancer cases per short ton emitted
+cement kilns,PM,pm25,new_asthma_cases,0.0362,0.0362,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,PM,pm25,strokes,0.000916,0.000916,EPA NORTH region,strokes per short ton emitted
+cement kilns,SO2,pm25,cardiac_arrests,6.69e-05,6.69e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+cement kilns,SO2,pm25,deaths,0.00428,0.00916,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,SO2,pm25,er_visits,0.0038399999999999997,0.0038399999999999997,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,SO2,pm25,heart_attacks,0.000275,0.000275,EPA NORTH region,nonfatal heart attacks per short ton emitted
+cement kilns,SO2,pm25,hospital_admissions,0.003398,0.003398,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,SO2,pm25,lost_work_days,0.514,0.514,EPA NORTH region,lost work days per short ton emitted
+cement kilns,SO2,pm25,lung_cancers,0.000299,0.000299,EPA NORTH region,new lung cancer cases per short ton emitted
+cement kilns,SO2,pm25,new_asthma_cases,0.0101,0.0101,EPA NORTH region,new asthma cases per short ton emitted
+cement kilns,SO2,pm25,strokes,0.000259,0.000259,EPA NORTH region,strokes per short ton emitted
+cement kilns,VOC,ozone,deaths,8.23e-05,0.00182,EPA NORTH region,premature deaths per short ton emitted
+cement kilns,VOC,ozone,er_visits,0.00407,,EPA NORTH region,emergency room visits per short ton emitted
+cement kilns,VOC,ozone,hospital_admissions,0.000214,,EPA NORTH region,hospital admissions per short ton emitted
+cement kilns,VOC,ozone,lost_school_days,0.86,,EPA NORTH region,lost school days per short ton emitted
+cement kilns,VOC,ozone,new_asthma_cases,0.0132,,EPA NORTH region,new asthma cases per short ton emitted
+coke ovens,NOX,ozone,deaths,0.000244,0.0054,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,NOX,ozone,er_visits,0.012,,EPA NORTH region,emergency room visits per short ton emitted
+coke ovens,NOX,ozone,hospital_admissions,0.000625,,EPA NORTH region,hospital admissions per short ton emitted
+coke ovens,NOX,ozone,lost_school_days,2.45,,EPA NORTH region,lost school days per short ton emitted
+coke ovens,NOX,ozone,new_asthma_cases,0.0374,,EPA NORTH region,new asthma cases per short ton emitted
+coke ovens,NOX,pm25,cardiac_arrests,3.63e-05,3.63e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+coke ovens,NOX,pm25,deaths,0.00241,0.00514,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,NOX,pm25,er_visits,0.002033,0.002033,EPA NORTH region,emergency room visits per short ton emitted
+coke ovens,NOX,pm25,heart_attacks,0.000152,0.000152,EPA NORTH region,nonfatal heart attacks per short ton emitted
+coke ovens,NOX,pm25,hospital_admissions,0.001826,0.001826,EPA NORTH region,hospital admissions per short ton emitted
+coke ovens,NOX,pm25,lost_work_days,0.277,0.277,EPA NORTH region,lost work days per short ton emitted
+coke ovens,NOX,pm25,lung_cancers,0.000163,0.000163,EPA NORTH region,new lung cancer cases per short ton emitted
+coke ovens,NOX,pm25,new_asthma_cases,0.00551,0.00551,EPA NORTH region,new asthma cases per short ton emitted
+coke ovens,NOX,pm25,strokes,0.000142,0.000142,EPA NORTH region,strokes per short ton emitted
+coke ovens,PM,pm25,cardiac_arrests,0.000362,0.000362,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+coke ovens,PM,pm25,deaths,0.0265,0.0558,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,PM,pm25,er_visits,0.02053,0.02053,EPA NORTH region,emergency room visits per short ton emitted
+coke ovens,PM,pm25,heart_attacks,0.0016,0.0016,EPA NORTH region,nonfatal heart attacks per short ton emitted
+coke ovens,PM,pm25,hospital_admissions,0.01919,0.01919,EPA NORTH region,hospital admissions per short ton emitted
+coke ovens,PM,pm25,lost_work_days,2.57,2.57,EPA NORTH region,lost work days per short ton emitted
+coke ovens,PM,pm25,lung_cancers,0.00166,0.00166,EPA NORTH region,new lung cancer cases per short ton emitted
+coke ovens,PM,pm25,new_asthma_cases,0.0501,0.0501,EPA NORTH region,new asthma cases per short ton emitted
+coke ovens,PM,pm25,strokes,0.00147,0.00147,EPA NORTH region,strokes per short ton emitted
+coke ovens,SO2,pm25,cardiac_arrests,7.37e-05,7.37e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+coke ovens,SO2,pm25,deaths,0.00481,0.0104,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,SO2,pm25,er_visits,0.00427,0.00427,EPA NORTH region,emergency room visits per short ton emitted
+coke ovens,SO2,pm25,heart_attacks,0.000316,0.000316,EPA NORTH region,nonfatal heart attacks per short ton emitted
+coke ovens,SO2,pm25,hospital_admissions,0.003876,0.003876,EPA NORTH region,hospital admissions per short ton emitted
+coke ovens,SO2,pm25,lost_work_days,0.568,0.568,EPA NORTH region,lost work days per short ton emitted
+coke ovens,SO2,pm25,lung_cancers,0.000328,0.000328,EPA NORTH region,new lung cancer cases per short ton emitted
+coke ovens,SO2,pm25,new_asthma_cases,0.0113,0.0113,EPA NORTH region,new asthma cases per short ton emitted
+coke ovens,SO2,pm25,strokes,0.000285,0.000285,EPA NORTH region,strokes per short ton emitted
+coke ovens,VOC,ozone,deaths,0.000175,0.00386,EPA NORTH region,premature deaths per short ton emitted
+coke ovens,VOC,ozone,er_visits,0.0082,,EPA NORTH region,emergency room visits per short ton emitted
+coke ovens,VOC,ozone,hospital_admissions,0.000448,,EPA NORTH region,hospital admissions per short ton emitted
+coke ovens,VOC,ozone,lost_school_days,1.78,,EPA NORTH region,lost school days per short ton emitted
+coke ovens,VOC,ozone,new_asthma_cases,0.0272,,EPA NORTH region,new asthma cases per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone,deaths,0.000306,0.00677,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone,er_visits,0.0154,,EPA NORTH region,emergency room visits per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone,hospital_admissions,0.000787,,EPA NORTH region,hospital admissions per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone,lost_school_days,3.12,,EPA NORTH region,lost school days per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,ozone,new_asthma_cases,0.0475,,EPA NORTH region,new asthma cases per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,cardiac_arrests,3.89e-05,3.89e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,deaths,0.00256,0.00545,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,er_visits,0.002184,0.002184,EPA NORTH region,emergency room visits per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,heart_attacks,0.000162,0.000162,EPA NORTH region,nonfatal heart attacks per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,hospital_admissions,0.0019619999999999998,0.0019619999999999998,EPA NORTH region,hospital admissions per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,lost_work_days,0.295,0.295,EPA NORTH region,lost work days per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,lung_cancers,0.000174,0.000174,EPA NORTH region,new lung cancer cases per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,new_asthma_cases,0.00589,0.00589,EPA NORTH region,new asthma cases per short ton emitted
+electric arc furnaces and argon-oxy.,NOX,pm25,strokes,0.000152,0.000152,EPA NORTH region,strokes per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,cardiac_arrests,8.24e-05,8.24e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,deaths,0.00527,0.0113,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,er_visits,0.00476,0.00476,EPA NORTH region,emergency room visits per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,heart_attacks,0.000341,0.000341,EPA NORTH region,nonfatal heart attacks per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,hospital_admissions,0.004194,0.004194,EPA NORTH region,hospital admissions per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,lost_work_days,0.638,0.638,EPA NORTH region,lost work days per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,lung_cancers,0.000367,0.000367,EPA NORTH region,new lung cancer cases per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,new_asthma_cases,0.0127,0.0127,EPA NORTH region,new asthma cases per short ton emitted
+electric arc furnaces and argon-oxy.,SO2,pm25,strokes,0.000318,0.000318,EPA NORTH region,strokes per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone,deaths,4.46e-05,0.000985,EPA NORTH region,premature deaths per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone,er_visits,0.00227,,EPA NORTH region,emergency room visits per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone,hospital_admissions,0.000115,,EPA NORTH region,hospital admissions per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone,lost_school_days,0.468,,EPA NORTH region,lost school days per short ton emitted
+electric arc furnaces and argon-oxy.,VOC,ozone,new_asthma_cases,0.00714,,EPA NORTH region,new asthma cases per short ton emitted
+electricity generating units,NOX,ozone,deaths,0.000566,0.0125,IN,premature deaths per short ton emitted
+electricity generating units,NOX,ozone,er_visits,0.0249,,IN,emergency room visits per short ton emitted
+electricity generating units,NOX,ozone,hospital_admissions,0.00149,,IN,hospital admissions per short ton emitted
+electricity generating units,NOX,ozone,lost_school_days,5.72,,IN,lost school days per short ton emitted
+electricity generating units,NOX,ozone,new_asthma_cases,0.0876,,IN,new asthma cases per short ton emitted
+electricity generating units,NOX,pm25,cardiac_arrests,1.97e-05,1.97e-05,IN,out-of-hospital cardiac arrests per short ton emitted
+electricity generating units,NOX,pm25,deaths,0.0013,0.00279,IN,premature deaths per short ton emitted
+electricity generating units,NOX,pm25,er_visits,0.001068,0.001068,IN,emergency room visits per short ton emitted
+electricity generating units,NOX,pm25,heart_attacks,8.52e-05,8.52e-05,IN,nonfatal heart attacks per short ton emitted
+electricity generating units,NOX,pm25,hospital_admissions,0.0010344,0.0010344,IN,hospital admissions per short ton emitted
+electricity generating units,NOX,pm25,lost_work_days,0.152,0.152,IN,lost work days per short ton emitted
+electricity generating units,NOX,pm25,lung_cancers,0.000175,0.000175,IN,new lung cancer cases per short ton emitted
+electricity generating units,NOX,pm25,new_asthma_cases,0.00307,0.00307,IN,new asthma cases per short ton emitted
+electricity generating units,NOX,pm25,strokes,7.63e-05,7.63e-05,IN,strokes per short ton emitted
+electricity generating units,PM,pm25,cardiac_arrests,0.000131,0.000131,IN,out-of-hospital cardiac arrests per short ton emitted
+electricity generating units,PM,pm25,deaths,0.00854,0.0185,IN,premature deaths per short ton emitted
+electricity generating units,PM,pm25,er_visits,0.00672,0.00672,IN,emergency room visits per short ton emitted
+electricity generating units,PM,pm25,heart_attacks,0.00056,0.00056,IN,nonfatal heart attacks per short ton emitted
+electricity generating units,PM,pm25,hospital_admissions,0.006956,0.006956,IN,hospital admissions per short ton emitted
+electricity generating units,PM,pm25,lost_work_days,1.03,1.03,IN,lost work days per short ton emitted
+electricity generating units,PM,pm25,lung_cancers,0.00116,0.00116,IN,new lung cancer cases per short ton emitted
+electricity generating units,PM,pm25,new_asthma_cases,0.0212,0.0212,IN,new asthma cases per short ton emitted
+electricity generating units,PM,pm25,strokes,0.000501,0.000501,IN,strokes per short ton emitted
+electricity generating units,SO2,pm25,cardiac_arrests,0.000111,0.000111,IN,out-of-hospital cardiac arrests per short ton emitted
+electricity generating units,SO2,pm25,deaths,0.00734,0.0159,IN,premature deaths per short ton emitted
+electricity generating units,SO2,pm25,er_visits,0.00634,0.00634,IN,emergency room visits per short ton emitted
+electricity generating units,SO2,pm25,heart_attacks,0.000502,0.000502,IN,nonfatal heart attacks per short ton emitted
+electricity generating units,SO2,pm25,hospital_admissions,0.0060940000000000005,0.0060940000000000005,IN,hospital admissions per short ton emitted
+electricity generating units,SO2,pm25,lost_work_days,0.856,0.856,IN,lost work days per short ton emitted
+electricity generating units,SO2,pm25,lung_cancers,0.000988,0.000988,IN,new lung cancer cases per short ton emitted
+electricity generating units,SO2,pm25,new_asthma_cases,0.0173,0.0173,IN,new asthma cases per short ton emitted
+electricity generating units,SO2,pm25,strokes,0.000432,0.000432,IN,strokes per short ton emitted
+ferroalloys,NOX,ozone,deaths,0.000367,0.00812,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,NOX,ozone,er_visits,0.0181,,EPA NORTH region,emergency room visits per short ton emitted
+ferroalloys,NOX,ozone,hospital_admissions,0.000933,,EPA NORTH region,hospital admissions per short ton emitted
+ferroalloys,NOX,ozone,lost_school_days,3.58,,EPA NORTH region,lost school days per short ton emitted
+ferroalloys,NOX,ozone,new_asthma_cases,0.0543,,EPA NORTH region,new asthma cases per short ton emitted
+ferroalloys,NOX,pm25,cardiac_arrests,2.73e-05,2.73e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+ferroalloys,NOX,pm25,deaths,0.00185,0.00392,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,NOX,pm25,er_visits,0.001559,0.001559,EPA NORTH region,emergency room visits per short ton emitted
+ferroalloys,NOX,pm25,heart_attacks,0.000116,0.000116,EPA NORTH region,nonfatal heart attacks per short ton emitted
+ferroalloys,NOX,pm25,hospital_admissions,0.0013599999999999999,0.0013599999999999999,EPA NORTH region,hospital admissions per short ton emitted
+ferroalloys,NOX,pm25,lost_work_days,0.203,0.203,EPA NORTH region,lost work days per short ton emitted
+ferroalloys,NOX,pm25,lung_cancers,0.000123,0.000123,EPA NORTH region,new lung cancer cases per short ton emitted
+ferroalloys,NOX,pm25,new_asthma_cases,0.00395,0.00395,EPA NORTH region,new asthma cases per short ton emitted
+ferroalloys,NOX,pm25,strokes,0.000108,0.000108,EPA NORTH region,strokes per short ton emitted
+ferroalloys,PM,pm25,cardiac_arrests,0.000235,0.000235,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+ferroalloys,PM,pm25,deaths,0.0165,0.0351,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,PM,pm25,er_visits,0.01379,0.01379,EPA NORTH region,emergency room visits per short ton emitted
+ferroalloys,PM,pm25,heart_attacks,0.00107,0.00107,EPA NORTH region,nonfatal heart attacks per short ton emitted
+ferroalloys,PM,pm25,hospital_admissions,0.01224,0.01224,EPA NORTH region,hospital admissions per short ton emitted
+ferroalloys,PM,pm25,lost_work_days,1.7,1.7,EPA NORTH region,lost work days per short ton emitted
+ferroalloys,PM,pm25,lung_cancers,0.00106,0.00106,EPA NORTH region,new lung cancer cases per short ton emitted
+ferroalloys,PM,pm25,new_asthma_cases,0.0334,0.0334,EPA NORTH region,new asthma cases per short ton emitted
+ferroalloys,PM,pm25,strokes,0.000946,0.000946,EPA NORTH region,strokes per short ton emitted
+ferroalloys,SO2,pm25,cardiac_arrests,6.14e-05,6.14e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+ferroalloys,SO2,pm25,deaths,0.00408,0.00873,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,SO2,pm25,er_visits,0.00358,0.00358,EPA NORTH region,emergency room visits per short ton emitted
+ferroalloys,SO2,pm25,heart_attacks,0.000263,0.000263,EPA NORTH region,nonfatal heart attacks per short ton emitted
+ferroalloys,SO2,pm25,hospital_admissions,0.0031,0.0031,EPA NORTH region,hospital admissions per short ton emitted
+ferroalloys,SO2,pm25,lost_work_days,0.463,0.463,EPA NORTH region,lost work days per short ton emitted
+ferroalloys,SO2,pm25,lung_cancers,0.000276,0.000276,EPA NORTH region,new lung cancer cases per short ton emitted
+ferroalloys,SO2,pm25,new_asthma_cases,0.00905,0.00905,EPA NORTH region,new asthma cases per short ton emitted
+ferroalloys,SO2,pm25,strokes,0.000241,0.000241,EPA NORTH region,strokes per short ton emitted
+ferroalloys,VOC,ozone,deaths,2.32e-05,0.000513,EPA NORTH region,premature deaths per short ton emitted
+ferroalloys,VOC,ozone,er_visits,0.0011,,EPA NORTH region,emergency room visits per short ton emitted
+ferroalloys,VOC,ozone,hospital_admissions,5.68e-05,,EPA NORTH region,hospital admissions per short ton emitted
+ferroalloys,VOC,ozone,lost_school_days,0.221,,EPA NORTH region,lost school days per short ton emitted
+ferroalloys,VOC,ozone,new_asthma_cases,0.00335,,EPA NORTH region,new asthma cases per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone,deaths,0.000405,0.00895,EPA NORTH region,premature deaths per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone,er_visits,0.0206,,EPA NORTH region,emergency room visits per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone,hospital_admissions,0.000955,,EPA NORTH region,hospital admissions per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone,lost_school_days,4.8,,EPA NORTH region,lost school days per short ton emitted
+gasoline distribution bulk terminals,NOX,ozone,new_asthma_cases,0.0756,,EPA NORTH region,new asthma cases per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone,deaths,4.15e-05,0.000917,EPA NORTH region,premature deaths per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone,er_visits,0.00219,,EPA NORTH region,emergency room visits per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone,hospital_admissions,0.000108,,EPA NORTH region,hospital admissions per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone,lost_school_days,0.456,,EPA NORTH region,lost school days per short ton emitted
+gasoline distribution bulk terminals,VOC,ozone,new_asthma_cases,0.00698,,EPA NORTH region,new asthma cases per short ton emitted
+industrial boilers,NH3,pm25,cardiac_arrests,0.000131,0.000131,IN,out-of-hospital cardiac arrests per short ton emitted
+industrial boilers,NH3,pm25,deaths,0.00846,0.0183,IN,premature deaths per short ton emitted
+industrial boilers,NH3,pm25,er_visits,0.00636,0.00636,IN,emergency room visits per short ton emitted
+industrial boilers,NH3,pm25,heart_attacks,0.000541,0.000541,IN,nonfatal heart attacks per short ton emitted
+industrial boilers,NH3,pm25,hospital_admissions,0.006816999999999999,0.006816999999999999,IN,hospital admissions per short ton emitted
+industrial boilers,NH3,pm25,lost_work_days,1.04,1.04,IN,lost work days per short ton emitted
+industrial boilers,NH3,pm25,lung_cancers,0.000577,0.000577,IN,new lung cancer cases per short ton emitted
+industrial boilers,NH3,pm25,new_asthma_cases,0.0215,0.0215,IN,new asthma cases per short ton emitted
+industrial boilers,NH3,pm25,strokes,0.000497,0.000497,IN,strokes per short ton emitted
+industrial boilers,NOX,ozone,deaths,0.000219,0.00484,IN,premature deaths per short ton emitted
+industrial boilers,NOX,ozone,er_visits,0.0102,,IN,emergency room visits per short ton emitted
+industrial boilers,NOX,ozone,hospital_admissions,0.000568,,IN,hospital admissions per short ton emitted
+industrial boilers,NOX,ozone,lost_school_days,2.3,,IN,lost school days per short ton emitted
+industrial boilers,NOX,ozone,new_asthma_cases,0.0352,,IN,new asthma cases per short ton emitted
+industrial boilers,NOX,pm25,cardiac_arrests,3.99e-05,3.99e-05,IN,out-of-hospital cardiac arrests per short ton emitted
+industrial boilers,NOX,pm25,deaths,0.00259,0.00556,IN,premature deaths per short ton emitted
+industrial boilers,NOX,pm25,er_visits,0.002146,0.002146,IN,emergency room visits per short ton emitted
+industrial boilers,NOX,pm25,heart_attacks,0.000166,0.000166,IN,nonfatal heart attacks per short ton emitted
+industrial boilers,NOX,pm25,hospital_admissions,0.0020399999999999997,0.0020399999999999997,IN,hospital admissions per short ton emitted
+industrial boilers,NOX,pm25,lost_work_days,0.312,0.312,IN,lost work days per short ton emitted
+industrial boilers,NOX,pm25,lung_cancers,0.000177,0.000177,IN,new lung cancer cases per short ton emitted
+industrial boilers,NOX,pm25,new_asthma_cases,0.00632,0.00632,IN,new asthma cases per short ton emitted
+industrial boilers,NOX,pm25,strokes,0.000154,0.000154,IN,strokes per short ton emitted
+industrial boilers,PM,pm25,cardiac_arrests,0.000405,0.000405,IN,out-of-hospital cardiac arrests per short ton emitted
+industrial boilers,PM,pm25,deaths,0.0258,0.0558,IN,premature deaths per short ton emitted
+industrial boilers,PM,pm25,er_visits,0.02065,0.02065,IN,emergency room visits per short ton emitted
+industrial boilers,PM,pm25,heart_attacks,0.00165,0.00165,IN,nonfatal heart attacks per short ton emitted
+industrial boilers,PM,pm25,hospital_admissions,0.02081,0.02081,IN,hospital admissions per short ton emitted
+industrial boilers,PM,pm25,lost_work_days,3.24,3.24,IN,lost work days per short ton emitted
+industrial boilers,PM,pm25,lung_cancers,0.00178,0.00178,IN,new lung cancer cases per short ton emitted
+industrial boilers,PM,pm25,new_asthma_cases,0.0661,0.0661,IN,new asthma cases per short ton emitted
+industrial boilers,PM,pm25,strokes,0.00153,0.00153,IN,strokes per short ton emitted
+industrial boilers,SO2,pm25,cardiac_arrests,7.94e-05,7.94e-05,IN,out-of-hospital cardiac arrests per short ton emitted
+industrial boilers,SO2,pm25,deaths,0.00509,0.011,IN,premature deaths per short ton emitted
+industrial boilers,SO2,pm25,er_visits,0.00451,0.00451,IN,emergency room visits per short ton emitted
+industrial boilers,SO2,pm25,heart_attacks,0.000332,0.000332,IN,nonfatal heart attacks per short ton emitted
+industrial boilers,SO2,pm25,hospital_admissions,0.0041080000000000005,0.0041080000000000005,IN,hospital admissions per short ton emitted
+industrial boilers,SO2,pm25,lost_work_days,0.62,0.62,IN,lost work days per short ton emitted
+industrial boilers,SO2,pm25,lung_cancers,0.000352,0.000352,IN,new lung cancer cases per short ton emitted
+industrial boilers,SO2,pm25,new_asthma_cases,0.0124,0.0124,IN,new asthma cases per short ton emitted
+industrial boilers,SO2,pm25,strokes,0.000305,0.000305,IN,strokes per short ton emitted
+industrial boilers,VOC,ozone,deaths,0.000139,0.00307,IN,premature deaths per short ton emitted
+industrial boilers,VOC,ozone,er_visits,0.0063,,IN,emergency room visits per short ton emitted
+industrial boilers,VOC,ozone,hospital_admissions,0.000366,,IN,hospital admissions per short ton emitted
+industrial boilers,VOC,ozone,lost_school_days,1.59,,IN,lost school days per short ton emitted
+industrial boilers,VOC,ozone,new_asthma_cases,0.0244,,IN,new asthma cases per short ton emitted
+integrated iron and steel,NOX,ozone,deaths,0.000264,0.00585,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,NOX,ozone,er_visits,0.0129,,EPA NORTH region,emergency room visits per short ton emitted
+integrated iron and steel,NOX,ozone,hospital_admissions,0.000676,,EPA NORTH region,hospital admissions per short ton emitted
+integrated iron and steel,NOX,ozone,lost_school_days,2.69,,EPA NORTH region,lost school days per short ton emitted
+integrated iron and steel,NOX,ozone,new_asthma_cases,0.0411,,EPA NORTH region,new asthma cases per short ton emitted
+integrated iron and steel,NOX,pm25,cardiac_arrests,4.11e-05,4.11e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+integrated iron and steel,NOX,pm25,deaths,0.00272,0.00579,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,NOX,pm25,er_visits,0.002285,0.002285,EPA NORTH region,emergency room visits per short ton emitted
+integrated iron and steel,NOX,pm25,heart_attacks,0.000171,0.000171,EPA NORTH region,nonfatal heart attacks per short ton emitted
+integrated iron and steel,NOX,pm25,hospital_admissions,0.0020759999999999997,0.0020759999999999997,EPA NORTH region,hospital admissions per short ton emitted
+integrated iron and steel,NOX,pm25,lost_work_days,0.314,0.314,EPA NORTH region,lost work days per short ton emitted
+integrated iron and steel,NOX,pm25,lung_cancers,0.000184,0.000184,EPA NORTH region,new lung cancer cases per short ton emitted
+integrated iron and steel,NOX,pm25,new_asthma_cases,0.00625,0.00625,EPA NORTH region,new asthma cases per short ton emitted
+integrated iron and steel,NOX,pm25,strokes,0.00016,0.00016,EPA NORTH region,strokes per short ton emitted
+integrated iron and steel,PM,pm25,cardiac_arrests,0.000622,0.000622,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+integrated iron and steel,PM,pm25,deaths,0.041,0.0884,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,PM,pm25,er_visits,0.0317,0.0317,EPA NORTH region,emergency room visits per short ton emitted
+integrated iron and steel,PM,pm25,heart_attacks,0.00259,0.00259,EPA NORTH region,nonfatal heart attacks per short ton emitted
+integrated iron and steel,PM,pm25,hospital_admissions,0.03211,0.03211,EPA NORTH region,hospital admissions per short ton emitted
+integrated iron and steel,PM,pm25,lost_work_days,4.87,4.87,EPA NORTH region,lost work days per short ton emitted
+integrated iron and steel,PM,pm25,lung_cancers,0.00274,0.00274,EPA NORTH region,new lung cancer cases per short ton emitted
+integrated iron and steel,PM,pm25,new_asthma_cases,0.0995,0.0995,EPA NORTH region,new asthma cases per short ton emitted
+integrated iron and steel,PM,pm25,strokes,0.00238,0.00238,EPA NORTH region,strokes per short ton emitted
+integrated iron and steel,SO2,pm25,cardiac_arrests,7.84e-05,7.84e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+integrated iron and steel,SO2,pm25,deaths,0.00507,0.0109,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,SO2,pm25,er_visits,0.00449,0.00449,EPA NORTH region,emergency room visits per short ton emitted
+integrated iron and steel,SO2,pm25,heart_attacks,0.000329,0.000329,EPA NORTH region,nonfatal heart attacks per short ton emitted
+integrated iron and steel,SO2,pm25,hospital_admissions,0.004045999999999999,0.004045999999999999,EPA NORTH region,hospital admissions per short ton emitted
+integrated iron and steel,SO2,pm25,lost_work_days,0.611,0.611,EPA NORTH region,lost work days per short ton emitted
+integrated iron and steel,SO2,pm25,lung_cancers,0.000348,0.000348,EPA NORTH region,new lung cancer cases per short ton emitted
+integrated iron and steel,SO2,pm25,new_asthma_cases,0.0122,0.0122,EPA NORTH region,new asthma cases per short ton emitted
+integrated iron and steel,SO2,pm25,strokes,0.000302,0.000302,EPA NORTH region,strokes per short ton emitted
+integrated iron and steel,VOC,ozone,deaths,6.83e-05,0.00151,EPA NORTH region,premature deaths per short ton emitted
+integrated iron and steel,VOC,ozone,er_visits,0.0034,,EPA NORTH region,emergency room visits per short ton emitted
+integrated iron and steel,VOC,ozone,hospital_admissions,0.000178,,EPA NORTH region,hospital admissions per short ton emitted
+integrated iron and steel,VOC,ozone,lost_school_days,0.745,,EPA NORTH region,lost school days per short ton emitted
+integrated iron and steel,VOC,ozone,new_asthma_cases,0.0114,,EPA NORTH region,new asthma cases per short ton emitted
+internal combustion engines,NOX,ozone,deaths,0.000289,0.00639,IN,premature deaths per short ton emitted
+internal combustion engines,NOX,ozone,er_visits,0.0131,,IN,emergency room visits per short ton emitted
+internal combustion engines,NOX,ozone,hospital_admissions,0.000744,,IN,hospital admissions per short ton emitted
+internal combustion engines,NOX,ozone,lost_school_days,2.97,,IN,lost school days per short ton emitted
+internal combustion engines,NOX,ozone,new_asthma_cases,0.0453,,IN,new asthma cases per short ton emitted
+internal combustion engines,NOX,pm25,cardiac_arrests,4.59e-05,4.59e-05,IN,out-of-hospital cardiac arrests per short ton emitted
+internal combustion engines,NOX,pm25,deaths,0.00307,0.00659,IN,premature deaths per short ton emitted
+internal combustion engines,NOX,pm25,er_visits,0.002357,0.002357,IN,emergency room visits per short ton emitted
+internal combustion engines,NOX,pm25,heart_attacks,0.000195,0.000195,IN,nonfatal heart attacks per short ton emitted
+internal combustion engines,NOX,pm25,hospital_admissions,0.002414,0.002414,IN,hospital admissions per short ton emitted
+internal combustion engines,NOX,pm25,lost_work_days,0.352,0.352,IN,lost work days per short ton emitted
+internal combustion engines,NOX,pm25,lung_cancers,0.000204,0.000204,IN,new lung cancer cases per short ton emitted
+internal combustion engines,NOX,pm25,new_asthma_cases,0.00726,0.00726,IN,new asthma cases per short ton emitted
+internal combustion engines,NOX,pm25,strokes,0.000178,0.000178,IN,strokes per short ton emitted
+internal combustion engines,VOC,ozone,deaths,0.000184,0.00406,IN,premature deaths per short ton emitted
+internal combustion engines,VOC,ozone,er_visits,0.00766,,IN,emergency room visits per short ton emitted
+internal combustion engines,VOC,ozone,hospital_admissions,0.000466,,IN,hospital admissions per short ton emitted
+internal combustion engines,VOC,ozone,lost_school_days,1.94,,IN,lost school days per short ton emitted
+internal combustion engines,VOC,ozone,new_asthma_cases,0.0299,,IN,new asthma cases per short ton emitted
+iron and steel foundries,NOX,ozone,deaths,0.000323,0.00714,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,NOX,ozone,er_visits,0.0161,,EPA NORTH region,emergency room visits per short ton emitted
+iron and steel foundries,NOX,ozone,hospital_admissions,0.00083,,EPA NORTH region,hospital admissions per short ton emitted
+iron and steel foundries,NOX,ozone,lost_school_days,3.34,,EPA NORTH region,lost school days per short ton emitted
+iron and steel foundries,NOX,ozone,new_asthma_cases,0.051,,EPA NORTH region,new asthma cases per short ton emitted
+iron and steel foundries,NOX,pm25,cardiac_arrests,3.74e-05,3.74e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+iron and steel foundries,NOX,pm25,deaths,0.00245,0.00522,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,NOX,pm25,er_visits,0.002075,0.002075,EPA NORTH region,emergency room visits per short ton emitted
+iron and steel foundries,NOX,pm25,heart_attacks,0.000154,0.000154,EPA NORTH region,nonfatal heart attacks per short ton emitted
+iron and steel foundries,NOX,pm25,hospital_admissions,0.001889,0.001889,EPA NORTH region,hospital admissions per short ton emitted
+iron and steel foundries,NOX,pm25,lost_work_days,0.285,0.285,EPA NORTH region,lost work days per short ton emitted
+iron and steel foundries,NOX,pm25,lung_cancers,0.000167,0.000167,EPA NORTH region,new lung cancer cases per short ton emitted
+iron and steel foundries,NOX,pm25,new_asthma_cases,0.00576,0.00576,EPA NORTH region,new asthma cases per short ton emitted
+iron and steel foundries,NOX,pm25,strokes,0.000146,0.000146,EPA NORTH region,strokes per short ton emitted
+iron and steel foundries,PM,pm25,cardiac_arrests,0.000344,0.000344,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+iron and steel foundries,PM,pm25,deaths,0.0227,0.0483,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,PM,pm25,er_visits,0.01956,0.01956,EPA NORTH region,emergency room visits per short ton emitted
+iron and steel foundries,PM,pm25,heart_attacks,0.00138,0.00138,EPA NORTH region,nonfatal heart attacks per short ton emitted
+iron and steel foundries,PM,pm25,hospital_admissions,0.017159999999999998,0.017159999999999998,EPA NORTH region,hospital admissions per short ton emitted
+iron and steel foundries,PM,pm25,lost_work_days,2.64,2.64,EPA NORTH region,lost work days per short ton emitted
+iron and steel foundries,PM,pm25,lung_cancers,0.00154,0.00154,EPA NORTH region,new lung cancer cases per short ton emitted
+iron and steel foundries,PM,pm25,new_asthma_cases,0.0537,0.0537,EPA NORTH region,new asthma cases per short ton emitted
+iron and steel foundries,PM,pm25,strokes,0.00135,0.00135,EPA NORTH region,strokes per short ton emitted
+iron and steel foundries,SO2,pm25,cardiac_arrests,7.09e-05,7.09e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+iron and steel foundries,SO2,pm25,deaths,0.00458,0.00981,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,SO2,pm25,er_visits,0.004030000000000001,0.004030000000000001,EPA NORTH region,emergency room visits per short ton emitted
+iron and steel foundries,SO2,pm25,heart_attacks,0.000295,0.000295,EPA NORTH region,nonfatal heart attacks per short ton emitted
+iron and steel foundries,SO2,pm25,hospital_admissions,0.003607,0.003607,EPA NORTH region,hospital admissions per short ton emitted
+iron and steel foundries,SO2,pm25,lost_work_days,0.543,0.543,EPA NORTH region,lost work days per short ton emitted
+iron and steel foundries,SO2,pm25,lung_cancers,0.000316,0.000316,EPA NORTH region,new lung cancer cases per short ton emitted
+iron and steel foundries,SO2,pm25,new_asthma_cases,0.0109,0.0109,EPA NORTH region,new asthma cases per short ton emitted
+iron and steel foundries,SO2,pm25,strokes,0.000276,0.000276,EPA NORTH region,strokes per short ton emitted
+iron and steel foundries,VOC,ozone,deaths,3.58e-05,0.000791,EPA NORTH region,premature deaths per short ton emitted
+iron and steel foundries,VOC,ozone,er_visits,0.00181,,EPA NORTH region,emergency room visits per short ton emitted
+iron and steel foundries,VOC,ozone,hospital_admissions,9.25e-05,,EPA NORTH region,hospital admissions per short ton emitted
+iron and steel foundries,VOC,ozone,lost_school_days,0.381,,EPA NORTH region,lost school days per short ton emitted
+iron and steel foundries,VOC,ozone,new_asthma_cases,0.00585,,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,NH3,pm25,cardiac_arrests,2.75e-05,2.75e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas,NH3,pm25,deaths,0.00179,0.00377,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NH3,pm25,er_visits,0.001552,0.001552,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,NH3,pm25,heart_attacks,0.000127,0.000127,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas,NH3,pm25,hospital_admissions,0.00136,0.00136,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,NH3,pm25,lost_work_days,0.202,0.202,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas,NH3,pm25,lung_cancers,0.000122,0.000122,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas,NH3,pm25,new_asthma_cases,0.0043,0.0043,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,NH3,pm25,strokes,0.00011,0.00011,EPA NORTH region,strokes per short ton emitted
+oil and natural gas,NOX,ozone,deaths,0.000214,0.00473,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NOX,ozone,er_visits,0.0107,,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,NOX,ozone,hospital_admissions,0.000547,,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,NOX,ozone,lost_school_days,2.18,,EPA NORTH region,lost school days per short ton emitted
+oil and natural gas,NOX,ozone,new_asthma_cases,0.0333,,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,NOX,pm25,cardiac_arrests,2.03e-05,2.03e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas,NOX,pm25,deaths,0.00135,0.00287,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,NOX,pm25,er_visits,0.001149,0.001149,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,NOX,pm25,heart_attacks,8.34e-05,8.34e-05,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas,NOX,pm25,hospital_admissions,0.0010395,0.0010395,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,NOX,pm25,lost_work_days,0.154,0.154,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas,NOX,pm25,lung_cancers,9.08e-05,9.08e-05,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas,NOX,pm25,new_asthma_cases,0.0031,0.0031,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,NOX,pm25,strokes,7.97e-05,7.97e-05,EPA NORTH region,strokes per short ton emitted
+oil and natural gas,PM,pm25,cardiac_arrests,0.000183,0.000183,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas,PM,pm25,deaths,0.0128,0.027,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,PM,pm25,er_visits,0.01024,0.01024,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,PM,pm25,heart_attacks,0.00077,0.00077,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas,PM,pm25,hospital_admissions,0.009292,0.009292,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,PM,pm25,lost_work_days,1.32,1.32,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas,PM,pm25,lung_cancers,0.00083,0.00083,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas,PM,pm25,new_asthma_cases,0.0259,0.0259,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,PM,pm25,strokes,0.000738,0.000738,EPA NORTH region,strokes per short ton emitted
+oil and natural gas,SO2,pm25,cardiac_arrests,3.75e-05,3.75e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas,SO2,pm25,deaths,0.00245,0.00525,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,SO2,pm25,er_visits,0.0021739999999999997,0.0021739999999999997,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,SO2,pm25,heart_attacks,0.000159,0.000159,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas,SO2,pm25,hospital_admissions,0.001909,0.001909,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,SO2,pm25,lost_work_days,0.284,0.284,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas,SO2,pm25,lung_cancers,0.000167,0.000167,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas,SO2,pm25,new_asthma_cases,0.0057,0.0057,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas,SO2,pm25,strokes,0.000147,0.000147,EPA NORTH region,strokes per short ton emitted
+oil and natural gas,VOC,ozone,deaths,8.1e-06,0.000179,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas,VOC,ozone,er_visits,0.000413,,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas,VOC,ozone,hospital_admissions,2.09e-05,,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas,VOC,ozone,lost_school_days,0.0848,,EPA NORTH region,lost school days per short ton emitted
+oil and natural gas,VOC,ozone,new_asthma_cases,0.0013,,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas transmissions,NOX,ozone,deaths,0.000244,0.00539,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,NOX,ozone,er_visits,0.0123,,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas transmissions,NOX,ozone,hospital_admissions,0.00063,,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas transmissions,NOX,ozone,lost_school_days,2.55,,EPA NORTH region,lost school days per short ton emitted
+oil and natural gas transmissions,NOX,ozone,new_asthma_cases,0.0389,,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas transmissions,NOX,pm25,cardiac_arrests,2.76e-05,2.76e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas transmissions,NOX,pm25,deaths,0.0018,0.00385,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,NOX,pm25,er_visits,0.0015570000000000002,0.0015570000000000002,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas transmissions,NOX,pm25,heart_attacks,0.000112,0.000112,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas transmissions,NOX,pm25,hospital_admissions,0.0014190000000000001,0.0014190000000000001,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas transmissions,NOX,pm25,lost_work_days,0.211,0.211,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas transmissions,NOX,pm25,lung_cancers,0.000123,0.000123,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas transmissions,NOX,pm25,new_asthma_cases,0.00431,0.00431,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas transmissions,NOX,pm25,strokes,0.000107,0.000107,EPA NORTH region,strokes per short ton emitted
+oil and natural gas transmissions,PM,pm25,cardiac_arrests,0.00025,0.00025,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas transmissions,PM,pm25,deaths,0.0163,0.0347,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,PM,pm25,er_visits,0.01423,0.01423,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas transmissions,PM,pm25,heart_attacks,0.00101,0.00101,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas transmissions,PM,pm25,hospital_admissions,0.01256,0.01256,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas transmissions,PM,pm25,lost_work_days,1.91,1.91,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas transmissions,PM,pm25,lung_cancers,0.00112,0.00112,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas transmissions,PM,pm25,new_asthma_cases,0.0381,0.0381,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas transmissions,PM,pm25,strokes,0.000971,0.000971,EPA NORTH region,strokes per short ton emitted
+oil and natural gas transmissions,SO2,pm25,cardiac_arrests,6.15e-05,6.15e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+oil and natural gas transmissions,SO2,pm25,deaths,0.00395,0.0085,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,SO2,pm25,er_visits,0.00353,0.00353,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas transmissions,SO2,pm25,heart_attacks,0.000258,0.000258,EPA NORTH region,nonfatal heart attacks per short ton emitted
+oil and natural gas transmissions,SO2,pm25,hospital_admissions,0.0032259999999999997,0.0032259999999999997,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas transmissions,SO2,pm25,lost_work_days,0.476,0.476,EPA NORTH region,lost work days per short ton emitted
+oil and natural gas transmissions,SO2,pm25,lung_cancers,0.000273,0.000273,EPA NORTH region,new lung cancer cases per short ton emitted
+oil and natural gas transmissions,SO2,pm25,new_asthma_cases,0.00955,0.00955,EPA NORTH region,new asthma cases per short ton emitted
+oil and natural gas transmissions,SO2,pm25,strokes,0.000237,0.000237,EPA NORTH region,strokes per short ton emitted
+oil and natural gas transmissions,VOC,ozone,deaths,6.96e-05,0.00154,EPA NORTH region,premature deaths per short ton emitted
+oil and natural gas transmissions,VOC,ozone,er_visits,0.00356,,EPA NORTH region,emergency room visits per short ton emitted
+oil and natural gas transmissions,VOC,ozone,hospital_admissions,0.000179,,EPA NORTH region,hospital admissions per short ton emitted
+oil and natural gas transmissions,VOC,ozone,lost_school_days,0.739,,EPA NORTH region,lost school days per short ton emitted
+oil and natural gas transmissions,VOC,ozone,new_asthma_cases,0.0113,,EPA NORTH region,new asthma cases per short ton emitted
+paint stripping / misc surface coating,VOC,ozone,deaths,3.22e-05,0.000711,EPA NORTH region,premature deaths per short ton emitted
+paint stripping / misc surface coating,VOC,ozone,er_visits,0.00174,,EPA NORTH region,emergency room visits per short ton emitted
+paint stripping / misc surface coating,VOC,ozone,hospital_admissions,8.44e-05,,EPA NORTH region,hospital admissions per short ton emitted
+paint stripping / misc surface coating,VOC,ozone,lost_school_days,0.36,,EPA NORTH region,lost school days per short ton emitted
+paint stripping / misc surface coating,VOC,ozone,new_asthma_cases,0.00552,,EPA NORTH region,new asthma cases per short ton emitted
+primary copper smelting,NOX,ozone,deaths,0.000379,0.00838,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,NOX,ozone,er_visits,0.0187,,EPA NORTH region,emergency room visits per short ton emitted
+primary copper smelting,NOX,ozone,hospital_admissions,0.000951,,EPA NORTH region,hospital admissions per short ton emitted
+primary copper smelting,NOX,ozone,lost_school_days,3.78,,EPA NORTH region,lost school days per short ton emitted
+primary copper smelting,NOX,ozone,new_asthma_cases,0.0579,,EPA NORTH region,new asthma cases per short ton emitted
+primary copper smelting,SO2,pm25,cardiac_arrests,6.2e-05,6.2e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+primary copper smelting,SO2,pm25,deaths,0.00418,0.00893,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,SO2,pm25,er_visits,0.00366,0.00366,EPA NORTH region,emergency room visits per short ton emitted
+primary copper smelting,SO2,pm25,heart_attacks,0.000268,0.000268,EPA NORTH region,nonfatal heart attacks per short ton emitted
+primary copper smelting,SO2,pm25,hospital_admissions,0.0031859999999999996,0.0031859999999999996,EPA NORTH region,hospital admissions per short ton emitted
+primary copper smelting,SO2,pm25,lost_work_days,0.465,0.465,EPA NORTH region,lost work days per short ton emitted
+primary copper smelting,SO2,pm25,lung_cancers,0.000279,0.000279,EPA NORTH region,new lung cancer cases per short ton emitted
+primary copper smelting,SO2,pm25,new_asthma_cases,0.00914,0.00914,EPA NORTH region,new asthma cases per short ton emitted
+primary copper smelting,SO2,pm25,strokes,0.000244,0.000244,EPA NORTH region,strokes per short ton emitted
+primary copper smelting,VOC,ozone,deaths,3.27e-05,0.000722,EPA NORTH region,premature deaths per short ton emitted
+primary copper smelting,VOC,ozone,er_visits,0.00163,,EPA NORTH region,emergency room visits per short ton emitted
+primary copper smelting,VOC,ozone,hospital_admissions,8.04e-05,,EPA NORTH region,hospital admissions per short ton emitted
+primary copper smelting,VOC,ozone,lost_school_days,0.332,,EPA NORTH region,lost school days per short ton emitted
+primary copper smelting,VOC,ozone,new_asthma_cases,0.00506,,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,NH3,pm25,cardiac_arrests,8.32e-05,8.32e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+pulp and paper,NH3,pm25,deaths,0.00548,0.0115,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NH3,pm25,er_visits,0.00421,0.00421,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,NH3,pm25,heart_attacks,0.000355,0.000355,EPA NORTH region,nonfatal heart attacks per short ton emitted
+pulp and paper,NH3,pm25,hospital_admissions,0.0038970000000000003,0.0038970000000000003,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,NH3,pm25,lost_work_days,0.603,0.603,EPA NORTH region,lost work days per short ton emitted
+pulp and paper,NH3,pm25,lung_cancers,0.000376,0.000376,EPA NORTH region,new lung cancer cases per short ton emitted
+pulp and paper,NH3,pm25,new_asthma_cases,0.0117,0.0117,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,NH3,pm25,strokes,0.000333,0.000333,EPA NORTH region,strokes per short ton emitted
+pulp and paper,NOX,ozone,deaths,0.000249,0.0055,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NOX,ozone,er_visits,0.0124,,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,NOX,ozone,hospital_admissions,0.000644,,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,NOX,ozone,lost_school_days,2.58,,EPA NORTH region,lost school days per short ton emitted
+pulp and paper,NOX,ozone,new_asthma_cases,0.0392,,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,NOX,pm25,cardiac_arrests,1.71e-05,1.71e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+pulp and paper,NOX,pm25,deaths,0.00109,0.00232,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,NOX,pm25,er_visits,0.0009289999999999999,0.0009289999999999999,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,NOX,pm25,heart_attacks,6.93e-05,6.93e-05,EPA NORTH region,nonfatal heart attacks per short ton emitted
+pulp and paper,NOX,pm25,hospital_admissions,0.0008500999999999999,0.0008500999999999999,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,NOX,pm25,lost_work_days,0.13,0.13,EPA NORTH region,lost work days per short ton emitted
+pulp and paper,NOX,pm25,lung_cancers,7.66e-05,7.66e-05,EPA NORTH region,new lung cancer cases per short ton emitted
+pulp and paper,NOX,pm25,new_asthma_cases,0.00254,0.00254,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,NOX,pm25,strokes,6.67e-05,6.67e-05,EPA NORTH region,strokes per short ton emitted
+pulp and paper,PM,pm25,cardiac_arrests,0.000373,0.000373,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+pulp and paper,PM,pm25,deaths,0.023,0.0488,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,PM,pm25,er_visits,0.020409999999999998,0.020409999999999998,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,PM,pm25,heart_attacks,0.00146,0.00146,EPA NORTH region,nonfatal heart attacks per short ton emitted
+pulp and paper,PM,pm25,hospital_admissions,0.01848,0.01848,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,PM,pm25,lost_work_days,2.97,2.97,EPA NORTH region,lost work days per short ton emitted
+pulp and paper,PM,pm25,lung_cancers,0.00167,0.00167,EPA NORTH region,new lung cancer cases per short ton emitted
+pulp and paper,PM,pm25,new_asthma_cases,0.0584,0.0584,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,PM,pm25,strokes,0.00141,0.00141,EPA NORTH region,strokes per short ton emitted
+pulp and paper,SO2,pm25,cardiac_arrests,4.48e-05,4.48e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+pulp and paper,SO2,pm25,deaths,0.00289,0.00616,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,SO2,pm25,er_visits,0.002452,0.002452,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,SO2,pm25,heart_attacks,0.000187,0.000187,EPA NORTH region,nonfatal heart attacks per short ton emitted
+pulp and paper,SO2,pm25,hospital_admissions,0.002247,0.002247,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,SO2,pm25,lost_work_days,0.339,0.339,EPA NORTH region,lost work days per short ton emitted
+pulp and paper,SO2,pm25,lung_cancers,0.000201,0.000201,EPA NORTH region,new lung cancer cases per short ton emitted
+pulp and paper,SO2,pm25,new_asthma_cases,0.00665,0.00665,EPA NORTH region,new asthma cases per short ton emitted
+pulp and paper,SO2,pm25,strokes,0.000176,0.000176,EPA NORTH region,strokes per short ton emitted
+pulp and paper,VOC,ozone,deaths,2.31e-05,0.000511,EPA NORTH region,premature deaths per short ton emitted
+pulp and paper,VOC,ozone,er_visits,0.00121,,EPA NORTH region,emergency room visits per short ton emitted
+pulp and paper,VOC,ozone,hospital_admissions,6.01e-05,,EPA NORTH region,hospital admissions per short ton emitted
+pulp and paper,VOC,ozone,lost_school_days,0.252,,EPA NORTH region,lost school days per short ton emitted
+pulp and paper,VOC,ozone,new_asthma_cases,0.00386,,EPA NORTH region,new asthma cases per short ton emitted
+refineries,NH3,pm25,cardiac_arrests,0.000199,0.000199,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+refineries,NH3,pm25,deaths,0.0123,0.0265,EPA NORTH region,premature deaths per short ton emitted
+refineries,NH3,pm25,er_visits,0.01151,0.01151,EPA NORTH region,emergency room visits per short ton emitted
+refineries,NH3,pm25,heart_attacks,0.000794,0.000794,EPA NORTH region,nonfatal heart attacks per short ton emitted
+refineries,NH3,pm25,hospital_admissions,0.010011,0.010011,EPA NORTH region,hospital admissions per short ton emitted
+refineries,NH3,pm25,lost_work_days,1.59,1.59,EPA NORTH region,lost work days per short ton emitted
+refineries,NH3,pm25,lung_cancers,0.000878,0.000878,EPA NORTH region,new lung cancer cases per short ton emitted
+refineries,NH3,pm25,new_asthma_cases,0.032,0.032,EPA NORTH region,new asthma cases per short ton emitted
+refineries,NH3,pm25,strokes,0.000748,0.000748,EPA NORTH region,strokes per short ton emitted
+refineries,NOX,ozone,deaths,0.000237,0.00523,EPA NORTH region,premature deaths per short ton emitted
+refineries,NOX,ozone,er_visits,0.0124,,EPA NORTH region,emergency room visits per short ton emitted
+refineries,NOX,ozone,hospital_admissions,0.000617,,EPA NORTH region,hospital admissions per short ton emitted
+refineries,NOX,ozone,lost_school_days,2.55,,EPA NORTH region,lost school days per short ton emitted
+refineries,NOX,ozone,new_asthma_cases,0.039,,EPA NORTH region,new asthma cases per short ton emitted
+refineries,NOX,pm25,cardiac_arrests,4.15e-05,4.15e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+refineries,NOX,pm25,deaths,0.00263,0.00562,EPA NORTH region,premature deaths per short ton emitted
+refineries,NOX,pm25,er_visits,0.002362,0.002362,EPA NORTH region,emergency room visits per short ton emitted
+refineries,NOX,pm25,heart_attacks,0.000167,0.000167,EPA NORTH region,nonfatal heart attacks per short ton emitted
+refineries,NOX,pm25,hospital_admissions,0.002092,0.002092,EPA NORTH region,hospital admissions per short ton emitted
+refineries,NOX,pm25,lost_work_days,0.325,0.325,EPA NORTH region,lost work days per short ton emitted
+refineries,NOX,pm25,lung_cancers,0.000185,0.000185,EPA NORTH region,new lung cancer cases per short ton emitted
+refineries,NOX,pm25,new_asthma_cases,0.00646,0.00646,EPA NORTH region,new asthma cases per short ton emitted
+refineries,NOX,pm25,strokes,0.000159,0.000159,EPA NORTH region,strokes per short ton emitted
+refineries,PM,pm25,cardiac_arrests,0.000513,0.000513,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+refineries,PM,pm25,deaths,0.032,0.0694,EPA NORTH region,premature deaths per short ton emitted
+refineries,PM,pm25,er_visits,0.03027,0.03027,EPA NORTH region,emergency room visits per short ton emitted
+refineries,PM,pm25,heart_attacks,0.00201,0.00201,EPA NORTH region,nonfatal heart attacks per short ton emitted
+refineries,PM,pm25,hospital_admissions,0.02502,0.02502,EPA NORTH region,hospital admissions per short ton emitted
+refineries,PM,pm25,lost_work_days,4.19,4.19,EPA NORTH region,lost work days per short ton emitted
+refineries,PM,pm25,lung_cancers,0.00226,0.00226,EPA NORTH region,new lung cancer cases per short ton emitted
+refineries,PM,pm25,new_asthma_cases,0.0826,0.0826,EPA NORTH region,new asthma cases per short ton emitted
+refineries,PM,pm25,strokes,0.00192,0.00192,EPA NORTH region,strokes per short ton emitted
+refineries,SO2,pm25,cardiac_arrests,7.75e-05,7.75e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+refineries,SO2,pm25,deaths,0.00494,0.0106,EPA NORTH region,premature deaths per short ton emitted
+refineries,SO2,pm25,er_visits,0.00449,0.00449,EPA NORTH region,emergency room visits per short ton emitted
+refineries,SO2,pm25,heart_attacks,0.000321,0.000321,EPA NORTH region,nonfatal heart attacks per short ton emitted
+refineries,SO2,pm25,hospital_admissions,0.004044,0.004044,EPA NORTH region,hospital admissions per short ton emitted
+refineries,SO2,pm25,lost_work_days,0.604,0.604,EPA NORTH region,lost work days per short ton emitted
+refineries,SO2,pm25,lung_cancers,0.000344,0.000344,EPA NORTH region,new lung cancer cases per short ton emitted
+refineries,SO2,pm25,new_asthma_cases,0.0121,0.0121,EPA NORTH region,new asthma cases per short ton emitted
+refineries,SO2,pm25,strokes,0.000298,0.000298,EPA NORTH region,strokes per short ton emitted
+refineries,VOC,ozone,deaths,4.67e-05,0.00103,EPA NORTH region,premature deaths per short ton emitted
+refineries,VOC,ozone,er_visits,0.00254,,EPA NORTH region,emergency room visits per short ton emitted
+refineries,VOC,ozone,hospital_admissions,0.000122,,EPA NORTH region,hospital admissions per short ton emitted
+refineries,VOC,ozone,lost_school_days,0.525,,EPA NORTH region,lost school days per short ton emitted
+refineries,VOC,ozone,new_asthma_cases,0.00805,,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,NH3,pm25,cardiac_arrests,0.00032,0.00032,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+residential woodstoves,NH3,pm25,deaths,0.0206,0.0436,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NH3,pm25,er_visits,0.0172,0.0172,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,NH3,pm25,heart_attacks,0.0013,0.0013,EPA NORTH region,nonfatal heart attacks per short ton emitted
+residential woodstoves,NH3,pm25,hospital_admissions,0.01692,0.01692,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,NH3,pm25,lost_work_days,2.43,2.43,EPA NORTH region,lost work days per short ton emitted
+residential woodstoves,NH3,pm25,lung_cancers,0.00144,0.00144,EPA NORTH region,new lung cancer cases per short ton emitted
+residential woodstoves,NH3,pm25,new_asthma_cases,0.0475,0.0475,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,NH3,pm25,strokes,0.00125,0.00125,EPA NORTH region,strokes per short ton emitted
+residential woodstoves,NOX,ozone,deaths,0.000135,0.00298,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NOX,ozone,er_visits,0.00702,,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,NOX,ozone,hospital_admissions,0.000354,,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,NOX,ozone,lost_school_days,1.42,,EPA NORTH region,lost school days per short ton emitted
+residential woodstoves,NOX,ozone,new_asthma_cases,0.0217,,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,NOX,pm25,cardiac_arrests,4.77e-05,4.77e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+residential woodstoves,NOX,pm25,deaths,0.00303,0.00644,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,NOX,pm25,er_visits,0.002638,0.002638,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,NOX,pm25,heart_attacks,0.000192,0.000192,EPA NORTH region,nonfatal heart attacks per short ton emitted
+residential woodstoves,NOX,pm25,hospital_admissions,0.002521,0.002521,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,NOX,pm25,lost_work_days,0.368,0.368,EPA NORTH region,lost work days per short ton emitted
+residential woodstoves,NOX,pm25,lung_cancers,0.000213,0.000213,EPA NORTH region,new lung cancer cases per short ton emitted
+residential woodstoves,NOX,pm25,new_asthma_cases,0.00722,0.00722,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,NOX,pm25,strokes,0.000185,0.000185,EPA NORTH region,strokes per short ton emitted
+residential woodstoves,PM,pm25,cardiac_arrests,0.000572,0.000572,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+residential woodstoves,PM,pm25,deaths,0.0362,0.0768,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,PM,pm25,er_visits,0.0311,0.0311,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,PM,pm25,heart_attacks,0.00227,0.00227,EPA NORTH region,nonfatal heart attacks per short ton emitted
+residential woodstoves,PM,pm25,hospital_admissions,0.03063,0.03063,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,PM,pm25,lost_work_days,4.44,4.44,EPA NORTH region,lost work days per short ton emitted
+residential woodstoves,PM,pm25,lung_cancers,0.00255,0.00255,EPA NORTH region,new lung cancer cases per short ton emitted
+residential woodstoves,PM,pm25,new_asthma_cases,0.0862,0.0862,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,PM,pm25,strokes,0.00221,0.00221,EPA NORTH region,strokes per short ton emitted
+residential woodstoves,SO2,pm25,cardiac_arrests,5.47e-05,5.47e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+residential woodstoves,SO2,pm25,deaths,0.00343,0.00734,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,SO2,pm25,er_visits,0.00312,0.00312,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,SO2,pm25,heart_attacks,0.00022,0.00022,EPA NORTH region,nonfatal heart attacks per short ton emitted
+residential woodstoves,SO2,pm25,hospital_admissions,0.0029159999999999998,0.0029159999999999998,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,SO2,pm25,lost_work_days,0.427,0.427,EPA NORTH region,lost work days per short ton emitted
+residential woodstoves,SO2,pm25,lung_cancers,0.000244,0.000244,EPA NORTH region,new lung cancer cases per short ton emitted
+residential woodstoves,SO2,pm25,new_asthma_cases,0.00837,0.00837,EPA NORTH region,new asthma cases per short ton emitted
+residential woodstoves,SO2,pm25,strokes,0.000211,0.000211,EPA NORTH region,strokes per short ton emitted
+residential woodstoves,VOC,ozone,deaths,7.88e-05,0.00174,EPA NORTH region,premature deaths per short ton emitted
+residential woodstoves,VOC,ozone,er_visits,0.0041,,EPA NORTH region,emergency room visits per short ton emitted
+residential woodstoves,VOC,ozone,hospital_admissions,0.000206,,EPA NORTH region,hospital admissions per short ton emitted
+residential woodstoves,VOC,ozone,lost_school_days,0.842,,EPA NORTH region,lost school days per short ton emitted
+residential woodstoves,VOC,ozone,new_asthma_cases,0.0129,,EPA NORTH region,new asthma cases per short ton emitted
+secondary lead smelters,NOX,ozone,deaths,0.000418,0.00923,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,NOX,ozone,er_visits,0.0232,,EPA NORTH region,emergency room visits per short ton emitted
+secondary lead smelters,NOX,ozone,hospital_admissions,0.00109,,EPA NORTH region,hospital admissions per short ton emitted
+secondary lead smelters,NOX,ozone,lost_school_days,4.84,,EPA NORTH region,lost school days per short ton emitted
+secondary lead smelters,NOX,ozone,new_asthma_cases,0.0736,,EPA NORTH region,new asthma cases per short ton emitted
+secondary lead smelters,NOX,pm25,cardiac_arrests,4.42e-05,4.42e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+secondary lead smelters,NOX,pm25,deaths,0.00271,0.00577,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,NOX,pm25,er_visits,0.002402,0.002402,EPA NORTH region,emergency room visits per short ton emitted
+secondary lead smelters,NOX,pm25,heart_attacks,0.000171,0.000171,EPA NORTH region,nonfatal heart attacks per short ton emitted
+secondary lead smelters,NOX,pm25,hospital_admissions,0.002188,0.002188,EPA NORTH region,hospital admissions per short ton emitted
+secondary lead smelters,NOX,pm25,lost_work_days,0.347,0.347,EPA NORTH region,lost work days per short ton emitted
+secondary lead smelters,NOX,pm25,lung_cancers,0.000198,0.000198,EPA NORTH region,new lung cancer cases per short ton emitted
+secondary lead smelters,NOX,pm25,new_asthma_cases,0.00667,0.00667,EPA NORTH region,new asthma cases per short ton emitted
+secondary lead smelters,NOX,pm25,strokes,0.000169,0.000169,EPA NORTH region,strokes per short ton emitted
+secondary lead smelters,SO2,pm25,cardiac_arrests,6.31e-05,6.31e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+secondary lead smelters,SO2,pm25,deaths,0.00402,0.00869,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,SO2,pm25,er_visits,0.0036899999999999997,0.0036899999999999997,EPA NORTH region,emergency room visits per short ton emitted
+secondary lead smelters,SO2,pm25,heart_attacks,0.000265,0.000265,EPA NORTH region,nonfatal heart attacks per short ton emitted
+secondary lead smelters,SO2,pm25,hospital_admissions,0.003562,0.003562,EPA NORTH region,hospital admissions per short ton emitted
+secondary lead smelters,SO2,pm25,lost_work_days,0.491,0.491,EPA NORTH region,lost work days per short ton emitted
+secondary lead smelters,SO2,pm25,lung_cancers,0.000279,0.000279,EPA NORTH region,new lung cancer cases per short ton emitted
+secondary lead smelters,SO2,pm25,new_asthma_cases,0.0101,0.0101,EPA NORTH region,new asthma cases per short ton emitted
+secondary lead smelters,SO2,pm25,strokes,0.000244,0.000244,EPA NORTH region,strokes per short ton emitted
+secondary lead smelters,VOC,ozone,deaths,4.7e-05,0.00104,EPA NORTH region,premature deaths per short ton emitted
+secondary lead smelters,VOC,ozone,er_visits,0.00249,,EPA NORTH region,emergency room visits per short ton emitted
+secondary lead smelters,VOC,ozone,hospital_admissions,0.000121,,EPA NORTH region,hospital admissions per short ton emitted
+secondary lead smelters,VOC,ozone,lost_school_days,0.541,,EPA NORTH region,lost school days per short ton emitted
+secondary lead smelters,VOC,ozone,new_asthma_cases,0.00829,,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,NH3,pm25,cardiac_arrests,0.000103,0.000103,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+synthetic organic chemical,NH3,pm25,deaths,0.00683,0.0147,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NH3,pm25,er_visits,0.00566,0.00566,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,NH3,pm25,heart_attacks,0.000433,0.000433,EPA NORTH region,nonfatal heart attacks per short ton emitted
+synthetic organic chemical,NH3,pm25,hospital_admissions,0.0053809999999999995,0.0053809999999999995,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,NH3,pm25,lost_work_days,0.779,0.779,EPA NORTH region,lost work days per short ton emitted
+synthetic organic chemical,NH3,pm25,lung_cancers,0.000457,0.000457,EPA NORTH region,new lung cancer cases per short ton emitted
+synthetic organic chemical,NH3,pm25,new_asthma_cases,0.016,0.016,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,NH3,pm25,strokes,0.000401,0.000401,EPA NORTH region,strokes per short ton emitted
+synthetic organic chemical,NOX,ozone,deaths,0.000236,0.00522,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NOX,ozone,er_visits,0.0118,,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,NOX,ozone,hospital_admissions,0.000612,,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,NOX,ozone,lost_school_days,2.5,,EPA NORTH region,lost school days per short ton emitted
+synthetic organic chemical,NOX,ozone,new_asthma_cases,0.0384,,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,NOX,pm25,cardiac_arrests,3.08e-05,3.08e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+synthetic organic chemical,NOX,pm25,deaths,0.00199,0.00424,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,NOX,pm25,er_visits,0.001685,0.001685,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,NOX,pm25,heart_attacks,0.000125,0.000125,EPA NORTH region,nonfatal heart attacks per short ton emitted
+synthetic organic chemical,NOX,pm25,hospital_admissions,0.0015789999999999999,0.0015789999999999999,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,NOX,pm25,lost_work_days,0.235,0.235,EPA NORTH region,lost work days per short ton emitted
+synthetic organic chemical,NOX,pm25,lung_cancers,0.000137,0.000137,EPA NORTH region,new lung cancer cases per short ton emitted
+synthetic organic chemical,NOX,pm25,new_asthma_cases,0.00485,0.00485,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,NOX,pm25,strokes,0.00012,0.00012,EPA NORTH region,strokes per short ton emitted
+synthetic organic chemical,PM,pm25,cardiac_arrests,0.00018,0.00018,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+synthetic organic chemical,PM,pm25,deaths,0.0118,0.0253,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,PM,pm25,er_visits,0.00988,0.00988,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,PM,pm25,heart_attacks,0.000748,0.000748,EPA NORTH region,nonfatal heart attacks per short ton emitted
+synthetic organic chemical,PM,pm25,hospital_admissions,0.009337999999999999,0.009337999999999999,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,PM,pm25,lost_work_days,1.38,1.38,EPA NORTH region,lost work days per short ton emitted
+synthetic organic chemical,PM,pm25,lung_cancers,0.000799,0.000799,EPA NORTH region,new lung cancer cases per short ton emitted
+synthetic organic chemical,PM,pm25,new_asthma_cases,0.0286,0.0286,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,PM,pm25,strokes,0.000701,0.000701,EPA NORTH region,strokes per short ton emitted
+synthetic organic chemical,SO2,pm25,cardiac_arrests,5.61e-05,5.61e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+synthetic organic chemical,SO2,pm25,deaths,0.00359,0.00773,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,SO2,pm25,er_visits,0.0032199999999999998,0.0032199999999999998,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,SO2,pm25,heart_attacks,0.00023,0.00023,EPA NORTH region,nonfatal heart attacks per short ton emitted
+synthetic organic chemical,SO2,pm25,hospital_admissions,0.0029300000000000003,0.0029300000000000003,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,SO2,pm25,lost_work_days,0.435,0.435,EPA NORTH region,lost work days per short ton emitted
+synthetic organic chemical,SO2,pm25,lung_cancers,0.000249,0.000249,EPA NORTH region,new lung cancer cases per short ton emitted
+synthetic organic chemical,SO2,pm25,new_asthma_cases,0.00895,0.00895,EPA NORTH region,new asthma cases per short ton emitted
+synthetic organic chemical,SO2,pm25,strokes,0.000217,0.000217,EPA NORTH region,strokes per short ton emitted
+synthetic organic chemical,VOC,ozone,deaths,2.28e-05,0.000504,EPA NORTH region,premature deaths per short ton emitted
+synthetic organic chemical,VOC,ozone,er_visits,0.00116,,EPA NORTH region,emergency room visits per short ton emitted
+synthetic organic chemical,VOC,ozone,hospital_admissions,5.89e-05,,EPA NORTH region,hospital admissions per short ton emitted
+synthetic organic chemical,VOC,ozone,lost_school_days,0.248,,EPA NORTH region,lost school days per short ton emitted
+synthetic organic chemical,VOC,ozone,new_asthma_cases,0.00381,,EPA NORTH region,new asthma cases per short ton emitted
+taconite mining,NOX,ozone,deaths,0.000198,0.00438,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,NOX,ozone,er_visits,0.00998,,EPA NORTH region,emergency room visits per short ton emitted
+taconite mining,NOX,ozone,hospital_admissions,0.00051,,EPA NORTH region,hospital admissions per short ton emitted
+taconite mining,NOX,ozone,lost_school_days,2.1,,EPA NORTH region,lost school days per short ton emitted
+taconite mining,NOX,ozone,new_asthma_cases,0.0321,,EPA NORTH region,new asthma cases per short ton emitted
+taconite mining,NOX,pm25,cardiac_arrests,1.3e-05,1.3e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+taconite mining,NOX,pm25,deaths,0.000838,0.00178,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,NOX,pm25,er_visits,0.000711,0.000711,EPA NORTH region,emergency room visits per short ton emitted
+taconite mining,NOX,pm25,heart_attacks,5.32e-05,5.32e-05,EPA NORTH region,nonfatal heart attacks per short ton emitted
+taconite mining,NOX,pm25,hospital_admissions,0.0006475,0.0006475,EPA NORTH region,hospital admissions per short ton emitted
+taconite mining,NOX,pm25,lost_work_days,0.0989,0.0989,EPA NORTH region,lost work days per short ton emitted
+taconite mining,NOX,pm25,lung_cancers,5.81e-05,5.81e-05,EPA NORTH region,new lung cancer cases per short ton emitted
+taconite mining,NOX,pm25,new_asthma_cases,0.00199,0.00199,EPA NORTH region,new asthma cases per short ton emitted
+taconite mining,NOX,pm25,strokes,5.09e-05,5.09e-05,EPA NORTH region,strokes per short ton emitted
+taconite mining,PM,pm25,cardiac_arrests,8.29e-05,8.29e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+taconite mining,PM,pm25,deaths,0.00558,0.0117,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,PM,pm25,er_visits,0.004540000000000001,0.004540000000000001,EPA NORTH region,emergency room visits per short ton emitted
+taconite mining,PM,pm25,heart_attacks,0.000356,0.000356,EPA NORTH region,nonfatal heart attacks per short ton emitted
+taconite mining,PM,pm25,hospital_admissions,0.004229999999999999,0.004229999999999999,EPA NORTH region,hospital admissions per short ton emitted
+taconite mining,PM,pm25,lost_work_days,0.597,0.597,EPA NORTH region,lost work days per short ton emitted
+taconite mining,PM,pm25,lung_cancers,0.000374,0.000374,EPA NORTH region,new lung cancer cases per short ton emitted
+taconite mining,PM,pm25,new_asthma_cases,0.0121,0.0121,EPA NORTH region,new asthma cases per short ton emitted
+taconite mining,PM,pm25,strokes,0.000335,0.000335,EPA NORTH region,strokes per short ton emitted
+taconite mining,SO2,pm25,cardiac_arrests,4.61e-05,4.61e-05,EPA NORTH region,out-of-hospital cardiac arrests per short ton emitted
+taconite mining,SO2,pm25,deaths,0.00296,0.00632,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,SO2,pm25,er_visits,0.002558,0.002558,EPA NORTH region,emergency room visits per short ton emitted
+taconite mining,SO2,pm25,heart_attacks,0.000191,0.000191,EPA NORTH region,nonfatal heart attacks per short ton emitted
+taconite mining,SO2,pm25,hospital_admissions,0.0023369999999999997,0.0023369999999999997,EPA NORTH region,hospital admissions per short ton emitted
+taconite mining,SO2,pm25,lost_work_days,0.349,0.349,EPA NORTH region,lost work days per short ton emitted
+taconite mining,SO2,pm25,lung_cancers,0.000205,0.000205,EPA NORTH region,new lung cancer cases per short ton emitted
+taconite mining,SO2,pm25,new_asthma_cases,0.00703,0.00703,EPA NORTH region,new asthma cases per short ton emitted
+taconite mining,SO2,pm25,strokes,0.00018,0.00018,EPA NORTH region,strokes per short ton emitted
+taconite mining,VOC,ozone,deaths,0.000128,0.00284,EPA NORTH region,premature deaths per short ton emitted
+taconite mining,VOC,ozone,er_visits,0.00639,,EPA NORTH region,emergency room visits per short ton emitted
+taconite mining,VOC,ozone,hospital_admissions,0.000325,,EPA NORTH region,hospital admissions per short ton emitted
+taconite mining,VOC,ozone,lost_school_days,1.34,,EPA NORTH region,lost school days per short ton emitted
+taconite mining,VOC,ozone,new_asthma_cases,0.0206,,EPA NORTH region,new asthma cases per short ton emitted

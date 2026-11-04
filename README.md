@@ -98,33 +98,49 @@ Everything links on **`registry_id`** — EPA's Facility Registry ID.
 | `rsei_facility_years` | TRI facility × year: RSEI score, cancer/non-cancer score, hazard | `build_rsei_indiana.py` |
 | `rsei_chemical_years` | TRI facility × chemical × year scores | `build_rsei_indiana.py` |
 | `impact_factors` | one published factor (social cost of carbon, value of a statistical life, removal cost, everyday-equivalence) with unit, dollar year and source | `build_impact_factors.py` |
-| `health_factors` | sector × pollutant × outcome: EPA premature deaths per ton (low, high) for Indiana | `build_impact_factors.py` |
+| `health_factors` | sector × pollutant × pathway × outcome: EPA cases per ton (low, high) for Indiana — deaths, lung cancers, heart attacks, strokes, asthma, ER visits, hospital admissions, lost work/school days | `build_impact_factors.py` |
 | `cpi` | year → Consumer Price Index, for converting dollars | `build_impact_factors.py` |
-| `facility_impacts` | facility (2023): estimated deaths, health and climate damage in dollars, cost to remove its CO2, everyday comparisons | `build_impacts_indiana.py` |
+| `facility_impacts` | facility (2023): estimated deaths and illnesses, health and climate damage in dollars, cost to remove its CO2, everyday comparisons | `build_impacts_indiana.py` |
+| `metadata` | source × fact (URL, data date, build date) | all |
 
 ### How the impact estimates work
 
 All dollars are 2024 dollars; every estimate has a low / central / high range.
 
-- **Health (deaths and dollars):** tons of fine particles (PM2.5), SO2, NOx, ammonia and VOCs
-  (NEI 2023) × EPA's *benefit-per-ton* estimates of premature deaths per ton for the
-  facility's industrial sector in Indiana (or EPA's North region). Covers deaths from fine-particle
-  and ozone pollution. Dollars = deaths × EPA's value of a statistical life ($7.4M in 2006 dollars,
-  $11.5M in 2024 dollars). Facilities outside EPA's 21 sectors use the Indiana "industrial
-  boilers" values (`health_sector_basis = 'proxy'`).
+- **Health (deaths, illness, dollars):** tons of fine particles (PM2.5), SO2, NOx, ammonia and VOCs
+  (NEI 2023) × EPA's *benefit-per-ton* estimates of cases per ton for the facility's industrial
+  sector in Indiana (or EPA's North region): premature deaths, lung cancers, nonfatal heart attacks,
+  strokes, cardiac arrests, new asthma cases, ER visits, hospital admissions, lost work and school
+  days. Covers fine-particle and ozone pollution. Dollars = deaths × EPA's value of a statistical
+  life ($7.4M in 2006 dollars, $11.5M in 2024 dollars). Facilities outside EPA's 21 sectors use the
+  Indiana "industrial boilers" values (`health_sector_basis = 'proxy'`).
 - **Climate:** each greenhouse gas (GHGRP 2023) × EPA's 2023 social cost of that gas
   ($204 per ton of CO2 in 2020 dollars at the central 2% rate; 2.5% and 1.5% give the low and high).
 - **Cost to reverse:** CO2-equivalent × the IPCC's projected cost of direct air capture at scale
   ($100–300 per ton); today's prices are higher.
 - **Everyday comparisons:** CO2-equivalent ÷ EPA's Greenhouse Gas Equivalencies factors
   (e.g. 4.29 tons per car per year).
+- **Climate deaths:** CO2-equivalent × the *mortality cost of carbon* from Bressler (2021,
+  Nature Communications): 2.26 × 10⁻⁴ expected heat-related deaths worldwide, 2020–2100, per ton
+  (one per 4,434 tons; range −1.71 to 6.78 × 10⁻⁴, with the negative low end floored at zero).
+  Counts heat deaths only — not disease, food supply, flooding or conflict.
+- **Death toll** (the map's single "deaths" number) = air-pollution deaths + climate deaths, i.e.
+  deaths linked to one year of a facility's pollution. Climate deaths are counted, not valued
+  again in dollars — EPA's social cost of carbon already includes them.
 
-**Not included:** toxic chemicals (TRI/RSEI) and water discharges have no accepted dollar-per-ton
-method; nonfatal illness (asthma, hospital visits) is left out, so health dollars are conservative.
+**Not included, and why:**
+- *Cancer and other harm from toxic chemicals (TRI/RSEI):* EPA models facility-level cancer risk
+  (AirToxScreen) but shares it only with state agencies; the public alternative, RSEI's
+  facility-by-neighborhood data, is 22 GB per year. An Indiana extract can be requested from EPA.
+- *Lead:* EPA's only valuation (2008 lead standard) gives statewide totals, not a per-ton value.
+- *Water and land discharges:* no accepted damage-per-pound method; shown as violations instead.
+- *Dollar cost of nonfatal illness:* illness is counted in cases, not dollars — EPA's illness dollar
+  tables document their dollar year inconsistently (2015 vs 2016 vs 2019). Deaths are most of
+  EPA's health dollars, so health dollars are slightly conservative.
+
 Facilities whose estimate rests on a value EPA flags as a possible outlier are marked in
 `epa_outlier_values`. Estimates are screening-level, for comparing facilities — not a measured count
 of deaths caused by any one plant.
-| `metadata` | source × fact (URL, data date, build date) | all |
 
 Example — Indiana's top toxic releasers in 2024, with their compliance status:
 
@@ -164,8 +180,10 @@ What the map can do:
 
 - **Dots or Heatmap** ("Show"). The heatmap glows where the chosen measure is concentrated and
   fades into clickable dots once you zoom in to town level.
-- **Rank by** estimated total harm ($), estimated deaths, climate damage ($), toxic releases (lbs)
-  or toxic risk score. Drives both the heatmap and the Top 20 list.
+- **Rank by** estimated total harm ($), estimated deaths (air pollution + climate), climate damage ($),
+  toxic releases (lbs) or toxic risk score. Drives both the heatmap and the Top 20 list.
+- **Running total** — the red box above the Top 20 list adds up the estimated deaths and damage for
+  every facility in view, and updates as you pan and zoom.
 - **Top 20 in view** — re-ranked every time you pan or zoom (all of Indiana zoomed out, a single
   neighborhood zoomed in). The 20 get larger dark dots; click a row to fly there and open it.
   The heatmap and Top 20 include every facility with data, whatever the "major only" filter says.

@@ -4,20 +4,28 @@ Estimate each Indiana facility's yearly harm in dollars, deaths and everyday ter
 Combines what facilities emit (NEI air pollutants, GHGRP greenhouse gases) with the
 published factors from build_impact_factors.py:
 
-  Health  = tons of PM2.5, SO2, NOx, NH3, VOC  x  EPA deaths-per-ton for the facility's
-            sector in Indiana  ->  estimated premature deaths;  x value of a statistical
+  Health  = tons of PM2.5, SO2, NOx, NH3, VOC  x  EPA cases-per-ton for the facility's
+            sector in Indiana  ->  estimated premature deaths and illnesses (lung cancers,
+            heart attacks, strokes, cardiac arrests, new asthma cases, ER visits, hospital
+            admissions, lost work and school days);  deaths x value of a statistical
             life  ->  dollars. Covers fine-particle and ozone pollution only (see below).
   Climate = tons of CO2, methane, nitrous oxide (+ other gases)  x  EPA social cost of
             each gas  ->  dollars of future climate damage.
   Reverse = tons CO2-equivalent  x  IPCC cost of removing CO2 from the air.
   Everyday comparisons = CO2-equivalent as cars, homes, gallons of gasoline, forest acres.
+  Climate deaths = tons CO2-equivalent  x  Bressler (2021) "mortality cost of carbon": expected
+            heat-related deaths worldwide, 2020-2100, per ton (low estimate floored at 0).
+  Total death toll = air-pollution deaths + climate deaths. (Dollars are not added again: EPA's
+            social cost of carbon already values climate deaths.)
 
 Every number is an estimate with a low / central / high range. "Central" health is the
 midpoint of EPA's low and high estimates; central climate uses EPA's central 2% rate.
 
-NOT included (no accepted per-ton dollar method): toxic chemicals (TRI/RSEI), water
-discharges, nonfatal illness (asthma, hospital visits -- EPA counts these, but they're a
-small share of the dollars), and harms outside these pollutants.
+NOT included: toxic chemicals (TRI/RSEI) -- EPA's facility-level cancer modeling isn't public,
+and RSEI's facility-by-neighborhood data is 22 GB a year; lead -- no per-ton valuation; water and
+land discharges -- no accepted damage-per-pound method; the dollar cost of nonfatal illness -- EPA's
+illness dollar values come in tables whose dollar year is inconsistently documented, so illness is
+counted in cases, not dollars (deaths are most of EPA's health dollars).
 
 Each facility is matched to one of EPA's 21 industrial sectors from its industry code
 (NAICS) and NEI source type; facilities that don't fit a sector (e.g. airports, factories
@@ -39,6 +47,10 @@ from common import DB_PATH, PROCESSED_DIR, connect, replace_table, set_metadata,
 
 YEAR = 2023   # newest year both NEI and GHGRP cover
 POLLUTANTS = {"PM": "pm25_tons", "SO2": "so2_tons", "NOX": "nox_tons", "NH3": "nh3_tons", "VOC": "voc_tons"}
+# What each pollutant turns into in the air: fine particles (pm25) and/or ozone
+PATHWAYS = {"PM": ["pm25"], "SO2": ["pm25"], "NH3": ["pm25"], "NOX": ["pm25", "ozone"], "VOC": ["ozone"]}
+ILLNESSES = ["lung_cancers", "heart_attacks", "strokes", "cardiac_arrests", "new_asthma_cases", "er_visits",
+             "hospital_admissions", "lost_work_days", "lost_school_days"]
 OTHER_GHG = ["hfc", "pfc", "sf6", "nf3", "other_fluorinated", "hfe", "short_lived", "other_ghg"]
 PROXY_SECTOR = "industrial boilers"
 SAME_SITE_KM = 1.0   # a GHG and an NEI record this close together with different IDs = same plant
@@ -92,8 +104,9 @@ def main():
     con.row_factory = sqlite3.Row
     try:
         f = {r["key"]: r["value"] for r in con.execute("SELECT key, value FROM impact_factors")}
-        hf = {(r["sector"], r["pollutant"], r["outcome"]): (r["deaths_per_ton_low"], r["deaths_per_ton_high"])
+        hf = {(r["sector"], r["pollutant"], r["pathway"], r["outcome"]): (r["cases_per_ton_low"], r["cases_per_ton_high"])
               for r in con.execute("SELECT * FROM health_factors")}
+        outcomes = sorted({o for (_, _, _, o) in hf})
         cpi = {r["year"]: r["cpi_u"] for r in con.execute("SELECT year, cpi_u FROM cpi")}
         nei = con.execute("SELECT * FROM nei_facilities").fetchall()
         # EPA's own "this value looks implausible" flags on the pollutants we use
@@ -129,24 +142,25 @@ def main():
         sector, basis = health_sector(r["naics"], r["source_type"], f"{r['facility_name']} {r['company'] or ''}")
         sector_counts[(sector, basis)] += 1
         fallbacks = []
-        deaths = [0.0, 0.0]
         for pol, col in POLLUTANTS.items():
             tons = r[col] or 0.0
             if not tons:
                 continue
             rows[k][col] += tons
-            outcomes = ["ozone_mortality"] if pol == "VOC" else ["pm25_mortality", "ozone_mortality"] if pol == "NOX" else ["pm25_mortality"]
-            for outcome in outcomes:
-                factor = hf.get((sector, pol, outcome))
-                if factor is None or factor[0] is None or factor[1] is None:
-                    factor = hf.get((PROXY_SECTOR, pol, outcome))   # sector has no value for this pollutant
-                    fallbacks.append(f"{pol}/{outcome.split('_')[0]}")
-                if factor is None:
-                    continue
-                deaths[0] += tons * factor[0]
-                deaths[1] += tons * factor[1]
-        rows[k]["deaths_low"] += deaths[0]
-        rows[k]["deaths_high"] += deaths[1]
+            for pathway in PATHWAYS[pol]:
+                for outcome in outcomes:
+                    factor = hf.get((sector, pol, pathway, outcome))
+                    if factor is None:
+                        # sector has no value for this pollutant: use Indiana industrial boilers
+                        factor = hf.get((PROXY_SECTOR, pol, pathway, outcome))
+                        if outcome == "deaths" and factor:
+                            fallbacks.append(f"{pol}/{pathway}")
+                    if factor is None:
+                        continue
+                    low = factor[0] or 0.0
+                    high = factor[1] if factor[1] is not None else low   # EPA gives some illnesses one estimate
+                    rows[k][f"{outcome}_low"] += tons * low
+                    rows[k][f"{outcome}_high"] += tons * high
         prev = info.get(k, {})
         # When several NEI records share one registry ID, keep the sector of the biggest emitter
         if not prev or (r["pm25_tons"] or 0) > prev.get("_pm", -1):
@@ -213,6 +227,8 @@ def main():
             "merged_records": i.get("merged_records"),
             **{col: v.get(col) or None for col in POLLUTANTS.values()},
             "deaths_low": d_lo, "deaths_central": d_mid, "deaths_high": d_hi,
+            # nonfatal illness, central estimate (midpoint of EPA low/high; usually identical)
+            **{ill: (v.get(f"{ill}_low", 0.0) + v.get(f"{ill}_high", 0.0)) / 2 for ill in ILLNESSES},
             "health_usd_low": d_lo * vsl, "health_usd_central": d_mid * vsl, "health_usd_high": d_hi * vsl,
             "co2e_t": co2e or None, "co2_t": v.get("co2_t") or None, "ch4_t": v.get("ch4_t") or None, "n2o_t": v.get("n2o_t") or None,
             "climate_usd_low": v.get("climate_usd_low", 0.0), "climate_usd_central": v.get("climate_usd_central", 0.0),
@@ -226,6 +242,10 @@ def main():
         for lvl in ("low", "central", "high"):
             row[f"total_usd_{lvl}"] = row[f"health_usd_{lvl}"] + row[f"climate_usd_{lvl}"]
         row["total_usd_per_day_central"] = row["total_usd_central"] / 365
+        # Climate deaths: worldwide, heat-related, spread over 2020-2100 (Bressler 2021)
+        for lvl in ("low", "central", "high"):
+            row[f"climate_deaths_{lvl}"] = max(0.0, co2e * f[f"mcc_{lvl}"])
+            row[f"total_deaths_{lvl}"] = row[f"deaths_{lvl}"] + row[f"climate_deaths_{lvl}"]
         out.append(row)
     out.sort(key=lambda r: -r["total_usd_central"])
 
@@ -234,6 +254,9 @@ def main():
     tot = lambda col: sum(r[col] or 0 for r in out)
     print(f"  {len(out):,} facilities with an estimate; Indiana totals ({YEAR}, {dollar_year}$):")
     print(f"    premature deaths: {tot('deaths_low'):,.0f} - {tot('deaths_high'):,.0f} (central {tot('deaths_central'):,.0f})")
+    print(f"    climate deaths (worldwide, 2020-2100): {tot('climate_deaths_low'):,.0f} - {tot('climate_deaths_high'):,.0f} "
+          f"(central {tot('climate_deaths_central'):,.0f}); total death toll central {tot('total_deaths_central'):,.0f}")
+    print("    illness: " + ", ".join(f"{ill.replace('_', ' ')} {tot(ill):,.0f}" for ill in ILLNESSES))
     print(f"    health damage: ${tot('health_usd_low') / 1e9:,.1f}B - ${tot('health_usd_high') / 1e9:,.1f}B")
     print(f"    climate damage: ${tot('climate_usd_low') / 1e9:,.1f}B - ${tot('climate_usd_high') / 1e9:,.1f}B (central ${tot('climate_usd_central') / 1e9:,.1f}B)")
     print("  top 8 by central estimated harm:")

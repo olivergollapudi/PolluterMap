@@ -131,8 +131,11 @@ def source_summaries(con):
     impacts = by_registry(con, """
         SELECT registry_id, total_usd_central, total_usd_low, total_usd_high, deaths_central, deaths_low, deaths_high,
                health_usd_central, climate_usd_central, climate_usd_low, climate_usd_high,
-               removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, epa_outlier_values
+               removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, epa_outlier_values,
+               lung_cancers, heart_attacks + strokes + cardiac_arrests, new_asthma_cases, er_visits + hospital_admissions,
+               total_deaths_central, total_deaths_low, total_deaths_high, climate_deaths_central
         FROM facility_impacts WHERE registry_id IS NOT NULL""")
+    death_rank = ranks({k: r[21] for k, r in impacts.items()})
     harm_rank = ranks({k: r[1] for k, r in impacts.items()})
     for k, r in impacts.items():
         extra[k].update({
@@ -144,6 +147,13 @@ def source_summaries(con):
             "removal_lo": r0(r[11]) or None, "removal_hi": r0(r[12]) or None,
             "eq_cars": r0(r[13]) or None, "eq_homes": r0(r[14]) or None, "eq_acres": r0(r[15]) or None,
             "harm_outlier": "Y" if r[16] else None, "harm_rank": harm_rank.get(k),
+            # nonfatal illness per year (rounded to 1 decimal; most small facilities are well under 1)
+            "ill_lung_cancer": round(r[17] or 0, 1) or None, "ill_heart_stroke": round(r[18] or 0, 1) or None,
+            "ill_asthma": round(r[19] or 0, 1) or None, "ill_hospital": round(r[20] or 0, 1) or None,
+            # total death toll = air-pollution deaths + climate deaths (worldwide, 2020-2100)
+            "total_deaths": round(r[21] or 0, 2) or None, "total_deaths_lo": round(r[22] or 0, 2),
+            "total_deaths_hi": round(r[23] or 0, 2) or None, "climate_deaths": round(r[24] or 0, 2) or None,
+            "death_rank": death_rank.get(k),
         })
     meta["impacts"] = {"year": int(imp_year), "dollar_year": int(imp_dollars), "ranked": len(harm_rank)}
 
