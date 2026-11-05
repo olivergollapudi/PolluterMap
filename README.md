@@ -261,10 +261,27 @@ Found while adding impact estimates:
 - **Split records again:** only 118 of 186 greenhouse-gas reporters share a Registry ID with their
   own air-emissions (NEI) record — e.g. the Gibson coal plant's two records have identical
   coordinates but different IDs. `build_impacts_indiana.py` merges records at the same location
-  (within 1 km) and notes it in `merged_records` (45 merges).
-- **EPA outlier flags:** EPA flags the PM2.5 value of six of Indiana's largest emitters (the big
-  steel mills and two coal plants) as a "National" outlier — unusually high compared with facilities
-  nationwide, which isn't necessarily wrong for plants this size. Those estimates are marked.
+  (within 1 km) and notes it in `merged_records` (40 merges, all checked against EPA's street
+  addresses). `SAME_PLANT` lists 13 more pairs checked by hand: some are farther apart because one
+  record's coordinates are off, and three sit within 1 km of a different company, which the location
+  rule would pick. `NOT_SAME_SITE` keeps two plants off a neighbor's record, and `SAME_SITE_NEI`
+  combines Alcoa Warrick's smelter and power plant, which share one greenhouse-gas report. A merged
+  row also gets the penalties filed under the IDs merged into it. None of this changes state
+  totals for deaths or dollars; it moves them between rows. Fourteen greenhouse-gas reporters still
+  have no linked air-pollution record, so they show no air deaths. Some of those are mostly methane,
+  but POET Shelbyville, Advanced Magnesium Alloys and Nestlé Anderson likely have air emissions that
+  are missing.
+- **Toxics and water reports in the mockup:** a report filed under a facility's own Registry ID is
+  used as is. Otherwise `export_mockup_data.py` looks within 3 km for a report whose name shares a
+  distinctive word (not the town name), and never uses a report twice, so some real matches are
+  missed in favor of never showing another company's data.
+- **EPA outlier flags:** EPA flags nine Indiana facilities' figures. Six are the PM2.5 values of big
+  steel mills and coal plants, over EPA's 500-ton "National" screening level. Those six rank in the
+  top 40 of about 78,000 US facilities, and their 2023 values are in line with or below the 2017 and
+  2020 NEI, so they look real rather than wrong; together they make up about half of Indiana's
+  air-pollution deaths. Of the other three, Scepter's ammonia is flagged high (it has risen each
+  inventory) and two VOC values are flagged low, so those two estimates may be too low. The map shows
+  the matching note (`outlier_note`).
 - **Social cost of carbon:** EPA's 2023 values are no longer used in federal rulemaking (2025),
   but remain the most recent peer-reviewed U.S. government estimate.
 - **Carbon-removal prices:** current market prices are higher than the IPCC's at-scale projection;

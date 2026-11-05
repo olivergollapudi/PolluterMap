@@ -54,6 +54,54 @@ ILLNESSES = ["lung_cancers", "heart_attacks", "strokes", "cardiac_arrests", "new
 OTHER_GHG = ["hfc", "pfc", "sf6", "nf3", "other_fluorinated", "hfe", "short_lived", "other_ghg"]
 PROXY_SECTOR = "industrial boilers"
 SAME_SITE_KM = 1.0   # a GHG and an NEI record this close together with different IDs = same plant
+# Plants whose GHG and NEI records are farther apart than that, checked by hand against the street
+# addresses in EPA's files: {GHG facility ID: NEI facility ID}. Deliberately NOT listed, because they
+# are different plants: Nucor Fastener / Nucor Vulcraft (St. Joe), Duke's power plant at Purdue / Purdue.
+SAME_PLANT = {
+    "1005602": "8199711",    # Steel Dynamics Structural & Rail, 2601 County Road 700 E, Columbia City
+    "1012923": "17996111",   # St. Paul compressor station / Rockies Express, 7791 N County Road 650 W
+    "1003691": "4554311",    # Newton County Landfill, 2266 E County Road 500 S, Brook
+    "1006783": "8198211",    # Tyson Fresh Meats, 2125 S County Road 125 W, Logansport
+    "1001155": "7972111",    # Aurorium (NEI still says Vertellus), 1500 S Tibbs Ave, Indianapolis
+    "1006058": "8207011",    # U.S. Gypsum, 11345 State Road 650, Shoals
+    "1005214": "4999311",    # Decatur Hills, 2090 S County Road 280 E, Greensburg
+    "1006000": "4552511",    # Naval Surface Warfare Center Crane, 300 State Road 361, Crane
+    "1003713": "4553211",    # Indiana University, Bloomington (same name, 1.2 km apart, addresses differ)
+    "1005820": "4746611",    # Centerpoint Landfill, Centerpoint (same name; the GHG record has no address)
+    # These three sit within SAME_SITE_KM of a different company, which the location rule would pick
+    "1002167": "4520511",    # Bartholomew County Landfill II, 811 E County Road 450 S (not AK Tube)
+    "1002875": "8089111",    # General Motors Bedford, 105 GM Dr (not Cap Group)
+    "1014580": "4025411",    # Azteca Milling, 15700 US Highway 41 N, Evansville (not Wansford rail yard)
+}
+# Within SAME_SITE_KM of another company's air record, but a different address, and they have no NEI
+# record of their own: Heritage-Crystal Clean (not Marathon), Farbest Foods (not OFS Brands).
+NOT_SAME_SITE = {"1012651", "1010674"}
+# One site reported as two NEI facilities: {NEI facility ID: the NEI facility to combine it with}.
+# Alcoa Warrick's single greenhouse-gas report covers both the smelter and its power plant (GHGRP
+# subparts D, electricity generation, and F, aluminum), so splitting the air records would leave
+# the power plant with no climate harm.
+SAME_SITE_NEI = {"8183111": "8181811"}   # Warrick Power Plant -> Alcoa Warrick LLC
+# PM2.5 values EPA flags as "National" outliers (over its 500-ton screening level), compared with the
+# 2017 and 2020 NEI. All six rank in the top 40 of about 78,000 US facilities in the 2023 NEI.
+#   Tons of PM2.5:                 2017   2020   2023
+OUTLIER_CHECKED = {
+    "7376511",   # Burns Harbor    3406   2825   3199
+    "8192011",   # Gary Works      1956   1605   2018
+    "7363111",   # Gibson          2146   1747   1125
+    "3986511",   # Indiana Harbor  1304   1167   1056
+    "8183111",   # Alcoa Warrick   1043    633    632
+    "7248511",   # Cayuga           633    593    587
+}
+
+
+def outlier_note(eis_id, flags):
+    """Plain-language note for a facility with a figure EPA flags. flags: e.g. ['PM25-PRI (National)']."""
+    if eis_id in OUTLIER_CHECKED:
+        return ("One of the largest sources of fine particles in the US. EPA flags its 2023 figure as unusually "
+                "high, but it is in line with or below what the plant reported in 2017 and 2020.")
+    if all(x.endswith("(Low)") for x in flags):
+        return "EPA flags one of this facility's emission figures as unusually low, so this estimate may be too low."
+    return "EPA flags one of this facility's emission figures as unusually high compared with facilities nationwide."
 
 
 def km_apart(lat1, lon1, lat2, lon2):
@@ -135,10 +183,21 @@ def main():
     def key_for(registry_id, fallback):
         return registry_id or fallback
 
+    # Which row each NEI facility belongs to
+    nei_keys = {r["eis_facility_id"]: key_for(r["registry_id"], f"nei:{r['eis_facility_id']}") for r in nei}
+    unknown = [e for e in (*SAME_PLANT.values(), *SAME_SITE_NEI, *SAME_SITE_NEI.values()) if e not in nei_keys]
+    if unknown:
+        sys.exit(f"ERROR: SAME_PLANT or SAME_SITE_NEI lists NEI facilities that aren't in the data: {unknown}")
+    # Registry IDs merged into a row, so that row also gets the penalties filed under them
+    merged_registries = defaultdict(set)
+    for from_id, to_id in SAME_SITE_NEI.items():
+        merged_registries[nei_keys[to_id]].add(nei_keys[from_id])
+        nei_keys[from_id] = nei_keys[to_id]
+
     # ---------------------------------------------------------------- health (NEI)
     sector_counts = defaultdict(int)
     for r in nei:
-        k = key_for(r["registry_id"], f"nei:{r['eis_facility_id']}")
+        k = nei_keys[r["eis_facility_id"]]
         sector, basis = health_sector(r["naics"], r["source_type"], f"{r['facility_name']} {r['company'] or ''}")
         sector_counts[(sector, basis)] += 1
         fallbacks = []
@@ -171,22 +230,30 @@ def main():
             info[k]["health_factor_fallbacks"] = ", ".join(sorted(set(fallbacks)))
         if outliers.get(r["eis_facility_id"]):
             info[k]["epa_outlier_values"] = "; ".join(outliers[r["eis_facility_id"]])
+            info[k]["outlier_note"] = outlier_note(r["eis_facility_id"], outliers[r["eis_facility_id"]])
 
     # ---------------------------------------------------------------- climate (GHGRP)
     # EPA often files one plant's air-pollution (NEI) and greenhouse-gas records under different
     # registry IDs. If a GHG facility's ID has no NEI record but an NEI facility sits at the same
-    # spot (within SAME_SITE_KM) with no GHG record yet, treat them as one plant.
-    nei_sites = [(key_for(r["registry_id"], f"nei:{r['eis_facility_id']}"), r["lat"], r["lon"]) for r in nei]
-    has_ghg, merged = set(), 0
+    # spot (within SAME_SITE_KM) with no GHG record yet, treat them as one plant. SAME_PLANT adds the
+    # pairs that are farther apart, usually because one record's coordinates are off.
+    nei_sites = [(nei_keys[r["eis_facility_id"]], r["lat"], r["lon"]) for r in nei]
+    has_ghg, merged, confirmed = {nei_keys[e] for e in SAME_PLANT.values()}, 0, 0
     for r in ghg:
         k = key_for(r["registry_id"], f"ghg:{r['ghg_facility_id']}")
-        if k not in info or "health_sector" not in info.get(k, {}):
+        if r["ghg_facility_id"] in SAME_PLANT:
+            k = nei_keys[SAME_PLANT[r["ghg_facility_id"]]]
+            confirmed += 1
+            info[k]["merged_records"] = f"GHG facility {r['ghg_facility_id']} (registry {r['registry_id']}) matched by address or name"
+            merged_registries[k].add(r["registry_id"])
+        elif r["ghg_facility_id"] not in NOT_SAME_SITE and (k not in info or "health_sector" not in info.get(k, {})):
             near = min(((km_apart(r["lat"], r["lon"], lat, lon), nk) for nk, lat, lon in nei_sites
                         if nk not in has_ghg), default=(float("inf"), None))
             if near[0] <= SAME_SITE_KM:
                 k = near[1]
                 merged += 1
                 info[k]["merged_records"] = f"GHG facility {r['ghg_facility_id']} (registry {r['registry_id']}) matched by location"
+                merged_registries[k].add(r["registry_id"])
         has_ghg.add(k)
         total = r[f"total_mt_co2e_{YEAR}"] or 0.0
         co2 = r[f"co2_mt_{YEAR}"] or 0.0
@@ -200,9 +267,12 @@ def main():
         for i, lvl in enumerate(("low", "central", "high")):
             rows[k][f"climate_usd_{lvl}"] += (co2 + other) * sc["co2"][i] + ch4_t * sc["ch4"][i] + n2o_t * sc["n2o"][i]
         prev = info.get(k, {})
-        info[k] = {**prev, "ghg_facility_id": r["ghg_facility_id"], "name": prev.get("name") or r["facility_name"],
+        # When several GHG reports land on one row, it is identified by the biggest
+        biggest = {"ghg_facility_id": r["ghg_facility_id"], "_ghg_t": total} if total >= prev.get("_ghg_t", -1) else {}
+        info[k] = {**prev, **biggest, "name": prev.get("name") or r["facility_name"],
                    "city": prev.get("city") or r["city"], "lat": prev.get("lat") or r["lat"], "lon": prev.get("lon") or r["lon"]}
-    print(f"  {merged} greenhouse-gas records merged into the air-pollution record at the same location")
+    print(f"  {merged} greenhouse-gas records merged into the air-pollution record at the same location, "
+          f"{confirmed} more from the checked list (SAME_PLANT)")
 
     # ---------------------------------------------------------------- combine
     out = []
@@ -212,6 +282,8 @@ def main():
         d_lo, d_hi = v.get("deaths_low", 0.0), v.get("deaths_high", 0.0)
         d_mid = (d_lo + d_hi) / 2
         co2e = v.get("co2e_t", 0.0)
+        penalties = [(echo[x]["penalties_5yr_usd"] or 0) + (echo[x]["federal_case_penalties_usd"] or 0)
+                     for x in {k} | merged_registries[k] if x in echo]
         row = {
             "registry_id": None if ":" in k else k,
             "in_echo": "Y" if e else "N",
@@ -224,6 +296,7 @@ def main():
             "health_sector": i.get("health_sector"), "health_sector_basis": i.get("health_sector_basis"),
             "health_factor_fallbacks": i.get("health_factor_fallbacks"),
             "epa_outlier_values": i.get("epa_outlier_values"),   # EPA flagged an input as a possible outlier
+            "outlier_note": i.get("outlier_note"),               # the same thing in plain language, for the map
             "merged_records": i.get("merged_records"),
             **{col: v.get(col) or None for col in POLLUTANTS.values()},
             "deaths_low": d_lo, "deaths_central": d_mid, "deaths_high": d_hi,
@@ -237,7 +310,7 @@ def main():
             "eq_cars": co2e / f["eq_car_year"], "eq_homes": co2e / f["eq_home_energy_year"],
             "eq_gallons_gasoline": co2e / f["eq_gallon_gasoline"], "eq_forest_acres": co2e / f["eq_forest_acre_year"],
             "eq_coal_plants": co2e / f["eq_coal_plant_year"],
-            "penalties_5yr_usd": ((e["penalties_5yr_usd"] or 0) + (e["federal_case_penalties_usd"] or 0)) if e else None,
+            "penalties_5yr_usd": sum(penalties) if penalties else None,
         }
         for lvl in ("low", "central", "high"):
             row[f"total_usd_{lvl}"] = row[f"health_usd_{lvl}"] + row[f"climate_usd_{lvl}"]
@@ -267,7 +340,7 @@ def main():
     cols = list(out[0].keys())
     types = {c: "TEXT" if c in ("registry_id", "in_echo", "facility_name", "city", "nei_eis_id", "ghg_facility_id",
                                 "health_sector", "health_sector_basis", "health_factor_fallbacks",
-                                "epa_outlier_values", "merged_records")
+                                "epa_outlier_values", "outlier_note", "merged_records")
              else "INTEGER" if c == "year" else "REAL" for c in cols}
     print("Writing:")
     write_csv(PROCESSED_DIR / "impacts_indiana_facilities.csv", cols, out)

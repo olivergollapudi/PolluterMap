@@ -466,7 +466,7 @@
       if (f.removal_lo) out.push(line("Cost to remove its CO2 from the air", `${money(f.removal_lo)}–${money(f.removal_hi)}`));
       if (f.eq_cars) out.push(line("Same CO2 as", `${big(f.eq_cars)} cars driven for a year, or ${big(f.eq_homes)} homes' energy use`));
       out.push(line("Penalties in the last 5 years", f.penalties_usd ? money(f.penalties_usd) : "$0 on this record"));
-      if (f.harm_outlier) out.push(note("EPA flags one of this facility's emission figures as unusually high compared with facilities nationwide."));
+      if (f.harm_outlier) out.push(note(f.harm_outlier));
       out.push(note("Screening estimates using EPA and IPCC factors, for comparing facilities. Covers deaths and illness from air pollution, and climate damage; toxic chemicals and water pollution aren't included."));
       return out;
     }

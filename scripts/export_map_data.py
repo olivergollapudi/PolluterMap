@@ -131,7 +131,7 @@ def source_summaries(con):
     impacts = by_registry(con, """
         SELECT registry_id, total_usd_central, total_usd_low, total_usd_high, deaths_central, deaths_low, deaths_high,
                health_usd_central, climate_usd_central, climate_usd_low, climate_usd_high,
-               removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, epa_outlier_values,
+               removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, outlier_note,
                lung_cancers, heart_attacks + strokes + cardiac_arrests, new_asthma_cases, er_visits + hospital_admissions,
                total_deaths_central, total_deaths_low, total_deaths_high, climate_deaths_central
         FROM facility_impacts WHERE registry_id IS NOT NULL""")
@@ -146,7 +146,7 @@ def source_summaries(con):
             "climate_lo": r0(r[9]) or None, "climate_hi": r0(r[10]) or None,
             "removal_lo": r0(r[11]) or None, "removal_hi": r0(r[12]) or None,
             "eq_cars": r0(r[13]) or None, "eq_homes": r0(r[14]) or None, "eq_acres": r0(r[15]) or None,
-            "harm_outlier": "Y" if r[16] else None, "harm_rank": harm_rank.get(k),
+            "harm_outlier": r[16], "harm_rank": harm_rank.get(k),
             # nonfatal illness per year (rounded to 1 decimal; most small facilities are well under 1)
             "ill_lung_cancer": round(r[17] or 0, 1) or None, "ill_heart_stroke": round(r[18] or 0, 1) or None,
             "ill_asthma": round(r[19] or 0, 1) or None, "ill_hospital": round(r[20] or 0, 1) or None,
