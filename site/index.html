@@ -3,567 +3,855 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Indiana Polluter Map</title>
-  <!-- MapLibre GL JS: free, open-source map library. A copy (version 4.7.1, from the official npm
-       package) is stored in vendor/, so the page doesn't depend on an outside download site. -->
+  <title>Indiana's Deadliest Polluters</title>
+  <meta name="description" content="An estimated 26,000 deaths a year are linked to pollution from Indiana's regulated polluters. See which ones, near you, from public EPA data.">
+  <meta property="og:title" content="Indiana's Deadliest Polluters"><meta property="og:type" content="website">
+  <meta property="og:description" content="Which Indiana polluters are linked to the most deaths, and what's near you. Built from public EPA data.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
+  <!-- Indiana's Deadliest Polluters. Data: site-data.js, zips.js and towns.js, made by
+       scripts/export_site_data.py. The older all-facilities map is in classic/. -->
   <link rel="stylesheet" href="vendor/maplibre-gl-4.7.1/maplibre-gl.css">
   <script src="vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
+  <script src="site-data.js"></script>
+  <script src="zips.js"></script>
+  <script src="towns.js"></script>
   <style>
-    html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #fff; }
+    /* Dark theme: the numbers should hit hard. Colors are set once here. */
+    :root {
+      --bg: #0d0e11; --panel: #15171c; --panel-2: #1c1f26; --line: #2a2e37; --ink: #f3efe8; --muted: #9b968e;
+      --red: #ff4b3a; --red-deep: #c4281b; --red-glow: rgba(255, 75, 58, .18);
+      --air: #ff4b3a; --toxic: #b48cff; --climate: #f2a65a;
+      --hover: rgba(255, 255, 255, .03); --sel: rgba(255, 255, 255, .05); --meter: rgba(255, 255, 255, .28);
+      --map-bg: #111318; --attrib-bg: rgba(13, 14, 17, .7); --icon-filter: invert(1); --shadow: rgba(0, 0, 0, .5);
+      color-scheme: dark;
+    }
+    /* Alternative color schemes, picked with ?theme=... (see THEMES in the script) */
+    :root[data-theme="paper"] {
+      --bg: #faf7f2; --panel: #ffffff; --panel-2: #f1ede6; --line: #e6e0d6; --ink: #1c1a17; --muted: #6f6a62;
+      --red: #b3261e; --red-deep: #8f1d16; --red-glow: rgba(179, 38, 30, .15);
+      --air: #b3261e; --toxic: #7a4fc4; --climate: #d98a3d;
+      --hover: rgba(0, 0, 0, .025); --sel: rgba(179, 38, 30, .07); --meter: rgba(0, 0, 0, .22);
+      --map-bg: #efece6; --attrib-bg: rgba(255, 255, 255, .8); --icon-filter: none; --shadow: rgba(0, 0, 0, .15);
+      color-scheme: light;
+    }
+    :root[data-theme="slate"] {
+      --bg: #0f1620; --panel: #141d29; --panel-2: #1b2634; --line: #253244; --ink: #e8edf3; --muted: #8b99ab;
+      --red: #ffb020; --red-deep: #b9740a; --red-glow: rgba(255, 176, 32, .18);
+      --air: #ffb020; --toxic: #a78bfa; --climate: #60a5fa;
+      --map-bg: #111a24; --attrib-bg: rgba(15, 22, 32, .75);
+    }
+    :root[data-theme="mist"] {
+      --bg: #eef1f3; --panel: #f9fafb; --panel-2: #e5e9ec; --line: #d5dbe0; --ink: #18212b; --muted: #66717d;
+      --red: #9c1f5a; --red-deep: #7a1546; --red-glow: rgba(156, 31, 90, .15);
+      --air: #9c1f5a; --toxic: #5b4bb7; --climate: #e08e2b;
+      --hover: rgba(0, 0, 0, .025); --sel: rgba(156, 31, 90, .07); --meter: rgba(0, 0, 0, .2);
+      --map-bg: #e9edf0; --attrib-bg: rgba(255, 255, 255, .8); --icon-filter: none; --shadow: rgba(0, 0, 0, .15);
+      color-scheme: light;
+    }
+    /* White-background schemes: same page, different accent */
+    :root[data-theme^="white"] {
+      --bg: #ffffff; --panel: #ffffff; --panel-2: #f3f4f6; --line: #e5e7eb; --ink: #111827; --muted: #6b7280;
+      --toxic: #7c3aed;
+      --hover: rgba(0, 0, 0, .025); --meter: rgba(0, 0, 0, .18);
+      --map-bg: #f5f5f3; --attrib-bg: rgba(255, 255, 255, .85); --icon-filter: none; --shadow: rgba(0, 0, 0, .12);
+      color-scheme: light;
+    }
+    :root[data-theme="white-crimson"] { --red: #c8102e; --red-deep: #a00d25; --air: #c8102e; --climate: #f2a7ae; --sel: rgba(200, 16, 46, .06); }
+    :root[data-theme="white-orange"] { --red: #c2410c; --red-deep: #9a3412; --air: #c2410c; --climate: #fdba74; --sel: rgba(194, 65, 12, .06); }
+    :root[data-theme="white-navy"] { --red: #1e3a8a; --red-deep: #1e3a8a; --air: #1e3a8a; --climate: #93c5fd; --sel: rgba(30, 58, 138, .06); }
+    :root[data-theme="white-mono"] { --red: #111827; --red-deep: #111827; --air: #111827; --toxic: #6b7280; --climate: #d1d5db; --sel: rgba(0, 0, 0, .05); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+    a { color: var(--ink); text-decoration-color: var(--muted); text-underline-offset: 3px; }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+    header { display: flex; align-items: center; gap: 24px; padding: 12px 24px; background: var(--bg); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+    header .logo { font-weight: 900; font-size: 18px; color: var(--ink); text-decoration: none; letter-spacing: -.01em; }
+    header .logo span { color: var(--red); }
+    header nav a { color: var(--muted); text-decoration: none; margin-right: 16px; font-size: 15px; }
+    header nav a:hover, header nav a.active { color: var(--ink); }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 64px; }
+    .eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    .key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+    .key.a { background: var(--air); } .key.t { background: var(--toxic); } .key.b { background: var(--climate); }
+    .split-bar { display: flex; height: 10px; background: var(--panel-2); border-radius: 5px; overflow: hidden; gap: 2px; }
+    .split-bar i { display: block; height: 100%; background: var(--air); min-width: 0; }
+    .split-bar i.t { background: var(--toxic); } .split-bar i.c { background: var(--climate); }
+    .chips { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .chips b { color: var(--muted); font-weight: 700; }
+    .key { width: 7px; height: 7px; margin-right: 5px; vertical-align: 1px; }
+
+    /* ---------- home: the map and leaderboard together ---------- */
+    #screen-home { position: fixed; top: 53px; bottom: 0; left: 0; right: 0; }
+    #screen-home.active { display: flex; }
+    #side { width: 440px; flex: none; max-width: 100%; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line); }
+    .map-wrap { flex: 1; position: relative; min-width: 0; background: var(--map-bg); }
     #map { position: absolute; inset: 0; }
-    .panel {
-      position: absolute; z-index: 1; background: #fff; border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 14px;
+    .total { padding: 22px 20px 18px; border-bottom: 1px solid var(--line); }
+    .total .big { font-size: 56px; line-height: 1; font-weight: 900; color: var(--ink); margin: 6px 0 4px; }
+    .total .big small { display: block; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--red); margin-top: 8px; }
+    .total .split-bar { margin: 14px 0 0; height: 6px; }
+    .stats-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); margin-top: 16px; }
+    .stats-row > div { padding: 0 12px; border-left: 1px solid var(--line); min-width: 0; }
+    .stats-row > div:first-child { padding-left: 0; border-left: 0; }
+    .stats-row b { display: block; font-size: 20px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
+    .stats-row > div:last-child b { white-space: normal; overflow-wrap: anywhere; }
+    .stats-row > div:first-child b { font-size: 26px; }
+    .stats-row span { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+    .total .worst { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .total .worst a { font-weight: 700; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--muted); }
+    .controls { padding: 14px 20px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+    .in-search { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: grid; place-items: center;
+      background: none; border: 0; border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 14px; }
+    .in-search:hover { color: var(--ink); background: var(--panel-2); }
+    .in-search[hidden] { display: none; }
+    .rank-by { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .rank-by select { font: inherit; font-size: 12px; font-weight: 700; color: var(--ink); background: none; border: 0; padding: 0 2px; cursor: pointer; }
+    .rank-by select option { background: var(--panel); }
+    .search { position: relative; }
+    .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .controls input { font: inherit; font-size: 15px; padding: 10px 40px 10px 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
+    .controls input:focus { outline: none; border-color: var(--muted); }
+    .board { flex: 1; min-height: 0; overflow-y: auto; }
+    .list-info { padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .list-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .killer { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 20px; border-top: 1px solid var(--line); cursor: pointer; align-items: center; }
+    .killer:hover, .killer:focus-visible { background: var(--hover); outline: none; }
+    .killer.on { background: var(--sel); box-shadow: inset 2px 0 0 var(--ink); }
+    .killer .rk { font-size: 15px; font-weight: 800; color: var(--muted); text-align: right; }
+    .killer .nm { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+    .killer .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .killer .meter { grid-column: 2 / 4; height: 2px; background: var(--panel-2); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .killer .meter i { display: block; height: 100%; background: var(--meter); border-radius: 1px; }
+    .killer .nums { text-align: right; white-space: nowrap; }
+    .killer .nums b { color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1.05; display: block; }
+    .killer .nums span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .btn { background: var(--red); color: #fff; border: 0; border-radius: 10px; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn.secondary { background: none; color: var(--ink); border: 1px solid var(--line); }
+    .more { display: block; margin: 14px auto 24px; }
+    .more[hidden] { display: none; }
+    .none { padding: 12px 20px; color: var(--muted); font-size: 14px; }
+    .rank-badge { min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px; background: var(--bg); border: 1.5px solid var(--red); color: var(--ink); font: 800 11px/19px system-ui, -apple-system, sans-serif; text-align: center; cursor: pointer; }
+    .maplibregl-popup { z-index: 30; }   /* above the numbered rank badges (z-index up to 20) */
+    .maplibregl-popup-content { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: 0 10px 30px var(--shadow); }
+    .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--panel); }
+    .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--panel); }
+    .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--panel); }
+    .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--panel); }
+    .maplibregl-popup-close-button { color: var(--muted); font-size: 18px; padding: 2px 8px; }
+    .maplibregl-ctrl-group { background: var(--panel); border: 1px solid var(--line); }
+    .maplibregl-ctrl-group button + button { border-top-color: var(--line); }
+    .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: var(--icon-filter); }
+    .maplibregl-ctrl-attrib { background: var(--attrib-bg) !important; color: var(--muted); }
+    .maplibregl-ctrl-attrib a { color: var(--muted); }
+    .hint { font-size: 12px; color: var(--muted); }
+    .hint[hidden] { display: none; }
+    .pop h4 { margin: 0 0 2px; font-size: 15px; padding-right: 16px; }
+    .pop .meta { font-size: 12px; color: var(--muted); }
+    .pop .big { font-size: 30px; font-weight: 900; line-height: 1.1; margin-top: 8px; }
+    .pop .big small { font-size: 13px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .06em; margin-left: 4px; }
+    .pop .line { font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .pop .flag { font-size: 12px; line-height: 1.4; margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--line); color: var(--ink); }
+    .pop .links { display: flex; gap: 14px; margin-top: 10px; font-size: 13px; }
+    .pop .links a { font-weight: 700; text-decoration: none; }
+    .pop button { font: inherit; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; }
+    @media (max-width: 760px) {
+      #screen-home.active { flex-direction: column-reverse; }
+      #side { width: 100%; flex: 1 1 58%; min-height: 0; display: block; overflow-y: auto; border-right: 0; border-top: 1px solid var(--line); }
+      .board { overflow: visible; }
+      .map-wrap { flex: 1 1 42%; min-height: 0; }
+      .total .big { font-size: 46px; }
     }
-    #controls { top: 10px; left: 10px; padding: 10px 12px; max-width: min(300px, calc(100% - 64px)); }
-    #controls h1 { font-size: 16px; margin: 0 0 6px; }
-    #controls label { display: block; margin: 3px 0; cursor: pointer; }
-    #controls .group { margin-top: 8px; padding-top: 6px; border-top: 1px solid #ddd; }
-    #controls .group-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
-    #controls select { font: inherit; font-size: 13px; width: 100%; }
-    #count, #source { color: #555; font-size: 12px; margin-top: 6px; }
-    #notice { color: #8a4b00; font-size: 12px; margin-top: 6px; }
-    #legend { font-size: 12px; color: #555; margin-top: 4px; }
-    #legend .bar { height: 8px; border-radius: 2px; margin: 2px 0;
-      background: linear-gradient(to right, rgba(255,237,160,.7), #feb24c, #fd8d3c, #f03b20, #bd0026); }
-    #legend .ends { display: flex; justify-content: space-between; }
-
-    #top { right: 10px; bottom: 30px; width: 300px; max-height: 45vh; display: flex; flex-direction: column; }
-    #top h2 { font-size: 14px; margin: 0; padding: 8px 12px 6px; border-bottom: 1px solid #ddd; }
-    #view-total { padding: 10px 12px; background: #7b1010; color: #fff; border-radius: 4px 4px 0 0; font-size: 13px; }
-    #view-total b { font-size: 18px; display: block; }
-    #top.list-hidden h2, #top.list-hidden #toplist { display: none; }
-    #top.list-hidden #view-total { border-radius: 4px; }
-    #top h2 small { display: block; font-weight: normal; color: #666; font-size: 11px; }
-    #toplist { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
-    #toplist li { display: grid; grid-template-columns: 24px 1fr auto; gap: 6px; align-items: baseline;
-      padding: 5px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 13px; }
-    #toplist li:hover, #toplist li:focus { background: #fdf0ef; outline: none; }
-    #toplist .n { color: #999; text-align: right; }
-    #toplist .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #toplist .city { display: block; color: #777; font-size: 11px; }
-    #toplist .v { font-weight: 600; white-space: nowrap; }
-    #toplist .empty { display: block; color: #777; cursor: default; }
-    @media (max-width: 700px) {
-      #top { left: 10px; right: 10px; width: auto; max-height: 32vh; }
+    @media (max-width: 640px) {
+      .wrap { padding: 20px 16px 48px; }
+      header { gap: 12px; padding: 12px 16px; }
+      header .logo { font-size: 16px; white-space: nowrap; }
+      header nav a { margin-right: 0; font-size: 14px; white-space: nowrap; }
+      #screen-home { top: 44px; }
+      .total, .controls { padding-left: 16px; padding-right: 16px; }
+      .killer { padding: 12px 16px; }
     }
 
-    .maplibregl-popup { z-index: 2; }   /* above the panels */
-    .maplibregl-popup-content { font-size: 13px; max-height: 40vh; overflow-y: auto; }
-    .maplibregl-popup-content h2 { font-size: 15px; margin: 0 0 6px; padding-right: 14px; }
-    .maplibregl-popup-content h3 { font-size: 13px; margin: 10px 0 2px; border-top: 1px solid #ddd; padding-top: 6px; }
-    .maplibregl-popup-content p { margin: 3px 0; }
-    .maplibregl-popup-content .note { color: #666; font-size: 11px; }
-    .maplibregl-popup-content .harm { color: #8b1a10; }
+    /* ---------- polluter page ---------- */
+    .fac-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .back { font-size: 14px; text-decoration: none; color: var(--muted); }
+    .back:hover { color: var(--ink); }
+    .share { font: inherit; font-size: 14px; color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+    .share:hover { border-color: var(--muted); }
+    .fac-head { margin-top: 18px; }
+    .rank-pill { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--red-deep); padding: 4px 10px; border-radius: 999px; }
+    .fac-head h1 { font-size: clamp(30px, 4.5vw, 46px); line-height: 1.05; margin: 12px 0 6px; letter-spacing: -.02em; }
+    .fac-head .meta { color: var(--muted); font-size: 16px; }
+    .hero { margin: 28px 0 28px; }
+    .hero .value { font-size: clamp(64px, 11vw, 112px); line-height: .95; font-weight: 900; }
+    .hero .label { font-size: 15px; font-weight: 800; color: var(--red); text-transform: uppercase; letter-spacing: .08em; margin-top: 8px; }
+    .hero .per { font-size: 18px; margin-top: 14px; }
+    .hero .town { font-size: 16px; color: var(--muted); margin-top: 6px; }
+    .hero .split-bar { margin-top: 18px; height: 12px; }
+    .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; }
+    .tile { padding: 14px 16px 4px 0; border-top: 1px solid var(--line); }
+    .tile .v { font-size: clamp(26px, 4vw, 36px); font-weight: 900; line-height: 1.05; }
+    .tile .l { font-size: 14px; font-weight: 700; margin-top: 6px; }
+    .tile .s { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+    @media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    details.more-info { border-top: 1px solid var(--line); margin: 8px 0 0; }
+    details.more-info summary { cursor: pointer; padding: 14px 0; font-weight: 700; list-style: none; }
+    details.more-info summary::-webkit-details-marker { display: none; }
+    details.more-info summary::before { content: "▸"; color: var(--muted); margin-right: 8px; display: inline-block; transition: transform .15s; }
+    details.more-info[open] summary::before { transform: rotate(90deg); }
+    .impacts > div { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px 0; font-size: 15px; line-height: 1.5; border-top: 1px solid var(--line); }
+    .impacts b { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; padding-top: 3px; }
+    @media (max-width: 640px) { .impacts > div { grid-template-columns: 1fr; gap: 2px; } }
+    .trend { display: flex; align-items: center; gap: 10px; }
+    .trend + .trend { margin-top: 8px; }
+    .trend svg { flex: none; }
+    .act { padding: 22px 0 6px; margin: 0 0 12px; border-top: 1px solid var(--line); }
+    .act h3 { margin: 0 0 12px; font-size: 18px; }
+    .act-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .act-links a, .act-links button { color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 999px;
+      padding: 8px 14px; font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; }
+    .act-links a:hover, .act-links button:hover { border-color: var(--muted); }
+    .note { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .method { line-height: 1.6; }
+    .method h1 { letter-spacing: -.02em; }
+    .method li { margin: 10px 0; }
   </style>
+  <script>   // other color schemes can be previewed with ?theme=paper etc.; set it before the page draws
+    (function () {
+      var ok = { ink: 1, paper: 1, slate: 1, mist: 1, "white-crimson": 1, "white-orange": 1, "white-navy": 1, "white-mono": 1 },
+        t = new URLSearchParams(location.search).get("theme");
+      if (!ok[t]) t = "ink";
+      if (t !== "ink") document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
 <body>
-  <div id="map"></div>
+  <header>
+    <a class="logo" href="#/">Indiana's <span>Deadliest</span> Polluters</a>
+    <nav>
+      <a href="#/method" data-nav="method">How we estimate</a>
+    </nav>
+  </header>
 
-  <div id="controls" class="panel">
-    <h1>Indiana regulated facilities</h1>
-    <label><input type="radio" name="scope" value="major" checked> Major facilities only</label>
-    <label><input type="radio" name="scope" value="all"> All facilities</label>
-    <label><input type="checkbox" id="inactive"> Include inactive facilities</label>
-    <div id="count">Loading…</div>
-
-    <div class="group">
-      <div class="group-title">Show</div>
-      <label><input type="radio" name="view" value="dots" checked> Dots</label>
-      <label><input type="radio" name="view" value="heat"> Heatmap</label>
-      <div id="legend" hidden>
-        <div class="bar"></div>
-        <div class="ends"><span>lower</span><span id="legend-label">estimated harm</span><span>higher</span></div>
+  <!-- ===================== 1. MAP + LEADERBOARD ===================== -->
+  <section id="screen-home" class="screen">
+    <div id="side">
+      <div class="total" id="total"></div>
+      <div class="controls">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="search" type="search" placeholder="Search a polluter, town, ZIP or address" aria-label="Search polluters, or find polluters near a ZIP code or address">
+          <button class="in-search" id="locate" title="Polluters near me" aria-label="Polluters near me"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg></button>
+          <button class="in-search" id="reset" hidden title="Clear and show all of Indiana" aria-label="Clear and show all of Indiana">✕</button></div>
+        <div class="hint" id="hint" hidden></div>
+      </div>
+      <div class="board" id="board">
+        <div class="list-info"><span class="list-title" id="list-title"></span>
+          <label class="rank-by">Rank by <select id="rank-by"><option value="deaths">deaths</option><option value="damage">damage $</option></select></label></div>
+        <div id="list"></div>
+        <button class="btn secondary more" id="more">Show more</button>
       </div>
     </div>
-
-    <div class="group">
-      <div class="group-title"><label for="metric" style="display:inline;margin:0">Rank by</label></div>
-      <select id="metric"></select>
-      <label><input type="checkbox" id="show-top" checked> Top 20 in view</label>
+    <div class="map-wrap">
+      <div id="map"></div>
     </div>
+  </section>
 
-    <div id="source"></div>
-    <div id="notice" hidden></div>
-  </div>
+  <!-- ===================== 2. FACILITY ===================== -->
+  <section id="screen-facility" class="screen">
+    <div class="wrap" id="facility"></div>
+  </section>
 
-  <div id="top" class="panel">
-    <div id="view-total" aria-live="polite"></div>
-    <h2><span id="top-title">Top 20 in view</span><small id="top-sub"></small></h2>
-    <ol id="toplist"></ol>
-  </div>
+  <!-- ===================== 3. METHOD ===================== -->
+  <section id="screen-method" class="screen">
+    <div class="wrap method">
+      <h1>How we estimate this</h1>
+      <p>Estimates for one year of pollution (2023), in 2024 dollars, from public EPA data and published methods.</p>
+      <ul>
+        <li><b>Air-pollution deaths:</b> tons of soot and smog-forming gases × EPA's deaths per ton for that industry.</li>
+        <li><b>Climate deaths:</b> tons of greenhouse gases × one death worldwide by 2100 per 4,434 tons (Bressler 2021).</li>
+        <li><b>Damage:</b> air-pollution deaths × $11.5 million (EPA's value of a life), plus EPA's social cost of greenhouse gases.</li>
+        <li><b>Illness:</b> EPA's cases per ton of lung cancer, heart attacks, strokes, asthma and hospital visits.</li>
+        <li><b>Toxic-chemical deaths and illness:</b> every chemical released to air, water or land (EPA toxic release, air and
+          water discharge reports) × EPA's TRACI cases per pound → cancers and other illnesses; 31% of cancers end in death (American Cancer Society).</li>
+        <li><b>Not in the death count:</b> deaths from other toxic illness, chemicals EPA has no factor for (manganese, nitrates, acids), and
+          water permit violations themselves (the extra pollution is counted).</li>
+      </ul>
+      <p>These are model estimates, not counted deaths, and the ranges are wide. Each polluter's page shows its range.</p>
+      <p class="note">Full sources, methods and caveats are in the project's README. All data is public, from the US EPA,
+        the Census Bureau and the studies named above.</p>
+    </div>
+  </section>
 
-  <!-- type="module" lets the code below "await" the basemap check before creating the map. -->
-  <script type="module">
-    // ---- 1. Create the map --------------------------------------------------
-    // The basemap (streets, labels) comes from OpenFreeMap: free, no account or API key.
-    // If it can't be reached (offline, or a network filter blocks it), try OpenStreetMap's own
-    // tile server (also no key; fine for light use with attribution). If that fails too, use a
-    // plain background so the facility dots still show.
-    const BASEMAP_URL = "https://tiles.openfreemap.org/styles/positron";
-    const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-    const OSM_STYLE = {
-      version: 8,
-      sources: {
-        osm: {
-          type: "raster", tiles: [OSM_TILES], tileSize: 256, maxzoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        },
-      },
-      // Mostly gray and a bit faded, so the red facility dots stand out.
-      layers: [{ id: "osm", type: "raster", source: "osm",
-                 paint: { "raster-saturation": -0.8, "raster-opacity": 0.7 } }],
+  <script>
+    // ------------------------------------------------------------------ color scheme
+    // The site uses "ink" (Ink & ember). The others, tried during design, can be previewed with ?theme=...
+    // Each scheme: the base map, the dot colors (small to big), whether the big ones glow, and accents.
+    const THEMES = {
+      ink:   { base: "dark", dark: true, ramp: ["#5a2a1c", "#b8331f", "#ff4b3a", "#ff8a6b"], glow: true, stroke: "#0d0e11", sel: "#ffffff", accent: "#ff4b3a", plain: "#14161b" },
+      paper: { base: "positron", dark: false, ramp: ["#f1c9ad", "#e07a52", "#c0392b", "#7a120b"], glow: false, stroke: "#ffffff", sel: "#1c1a17", accent: "#b3261e", plain: "#efece6" },
+      slate: { base: "dark", dark: true, ramp: ["#4a3e22", "#b07a14", "#ffb020", "#ffe08a"], glow: false, stroke: "#0f1620", sel: "#ffffff", accent: "#ffb020", plain: "#111a24" },
+      "white-crimson": { base: "positron", dark: false, ramp: ["#f7c1c7", "#ec6475", "#c8102e", "#6d0617"], glow: false, stroke: "#ffffff", sel: "#111827", accent: "#c8102e", plain: "#f5f5f3" },
+      "white-orange":  { base: "positron", dark: false, ramp: ["#fed7aa", "#fb923c", "#c2410c", "#7c2d12"], glow: false, stroke: "#ffffff", sel: "#111827", accent: "#c2410c", plain: "#f5f5f3" },
+      "white-navy":    { base: "positron", dark: false, ramp: ["#c7d2fe", "#6b7fd7", "#1e3a8a", "#0b1640"], glow: false, stroke: "#ffffff", sel: "#111827", accent: "#1e3a8a", plain: "#f5f5f3" },
+      "white-mono":    { base: "positron", dark: false, ramp: ["#d4d4d8", "#8b8b93", "#3f3f46", "#09090b"], glow: false, stroke: "#ffffff", sel: "#c8102e", accent: "#111827", plain: "#f5f5f3" },
+      mist:  { base: "positron", dark: false, ramp: ["#efc3d6", "#d0638f", "#9c1f5a", "#4d0a2a"], glow: false, stroke: "#ffffff", sel: "#18212b", accent: "#9c1f5a", plain: "#e9edf0" },
     };
-    const PLAIN_STYLE = {
-      version: 8,
-      sources: {},
-      layers: [{ id: "background", type: "background", paint: { "background-color": "#f2f1ed" } }],
-    };
+    const THEME_NAME = (() => {
+      const q = new URLSearchParams(location.search).get("theme");
+      if (q && THEMES[q]) return q;
+      return "ink";
+    })();
+    const THEME = THEMES[THEME_NAME];
+    if (THEME_NAME !== "ink") document.documentElement.dataset.theme = THEME_NAME;   // "ink" is the base :root colors
 
-    function showBasemapNotice() {
-      const notice = document.getElementById("notice");
-      notice.textContent = "Background map couldn't load on this network, so streets and labels are hidden. Facilities are still shown.";
-      notice.hidden = false;
-    }
-
-    // Fetch a URL, giving up after a few seconds. no-store: really ask the server, rather than
-    // trusting a copy the browser saved earlier.
-    async function reachable(url) {
-      const timeout = new AbortController();
-      setTimeout(() => timeout.abort(), 6000);
-      const response = await fetch(url, { signal: timeout.signal, cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response;
-    }
-
-    async function chooseStyle() {
-      try {
-        return await (await reachable(BASEMAP_URL)).json();
-      } catch (err) {
-        console.warn("OpenFreeMap basemap unavailable:", err);
-      }
-      try {
-        await reachable(OSM_TILES.replace("{z}/{x}/{y}", "6/16/24"));   // one tile over Indiana
-        console.info("Using backup basemap: OpenStreetMap tiles");
-        return OSM_STYLE;
-      } catch (err) {
-        console.warn("OpenStreetMap tiles unavailable, using plain background:", err);
-      }
-      showBasemapNotice();
-      return PLAIN_STYLE;
-    }
-
-    const map = new maplibregl.Map({
-      container: "map",
-      style: await chooseStyle(),
-      bounds: [[-88.1, 37.77], [-84.78, 41.76]],   // Indiana: [west, south], [east, north]
-      // On wide screens, leave room for the controls (left) and Top 20 list (right).
-      fitBoundsOptions: { padding: window.innerWidth > 900 ? { top: 20, bottom: 20, left: 330, right: 330 } : 20 },
-    });
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
-
-    let allFeatures = [];   // kept so we can count and rank what's visible
-    let sources = {};       // year and number of ranked facilities for each data source
-
-    // ---- 2. Number formatting -------------------------------------------------
-    const fmt = (n) => Math.round(n).toLocaleString();
+    // ------------------------------------------------------------------ data + formatting
+    const DATA = window.SITE_DATA;
+    const F = DATA.facilities;   // sorted worst-first by deaths
+    const BY_KEY = new Map(F.map(f => [f.key, f]));   // stable IDs used in links
+    const sig2 = (n) => Number(n.toPrecision(2)).toLocaleString();
+    const deathsText = (n) => !n ? "0" : n >= 100 ? sig2(n) : n >= 10 ? Math.round(n).toLocaleString() : n >= 0.1 ? n.toFixed(1) : "under 0.1";
     function money(n) {
       if (n >= 1e9) return `$${(n / 1e9).toFixed(n >= 1e10 ? 0 : 1)} billion`;
       if (n >= 1e6) return `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} million`;
-      if (n >= 1e3) return `$${fmt(n / 1e3)}K`;
-      return `$${fmt(n)}`;
+      if (n >= 1e3) return `$${Math.round(n / 1e3).toLocaleString()}K`;
+      return `$${Math.round(n).toLocaleString()}`;
     }
-    const shortMoney = (n) => money(n).replace(" billion", "B").replace(" million", "M");
-    const big = (n) => n >= 1e6 ? `${(n / 1e6).toFixed(1)} million` : fmt(n);
-    // Estimates aren't precise: round 100+ to two significant figures (26,076 -> 26,000; 351 -> 350)
-    const deathsText = (n) => n >= 100 ? Number(n.toPrecision(2)).toLocaleString() : n >= 10 ? fmt(n) : n.toFixed(1);
-
-    // ---- 3. What the heatmap and Top 20 rank by -------------------------------
-    // Each metric is a property in facilities.geojson (see scripts/export_map_data.py).
-    const METRICS = {
-      harm_usd:    { label: "Estimated total harm ($ per year)", short: shortMoney, legend: "estimated harm" },
-      total_deaths: { label: "Estimated deaths (air pollution + climate)", short: (n) => `${deathsText(n)} deaths`, legend: "estimated deaths" },
-      climate_usd: { label: "Climate damage ($ per year)", short: shortMoney, legend: "climate damage" },
-      tri_lb:      { label: "Toxic chemical releases (lbs)", short: (n) => `${big(n)} lbs`, legend: "toxic releases" },
-      rsei_score:  { label: "Toxic risk score (EPA RSEI)", short: (n) => fmt(n), legend: "toxic risk" },
+    const short = (s) => s.replace(" billion", "B").replace(" million", "M");
+    const big = (n) => n >= 1e6 ? `${(n / 1e6).toFixed(1)} million` : Math.round(n).toLocaleString();
+    const sum = (arr, k) => arr.reduce((t, f) => t + (f[k] || 0), 0);
+    const el = (tag, attrs = {}, ...kids) => {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) k === "class" ? e.className = v : e.setAttribute(k, v);
+      e.append(...kids.filter(k => k !== null && k !== undefined));
+      return e;
     };
-    const metricSelect = document.getElementById("metric");
-    for (const [key, m] of Object.entries(METRICS)) metricSelect.add(new Option(m.label, key));
-    const metric = () => metricSelect.value;
-    const maxOf = {};   // largest value of each metric, to scale the heatmap
-
-    // ---- 4. Which dots to show, based on the controls -----------------------
-    // MapLibre "filter expressions" are little JSON formulas the map evaluates for every dot.
-    function currentFilter() {
-      const scope = document.querySelector('input[name="scope"]:checked').value;
-      const includeInactive = document.getElementById("inactive").checked;
-      const conditions = ["all"];
-      if (scope === "major") conditions.push(["==", ["get", "major"], true]);
-      if (!includeInactive) conditions.push(["==", ["get", "active"], true]);
-      return conditions;
+    function range(lo, hi) {   // "$5.6–17B" when both ends share a unit, else "$800M–$2.4B"
+      const a = short(money(lo)), b = short(money(hi)), unit = (x) => x.slice(-1);
+      return /[BM]$/.test(a) && unit(a) === unit(b) ? `${a.slice(0, -1)}–${b.slice(1)}` : `${a}–${b}`;
     }
+    const offsetText = (f) => range(f.offset_lo, f.offset_hi);
+    const lbs = (n) => n >= 1e6 ? `${(n / 1e6).toFixed(1)} million` : sig2(n);
+    const pct = (x) => x < 0.0001 ? "under 0.01%" : `${Number((100 * x).toPrecision(1))}%`;
+    const n0 = (n) => Math.round(n).toLocaleString();
+    const plural = (n, word) => `${n0(n)} ${word}${Math.round(n) === 1 ? "" : "s"}`;
+    const METRICS = {
+      deaths: { key: "deaths", keepAll: true, big: (f) => deathsText(f.deaths), unit: "deaths", title: "Deadliest polluters" },
+      damage: { key: "damage", big: (f) => short(money(f.damage)), unit: "a year", title: "Most damaging polluters" },
+    };
 
-    function updateFilter() {
-      if (!map.getLayer("facilities")) return;   // dots not drawn yet
-      map.setFilter("facilities", currentFilter());
-      const scope = document.querySelector('input[name="scope"]:checked').value;
-      const includeInactive = document.getElementById("inactive").checked;
-      const n = allFeatures.filter(f =>
-        (scope !== "major" || f.properties.major) && (includeInactive || f.properties.active)
-      ).length;
-      document.getElementById("count").textContent = `Showing ${n.toLocaleString()} facilities`;
+    // Numbers people can picture. Indiana traffic deaths: 898 in 2023 (NHTSA, FARS 2023 annual report file)
+    const TRAFFIC_DEATHS = 898;
+    function perDay(n) {   // deaths linked to a year of pollution, spread over its days
+      if (n / 365 >= 1.5) return `about ${Math.round(n / 365)} deaths for every day of its pollution`;
+      if (n / 365 >= 0.75) return "about one death for every day of its pollution";
+      if (n >= 1) return `one death for every ${Math.round(365 / n)} days of its pollution`;
+      return null;
     }
-
-    // ---- 5. Heatmap ---------------------------------------------------------------
-    // Glows where the chosen metric is concentrated. Weighted by the square root so one giant
-    // plant doesn't drown out everything else. Fades into dots when you zoom in close.
-    function heatWeight() {
-      const m = metric();
-      return ["/", ["sqrt", ["coalesce", ["get", m], 0]], Math.sqrt(maxOf[m] || 1)];
+    function vsTraffic(air) {
+      if (air >= TRAFFIC_DEATHS * 1.15) return `${(air / TRAFFIC_DEATHS).toFixed(1)} times as many deaths as every traffic crash in Indiana`;
+      if (air >= TRAFFIC_DEATHS * 0.9) return "as many deaths as every traffic crash in Indiana";
+      if (air >= TRAFFIC_DEATHS * 0.05) return `${Math.round(100 * air / TRAFFIC_DEATHS)}% as many deaths as every traffic crash in Indiana`;
+      return null;
     }
-
-    function setView() {
-      if (!map.getLayer("heat")) return;
-      const heat = document.querySelector('input[name="view"]:checked').value === "heat";
-      map.setLayoutProperty("heat", "visibility", heat ? "visible" : "none");
-      // In heatmap mode the ordinary dots only appear once you're zoomed in to town level.
-      map.setPaintProperty("facilities", "circle-opacity",
-        heat ? ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.8] : 0.8);
-      map.setPaintProperty("facilities", "circle-stroke-opacity",
-        heat ? ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1] : 1);
-      document.getElementById("legend").hidden = !heat;
-    }
-
-    function setMetric() {
-      if (!map.getLayer("heat")) return;
-      map.setFilter("heat", [">", ["coalesce", ["get", metric()], 0], 0]);
-      map.setPaintProperty("heat", "heatmap-weight", heatWeight());
-      document.getElementById("legend-label").textContent = METRICS[metric()].legend;
-      updateTop();
-    }
-
-    // ---- 6. Top 20 in view ----------------------------------------------------------
-    // Every time the map stops moving, rank the facilities currently on screen.
-    // Includes all facilities with data, whatever the "major only" filter says.
-    let topFeatures = [];
-
-    function updateTop() {
-      const panel = document.getElementById("top");
-      const showTop = document.getElementById("show-top").checked;
-      panel.classList.toggle("list-hidden", !showTop);   // the running total always stays visible
-      if (!map.getSource("top")) return;
-      const m = metric();
-      const b = map.getBounds();
-
-      // Running total for everything on screen
-      let deaths = 0, harm = 0, n = 0;
-      for (const f of allFeatures) {
-        if (f.properties.harm_usd > 0 && b.contains(f.geometry.coordinates)) {
-          deaths += f.properties.total_deaths || 0;
-          harm += f.properties.harm_usd;
-          n += 1;
-        }
+    // Compare a death count with the population of a real Indiana town nearby: the town whose population
+    // is closest to the count, among towns in view (Census 2024 estimates, in towns.js).
+    const TOWN_LIST = (window.IN_TOWNS || []).map(([name, lon, lat, pop]) => ({ name, lon, lat, pop }));
+    function townMatch(n, towns) {
+      if (!(n >= 20) || !towns.length) return null;   // below that, a town comparison reads oddly ("7% of New Amsterdam")
+      const t = towns.reduce((best, x) => Math.abs(Math.log(x.pop / n)) < Math.abs(Math.log(best.pop / n)) ? x : best);
+      const r = n / t.pop;
+      if (r >= 0.8 && r <= 1.25) return { t, head: `≈ ${t.name}`, line: `the population of ${t.name}` };
+      if (r > 1.25) {
+        const k = r < 10 ? Number(r.toFixed(1)) : Math.round(r);
+        return { t, head: `${k}× ${t.name}`, line: `${k}× the population of ${t.name}` };
       }
-      const total = document.getElementById("view-total");
-      total.replaceChildren();
-      const head = document.createElement("b");
-      head.textContent = n ? `About ${deathsText(deaths)} deaths` : "No estimated harm in view";
-      total.append(head, n ? `and ${money(harm)} in damage linked to one year of pollution from ` +
-                             `${n.toLocaleString()} facilit${n === 1 ? "y" : "ies"} in view` : "Zoom out or pan.");
+      const pc = Math.max(1, Math.round(100 * r));
+      return { t, head: `${pc}% of ${t.name}`, line: `${pc}% of the population of ${t.name}` };
+    }
+    const townsNear = (lon, lat, mi) => TOWN_LIST.filter(t => miles([lon, lat], [t.lon, t.lat]) <= mi);
+    function townsInView() {
+      const b = map.getBounds(), inside = TOWN_LIST.filter(t => b.contains([t.lon, t.lat]));
+      if (inside.length >= 5) return inside;
+      const c = map.getCenter();   // zoomed in close: widen to towns around the view
+      return townsNear(c.lng, c.lat, 30);
+    }
+    function townForPlant(f) {   // a town near the plant, widening the search if none is a close match
+      for (const mi of [25, 50, 100]) {
+        const m = townMatch(f.deaths, townsNear(f.lon, f.lat, mi));
+        if (m && Math.abs(Math.log(f.deaths / m.t.pop)) <= Math.log(1.5)) return m;
+        if (mi === 100) return m;
+      }
+    }
 
-      topFeatures = showTop ? allFeatures
-        .filter(f => f.properties[m] > 0 && b.contains(f.geometry.coordinates))
-        .sort((a, c) => c.properties[m] - a.properties[m])
-        .slice(0, 20) : [];
-      map.getSource("top").setData({ type: "FeatureCollection", features: topFeatures });
+    function spark(series, label) {   // a small trend line: [[year, value], ...]
+      const pts = (series || []).filter(([, v]) => v !== null);
+      if (pts.length < 3) return null;
+      const first = pts[0], last = pts[pts.length - 1];
+      if (!first[1] && !last[1]) return null;
+      const W = 120, H = 32, x0 = first[0], x1 = last[0], top = Math.max(...pts.map(p => p[1])) || 1;
+      const xy = pts.map(([y, v]) => `${(W * (y - x0) / (x1 - x0 || 1)).toFixed(1)},${(H - 3 - (H - 6) * v / top).toFixed(1)}`).join(" ");
+      const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      svg.setAttribute("role", "img"); svg.setAttribute("aria-label", `${label}, ${x0} to ${x1}`);
+      const line = document.createElementNS(ns, "polyline");
+      line.setAttribute("points", xy); line.setAttribute("fill", "none"); line.setAttribute("stroke", THEME.accent); line.setAttribute("stroke-width", "2");
+      svg.append(line);
+      const change = first[1] ? (last[1] - first[1]) / first[1] : null;
+      const words = change === null ? `${label}: none in ${x0}, some by ${x1}`
+        : Math.abs(change) < 0.05 ? `${label}: about the same, ${x0} to ${x1}`
+        : `${label}: ${change > 0 ? "up" : "down"} ${Math.round(Math.abs(change) * 100)}% from ${x0} to ${x1}`;
+      return el("div", { class: "trend" }, svg, el("span", {}, words));
+    }
 
-      document.getElementById("top-title").textContent = `Top ${topFeatures.length || 20} in view`;
-      document.getElementById("top-sub").textContent = `by ${METRICS[m].label.toLowerCase()}`;
-      const list = document.getElementById("toplist");
-      list.replaceChildren();
-      if (!topFeatures.length) {
-        const li = document.createElement("li");
-        li.innerHTML = '<span class="empty">No facilities with this data in view. Zoom out or pan.</span>';
-        list.append(li);
+    // Everything else each polluter does, from every dataset we have, as short lines.
+    // Only what's notable is listed; `stand` marks what stands out enough for the map popup.
+    function impacts(f) {
+      const out = [], t = f.toxic, w = f.water, ill = f.ill;
+      const sick = [[ill.lung_cancers, "lung cancer"], [ill.heart_attacks + ill.strokes, "heart attack or stroke", "heart attacks and strokes"],
+        [ill.new_asthma_cases, "new asthma case"], [ill.er_visits + ill.hospital_admissions, "ER visit or hospital stay", "ER visits and hospital stays"]]
+        .filter(([n]) => n >= 1).map(([n, one, many]) => Math.round(n) === 1 ? `1 ${one}` : `${n0(n)} ${many || one + "s"}`);
+      if (sick.length) out.push({ label: "Illness", text: sick.join(" · ") + " a year" });
+      if (f.co2e_t) out.push({ label: "Climate", text: `${big(f.co2e_t)} tons of greenhouse gases a year, as much as ${big(f.cars)} cars` });
+      const tox = [];
+      const tc = f.toxic_cancers >= 0.1 ? `${f.toxic_cancers >= 10 ? n0(f.toxic_cancers) : f.toxic_cancers.toFixed(1)} cancers` : null;
+      const ti = f.toxic_illnesses >= 1 ? (Math.round(f.toxic_illnesses) === 1 ? "1 other illness" : `${n0(f.toxic_illnesses)} other illnesses`) : null;
+      if (tc || ti) tox.push(`Linked to ${[tc, ti].filter(Boolean).join(" and ")}${f.toxic_chem ? `, mostly from ${f.toxic_chem}` : ""}.`);
+      if (f.toxic_rank && f.toxic_rank <= 25) tox.push(`#${f.toxic_rank} of ${f.toxic_ranked} in Indiana for toxic-chemical risk to neighbors.`);
+      if (t && t.lb >= 1) tox.push(`Released ${lbs(t.lb)} lbs${t.carcinogen_lb >= 1 ? `, ${lbs(t.carcinogen_lb)} of them cancer-causing` : ""}.`);
+      else if (f.hap_lb >= 1) tox.push(`${lbs(f.hap_lb)} lbs of hazardous air pollutants.`);
+      if (f.lead_lb >= 1) tox.push(`${lbs(f.lead_lb)} lbs of lead into the air.`);
+      if (tox.length) out.push({ label: "Toxic chemicals", text: tox.join(" "), stand: f.toxic_rank && f.toxic_rank <= 25 ? tox[0] : f.lead_lb >= 500 ? `${lbs(f.lead_lb)} lbs of lead into the air` : null });
+      const wat = [];
+      if (w && w.exceedances) wat.push(`Broke its permit limits ${w.exceedances === 1 ? "once" : w.exceedances + " times"} last year.`);
+      if (w && w.impaired) wat.push(`Discharges into ${w.impaired.split(", ")[0]}, already listed as polluted.`);
+      if (wat.length) out.push({ label: "Water", text: wat.join(" "), stand: w.exceedances >= 10 ? wat[0] : null });
+      const rec = [`Fined ${money(f.fines)} in 5 years${f.fines ? `, ${pct(f.fines / f.damage)} of one year's damage` : ""}.`];
+      if (f.qtrs_violation) rec.push(f.qtrs_violation >= 12 ? "Out of compliance for all of the last 3 years." : `Out of compliance ${f.qtrs_violation} of the last 12 quarters.`);
+      out.push({ label: "Record", text: rec.join(" "), stand: f.qtrs_violation >= 12 ? "Out of compliance all of the last 3 years" : null });
+      return out;
+    }
+    // Each polluter's rank across all of Indiana, for each way of ranking
+    const RANKS = {};
+    for (const [name, m] of Object.entries(METRICS)) {
+      RANKS[name] = new Map(F.filter(f => m.keepAll || f[m.key] > 0).sort((a, b) => b[m.key] - a[m.key]).map((f, i) => [f.id, i + 1]));
+    }
+    const TOWNS = { "Indianapolis": [-86.1581, 39.7684], "Gary": [-87.3464, 41.5934], "Hammond": [-87.5000, 41.5834],
+      "Fort Wayne": [-85.1394, 41.0793], "Evansville": [-87.5711, 37.9716], "South Bend": [-86.2520, 41.6764],
+      "Lafayette": [-86.8753, 40.4167], "Bloomington": [-86.5264, 39.1653], "Terre Haute": [-87.4139, 39.4667],
+      "Muncie": [-85.3864, 40.1934] };
+    function miles(a, b) {   // [lon, lat] points
+      const R = 3958.8, rad = Math.PI / 180;
+      const dLat = (b[1] - a[1]) * rad, dLon = (b[0] - a[0]) * rad;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLon / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    // ------------------------------------------------------------------ 1. map + leaderboard
+    const STATE_BOUNDS = [[-88.1, 37.77], [-84.78, 41.76]];
+    let map, ready = false, metric = "deaths", center = null, centerLabel = null; const radiusMi = 10;
+    let query = "", filteredBy = "", shown = 25, selected = null, hovered = null, popup = null, badges = [], searchTimer = null;
+    const PLAIN = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": THEME.plain } }] };
+    const OSM = { version: 8, sources: { osm: { type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' } },
+      layers: [{ id: "osm", type: "raster", source: "osm", paint: THEME.dark ? { "raster-saturation": -1, "raster-brightness-min": 0.92, "raster-brightness-max": 0.06, "raster-contrast": 0.1 }   // min > max turns light tiles dark
+        : { "raster-saturation": -0.9, "raster-opacity": 0.7 } }] };
+    async function reachable(url) {
+      const c = new AbortController(); setTimeout(() => c.abort(), 6000);
+      const r = await fetch(url, { signal: c.signal, cache: "no-store" }); if (!r.ok) throw new Error(r.status); return r;
+    }
+    async function chooseStyle() {
+      try { return await (await reachable(`https://tiles.openfreemap.org/styles/${THEME.base}`)).json(); } catch {}
+      try { await reachable("https://tile.openstreetmap.org/6/16/24.png"); return OSM; } catch {}
+      return PLAIN;
+    }
+    const geo = () => ({ type: "FeatureCollection", features: F.map(f => ({ type: "Feature",
+      geometry: { type: "Point", coordinates: [f.lon, f.lat] }, properties: { id: f.id, v: f[METRICS[metric].key] || 0 } })) });
+    function circle(c, mi) {
+      const pts = [];
+      for (let i = 0; i <= 64; i++) {
+        const a = (i / 64) * 2 * Math.PI;
+        pts.push([c[0] + (mi / 69 / Math.cos(c[1] * Math.PI / 180)) * Math.cos(a), c[1] + (mi / 69) * Math.sin(a)]);
+      }
+      return { type: "Feature", geometry: { type: "Polygon", coordinates: [pts] } };
+    }
+
+    let mapStarting = null;
+    function initMap() {
+      mapStarting ??= startMap();
+      return mapStarting;
+    }
+    async function startMap() {
+      map = new maplibregl.Map({ container: "map", style: await chooseStyle(), bounds: STATE_BOUNDS, fitBoundsOptions: { padding: 30 },
+        attributionControl: { compact: true } });
+      map.addControl(new maplibregl.NavigationControl(), "top-right");
+      // "style.load" fires as soon as the map style is ready; "load" would also wait for every street tile.
+      map.once("style.load", () => {
+        ready = true;
+        map.addSource("f", { type: "geojson", data: geo() });
+        map.addSource("ring", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        map.addLayer({ id: "ring-fill", type: "fill", source: "ring", paint: { "fill-color": THEME.accent, "fill-opacity": 0.07 } });
+        map.addLayer({ id: "ring-line", type: "line", source: "ring", paint: { "line-color": THEME.accent, "line-width": 1.5, "line-dasharray": [2, 2] } });
+        map.addLayer({ id: "glow", type: "circle", source: "f", paint: glowPaint() });   // soft halo under the big ones
+        map.addLayer({ id: "dots", type: "circle", source: "f", layout: { "circle-sort-key": ["-", 0, ["get", "v"]] }, paint: dotPaint() });
+        map.on("click", "dots", (e) => select(F[e.features[0].properties.id], true));
+        map.on("mouseenter", "dots", () => map.getCanvas().style.cursor = "pointer");
+        map.on("mouseleave", "dots", () => map.getCanvas().style.cursor = "");
+        map.on("moveend", updateBoard);
+        applyHash();
+        updateBoard();
+      });
+    }
+    function scaled() {   // 0..1 for each dot; square root so mid-size plants still show
+      const max = Math.max(...F.map(f => f[METRICS[metric].key] || 0));
+      return ["/", ["sqrt", ["get", "v"]], Math.sqrt(max)];
+    }
+    function dotPaint() {
+      const t = scaled();
+      return {
+        "circle-radius": ["interpolate", ["linear"], t, 0, 2.5, 1, 22],
+        "circle-color": ["interpolate", ["linear"], t, 0, THEME.ramp[0], 0.12, THEME.ramp[1], 0.4, THEME.ramp[2], 1, THEME.ramp[3]],
+        "circle-opacity": 0.9, "circle-stroke-color": THEME.stroke, "circle-stroke-width": 0.5,
+      };
+    }
+    function glowPaint() {
+      const t = scaled();
+      return {
+        "circle-radius": ["interpolate", ["linear"], t, 0, 0, 0.35, 0, 0.36, 24, 1, 60],
+        "circle-color": THEME.accent, "circle-blur": 1,
+        "circle-opacity": THEME.glow ? ["interpolate", ["linear"], t, 0, 0, 0.35, 0, 0.36, 0.25, 1, 0.4] : 0,
+      };
+    }
+    function highlight() {
+      if (!map?.getLayer("dots")) return;
+      const ids = [selected, hovered].filter(id => id !== null);
+      map.setPaintProperty("dots", "circle-stroke-color", ids.length ? ["case", ["in", ["get", "id"], ["literal", ids]], THEME.sel, THEME.stroke] : THEME.stroke);
+      map.setPaintProperty("dots", "circle-stroke-width", ids.length ? ["case", ["in", ["get", "id"], ["literal", ids]], 3, 0.5] : 0.5);
+    }
+
+    // ---- what's on screen: a search, a circle around a town, or whatever the map shows
+    function matches(f, q) {
+      return [f.name, f.owner, f.city, f.county, f.kind].some(s => s && s.toLowerCase().includes(q));
+    }
+    // A search that is a ZIP code or a street address means "polluters near here", not a name search
+    const isZip = (q) => /^\d{5}$/.test(q.trim());
+    const isAddress = (q) => /^\d+[a-z]?\s+\S+/i.test(q.trim()) && !isZip(q);
+    function area() {
+      const q = isZip(query) || isAddress(query) ? "" : query.trim().toLowerCase();
+      if (q) return { where: `matching "${query.trim()}"`, list: F.filter(f => matches(f, q)) };
+      if (center) return { where: `within ${radiusMi} miles of ${centerLabel}`, list: F.filter(f => miles(center, [f.lon, f.lat]) <= radiusMi) };
+      const b = map.getBounds();
+      return { where: "in view", list: F.filter(f => b.contains([f.lon, f.lat])) };
+    }
+    function renderTotal(list, where) {
+      const box = document.getElementById("total");
+      if (!list.length) { box.replaceChildren(el("div", { class: "eyebrow" }, `No polluters ${where}`)); return; }
+      const all = sum(list, "deaths"), air = sum(list, "air_deaths"), tox = sum(list, "toxic_deaths"), clim = sum(list, "climate_deaths");
+      const part = (v, cls) => { const i = el("i", cls ? { class: cls } : {}); i.style.width = `${all ? 100 * v / all : 0}%`; return i; };
+      const town = townMatch(all, townsInView());
+      const offsetLo = sum(list, "offset_lo"), offsetHi = sum(list, "offset_hi");
+      box.replaceChildren(...[
+        el("div", { class: "eyebrow" }, `${plural(list.length, "polluter")} ${where}`),
+        el("div", { class: "big num" }, deathsText(all), el("small", {}, "estimated deaths a year")),
+        el("div", { class: "split-bar", title: "Where the deaths come from" }, part(air), part(tox, "t"), part(clim, "c")),
+        el("div", { class: "chips" },
+          el("span", {}, el("span", { class: "key a" }), el("b", { class: "num" }, deathsText(air)), " air"),
+          el("span", {}, el("span", { class: "key t" }), el("b", { class: "num" }, deathsText(tox)), " toxic"),
+          el("span", {}, el("span", { class: "key b" }), el("b", { class: "num" }, deathsText(clim)), " climate")),
+        el("div", { class: "stats-row" },
+          el("div", {}, el("b", { class: "num" }, short(money(sum(list, "damage")))), el("span", {}, "damage a year")),
+          offsetHi ? el("div", {}, el("b", { class: "num" }, range(offsetLo, offsetHi)), el("span", {}, "to offset their CO2")) : null,
+          town ? el("div", { title: town.line }, el("b", {}, town.head), el("span", {}, "in deaths a year")) : null),
+        center ? worstNearby(list) : null].filter(Boolean));
+    }
+    function worstNearby(list) {
+      const w = [...list].sort((a, b) => b.deaths - a.deaths)[0];
+      if (!w || !w.deaths) return null;
+      const a = el("a", { href: "#" }, w.name);
+      a.onclick = (e) => { e.preventDefault(); select(w, true); };
+      return el("div", { class: "worst" }, "Deadliest nearby: ", a, ` · ${miles(center, [w.lon, w.lat]).toFixed(1)} mi away`);
+    }
+    function updateBoard() {
+      if (!ready) return;
+      const M = METRICS[metric], { list, where } = area();
+      // The search bar shows "near me" until something narrows the list, then a clear (✕) button
+      const narrowed = !!(query.trim() || center);
+      document.getElementById("reset").hidden = !narrowed;
+      document.getElementById("locate").hidden = narrowed;
+      renderTotal(list, where);
+      // Only change the filter when the search changes: each change makes the map reload its dots.
+      const searching = query.trim().toLowerCase();
+      if (searching !== filteredBy) {
+        filteredBy = searching;
+        const filter = searching ? ["in", ["get", "id"], ["literal", list.map(f => f.id)]] : null;
+        map.setFilter("dots", filter);
+        map.setFilter("glow", filter);
+      }
+      const ranked = list.filter(f => RANKS[metric].has(f.id)).sort((a, b) => RANKS[metric].get(a.id) - RANKS[metric].get(b.id));
+      const at = ranked.findIndex(f => f.id === selected);
+      if (at >= shown) shown = at + 1;
+
+      document.getElementById("list-title").textContent = `${M.title} ${where}`;
+      const top = ranked.length ? ranked[0][M.key] || 1 : 1;
+      const meterFill = (x) => { const i = el("i"); i.style.width = `${Math.max(1, 100 * Math.sqrt(Math.max(0, x)))}%`; return i; };
+      document.getElementById("list").replaceChildren(...(ranked.length ? ranked.slice(0, shown).map(f => {
+        const row = el("div", { class: `killer${f.id === selected ? " on" : ""}`, tabindex: "0", role: "button", "data-id": f.id },
+          el("div", { class: "rk" }, `${RANKS[metric].get(f.id)}`),
+          el("div", {}, el("div", { class: "nm" }, f.name),
+            el("div", { class: "meta" }, [f.kind, f.city].filter(Boolean).join(" · "))),
+          el("div", { class: "nums" }, el("b", { class: "num" }, M.big(f))),
+          el("div", { class: "meter" }, meterFill(f[M.key] / top)));
+        row.onclick = () => select(f, false);
+        row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(f, false); } };
+        row.onmouseenter = () => { hovered = f.id; highlight(); };
+        row.onmouseleave = () => { hovered = null; highlight(); };
+        return row;
+      }) : [el("div", { class: "none" }, `None ${where}`)]));
+      document.getElementById("more").hidden = shown >= ranked.length;
+
+      // The top of the leaderboard also shows on the map, as numbered badges
+      badges.forEach(b => b.remove());
+      badges = ranked.slice(0, 5).map((f, i) => {
+        const e = el("div", { class: "rank-badge", title: f.name }, `${RANKS[metric].get(f.id)}`);
+        e.style.zIndex = 20 - i;
+        e.onclick = (ev) => { ev.stopPropagation(); select(f, true); };
+        return new maplibregl.Marker({ element: e }).setLngLat([f.lon, f.lat]).addTo(map);
+      });
+    }
+
+    // ---- choosing a polluter, from its row, its dot or its badge
+    function popupCard(f) {
+      const zoom = el("button", {}, "Zoom in");
+      zoom.onclick = () => map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom() + 2, 11) });
+      const stand = impacts(f).map(x => x.stand).filter(Boolean).slice(0, 2);
+      return el("div", { class: "pop" },
+        el("h4", {}, f.name),
+        el("div", { class: "meta" }, [f.kind, f.city].filter(Boolean).join(" · ")),
+        el("div", { class: "big num" }, deathsText(f.deaths), el("small", {}, "deaths a year")),
+        el("div", { class: "line" }, `${f.deaths ? `#${RANKS.deaths.get(f.id)} in Indiana · ` : ""}${short(money(f.damage))} damage a year`),
+        ...stand.map(x => el("div", { class: "flag" }, x.replace(/\.$/, ""))),
+        el("div", { class: "links" }, el("a", { href: `#/f/${f.key}` }, "See its impact →"), zoom));
+    }
+    function select(f, scrollList) {
+      popup?.remove();
+      selected = f.id;
+      highlight();
+      popup = new maplibregl.Popup({ maxWidth: "300px", focusAfterOpen: false, offset: 10 })
+        .setLngLat([f.lon, f.lat]).setDOMContent(popupCard(f)).addTo(map);
+      popup.on("close", () => { if (selected === f.id) { selected = null; highlight(); markRow(); } });
+      if (!map.getBounds().contains([f.lon, f.lat])) map.easeTo({ center: [f.lon, f.lat] });
+      if (scrollList) {
+        const inList = document.querySelector(`.killer[data-id="${f.id}"]`);
+        if (!inList) updateBoard();
+      }
+      markRow();
+      if (scrollList) document.querySelector(`.killer[data-id="${f.id}"]`)?.scrollIntoView({ block: "nearest" });
+    }
+    function markRow() {
+      document.querySelectorAll(".killer").forEach(r => r.classList.toggle("on", +r.dataset.id === selected));
+    }
+
+    // ---- controls
+    function setMetric(m) {
+      metric = m;
+      shown = 25;
+      document.getElementById("rank-by").value = m;
+      if (map?.getSource("f")) {
+        map.getSource("f").setData(geo());
+        for (const [k, v] of Object.entries(dotPaint())) map.setPaintProperty("dots", k, v);
+        for (const [k, v] of Object.entries(glowPaint())) map.setPaintProperty("glow", k, v);
+        highlight();
+      }
+      document.getElementById("board").scrollTop = 0;
+      updateBoard();
+    }
+    document.getElementById("rank-by").onchange = (e) => setMetric(e.target.value);
+    document.getElementById("more").onclick = () => { shown += 50; updateBoard(); };
+
+    function setCenter(c, label) {
+      center = c;
+      centerLabel = label || null;
+      shown = 25;
+      map.getSource("ring").setData(c ? { type: "FeatureCollection", features: [circle(c, radiusMi)] } : { type: "FeatureCollection", features: [] });
+      if (c) map.fitBounds(new maplibregl.LngLatBounds(c, c).extend([c[0] - radiusMi / 50, c[1] - radiusMi / 69]).extend([c[0] + radiusMi / 50, c[1] + radiusMi / 69]), { padding: 40 });
+      updateBoard();
+    }
+    document.getElementById("locate").onclick = () => {
+      if (!navigator.geolocation) return alert("Your browser can't share your location.");
+      navigator.geolocation.getCurrentPosition(
+        (p) => setCenter([p.coords.longitude, p.coords.latitude], "you"),
+        () => alert("Couldn't get your location. Search for your town instead."));
+    };
+    document.getElementById("reset").onclick = () => {
+      query = "";
+      document.getElementById("search").value = "";
+      showHint("");
+      popup?.remove();
+      setCenter(null);
+      map.fitBounds(STATE_BOUNDS, { padding: 30 });
+    };
+    const hint = document.getElementById("hint");
+    function showHint(text) { hint.textContent = text || ""; hint.hidden = !text; }
+    function findAddress(q) {
+      // The US Census Bureau's free address lookup. It allows browser requests only as "JSONP"
+      // (it answers by calling a function), so it's loaded as a script.
+      showHint("Looking up the address…");
+      const old = document.getElementById("geocode");
+      old?.remove();
+      window.gotAddress = (res) => {
+        const m = res?.result?.addressMatches?.[0];
+        if (!m) return showHint("Couldn't find that address. Try adding the town, or search by ZIP code.");
+        showHint(`Addresses are looked up by the US Census Bureau. Showing ${radiusMi} miles around ${m.matchedAddress}.`);
+        setCenter([m.coordinates.x, m.coordinates.y], q.trim().split(",")[0]);
+      };
+      const full = /\b(in|indiana)\b/i.test(q) ? q : `${q}, IN`;
+      const s = el("script", { id: "geocode", src: "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current"
+        + `&format=jsonp&callback=gotAddress&address=${encodeURIComponent(full)}` });
+      s.onerror = () => showHint("The Census address lookup didn't answer. Try a ZIP code instead.");
+      document.head.append(s);
+    }
+    document.getElementById("search").onkeydown = (e) => {
+      if (e.key === "Enter" && isAddress(e.target.value)) findAddress(e.target.value);
+    };
+    document.getElementById("search").oninput = (e) => {
+      query = e.target.value;
+      shown = 25;
+      if (isZip(query)) {
+        const z = (window.IN_ZIPS || {})[query.trim()];
+        showHint(z ? "" : "That isn't an Indiana ZIP code.");
+        if (z) setCenter(z, `ZIP ${query.trim()}`);
         return;
       }
-      topFeatures.forEach((f, i) => {
-        const li = document.createElement("li");
-        li.tabIndex = 0;
-        const n = document.createElement("span"); n.className = "n"; n.textContent = i + 1;
-        const name = document.createElement("span"); name.className = "name"; name.textContent = f.properties.name;
-        const city = document.createElement("span"); city.className = "city";
-        city.textContent = (f.properties.address || "").split(", ").pop();
-        name.append(city);
-        const v = document.createElement("span"); v.className = "v"; v.textContent = METRICS[m].short(f.properties[m]);
-        li.append(n, name, v);
-        li.addEventListener("mouseenter", () => map.setFilter("top-hover", ["==", ["get", "_i"], f.properties._i]));
-        li.addEventListener("mouseleave", () => map.setFilter("top-hover", ["==", ["get", "_i"], -1]));
-        const open = () => {
-          map.flyTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 12) });
-          map.once("moveend", () => showPopup(f.properties, f.geometry.coordinates));
-        };
-        li.addEventListener("click", open);
-        li.addEventListener("keydown", (e) => { if (e.key === "Enter") open(); });
-        list.append(li);
-      });
-    }
-
-    document.querySelectorAll('#controls input[name="scope"], #inactive').forEach(el => el.addEventListener("change", updateFilter));
-    document.querySelectorAll('#controls input[name="view"]').forEach(el => el.addEventListener("change", setView));
-    metricSelect.addEventListener("change", setMetric);
-    document.getElementById("show-top").addEventListener("change", updateTop);
-    map.on("moveend", updateTop);
-
-    // ---- 7. Load our data and draw it -------------------------------------------------
-    let dotsStarted = false;
-    async function addFacilities() {
-      if (dotsStarted) return;   // only once, whichever event gets here first
-      dotsStarted = true;
-      const geojson = await (await fetch("data/facilities.geojson")).json();
-      geojson.features.forEach((f, i) => { f.properties._i = i; });   // an id for highlighting
-      allFeatures = geojson.features;
-      sources = geojson.sources || {};
-      for (const m of Object.keys(METRICS)) {
-        maxOf[m] = Math.max(0, ...allFeatures.map(f => f.properties[m] || 0));
+      showHint(isAddress(query) ? "Press Enter to find polluters near this address." : "");
+      if (center && !isAddress(query)) { center = null; map.getSource("ring").setData({ type: "FeatureCollection", features: [] }); }
+      updateBoard();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {     // once they stop typing, show the matches on the map
+        const { list } = area();
+        if (!query.trim() || isAddress(query) || !list.length) return;
+        const bounds = new maplibregl.LngLatBounds();
+        list.forEach(f => bounds.extend([f.lon, f.lat]));
+        map.fitBounds(bounds, { padding: 60, maxZoom: 11 });
+      }, 500);
+    };
+    function applyHash() {     // links like #/?near=Gary and #/?f=12
+      const near = location.hash.match(/near=([^&]+)/), one = location.hash.match(/[?&]f=([^&]+)/);
+      if (near && TOWNS[decodeURIComponent(near[1])]) {
+        const t = decodeURIComponent(near[1]);
+        setCenter(TOWNS[t], t);
       }
-      document.getElementById("source").textContent =
-        `Sources: EPA ECHO (as of ${geojson.source_data_date}), TRI, RSEI, GHGRP, NEI, water discharge reports; ` +
-        `harm estimates from EPA and IPCC factors`;
-
-      map.addSource("facilities", { type: "geojson", data: geojson });
-      map.addLayer({
-        id: "heat",
-        type: "heatmap",
-        source: "facilities",
-        layout: { visibility: "none" },
-        filter: [">", ["coalesce", ["get", metric()], 0], 0],
-        paint: {
-          "heatmap-weight": heatWeight(),
-          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 5, 2.5, 9, 4, 12, 6],
-          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 18, 9, 36, 12, 55],
-          "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"],
-            0, "rgba(255,237,160,0)", 0.05, "rgba(255,237,160,0.6)", 0.2, "#feb24c",
-            0.4, "#fd8d3c", 0.6, "#f03b20", 0.85, "#bd0026", 1, "#67000d"],
-          "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.9, 12.5, 0],
-        },
-      });
-      map.addLayer({
-        id: "facilities",
-        type: "circle",
-        source: "facilities",
-        filter: currentFilter(),
-        paint: {
-          // Bigger dots for major facilities, and bigger for everything as you zoom in.
-          "circle-radius": ["interpolate", ["linear"], ["zoom"],
-            6, ["case", ["get", "major"], 3.5, 1.5],
-            12, ["case", ["get", "major"], 8, 5]],
-          "circle-color": "#c0392b",
-          "circle-opacity": 0.8,
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 0.5,
-        },
-        layout: { "circle-sort-key": ["case", ["get", "major"], 1, 0] },  // majors draw on top
-      });
-
-      // The current Top 20: larger, darker dots drawn above everything else.
-      map.addSource("top", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      map.addLayer({
-        id: "top-dots",
-        type: "circle",
-        source: "top",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 6, 12, 11],
-          "circle-color": "#7b1010",
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 1.5,
-        },
-      });
-      map.addLayer({
-        id: "top-hover",
-        type: "circle",
-        source: "top",
-        filter: ["==", ["get", "_i"], -1],
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 11, 12, 17],
-          "circle-color": "rgba(0,0,0,0)",
-          "circle-stroke-color": "#111",
-          "circle-stroke-width": 3,
-        },
-      });
-
-      updateFilter();
-      setView();
-      setMetric();
-    }
-    map.on("load", addFacilities);
-
-    // Safety net: if the basemap's own pieces (street tiles, fonts, icons) get stuck, the map
-    // never reports "load". After 15 seconds, switch to the plain background and draw the dots.
-    setTimeout(() => {
-      if (dotsStarted) return;
-      console.warn("Map still loading after 15s; switching to plain background.");
-      showBasemapNotice();
-      map.once("style.load", addFacilities);
-      map.setStyle(PLAIN_STYLE);
-    }, 15000);
-
-    // ---- 8. Click a dot -> popup -------------------------------------------
-    // Built with DOM nodes + textContent (not HTML strings) so odd characters in names display safely.
-    function line(label, value) {
-      const p = document.createElement("p");
-      const b = document.createElement("b");
-      b.textContent = label + ": ";
-      p.append(b, value);
-      return p;
-    }
-
-    function heading(text, className) {
-      const h = document.createElement("h3");
-      h.textContent = text;
-      if (className) h.className = className;
-      return h;
-    }
-
-    function note(text) {
-      const p = document.createElement("p");
-      p.className = "note";
-      p.textContent = text;
-      return p;
-    }
-
-    function p(text) {
-      const el = document.createElement("p");
-      el.textContent = text;
-      return el;
-    }
-
-    // "#3 of 722 in Indiana"
-    const rank = (r, src) => r ? ` (#${r} of ${sources[src]?.ranked?.toLocaleString() ?? "?"} in Indiana)` : "";
-    const year = (src) => sources[src]?.year ?? "";
-
-    // Estimated harm: dollars, deaths, comparisons (scripts/build_impacts_indiana.py).
-    function harmSection(f) {
-      if (f.harm_usd === undefined) return [];
-      const out = [heading(`Estimated yearly harm (${year("impacts")}, in ${sources.impacts?.dollar_year} dollars)`, "harm")];
-      out.push(line("Total", `${money(f.harm_usd)} a year (range ${money(f.harm_lo)}–${money(f.harm_hi)})${rank(f.harm_rank, "impacts")}`));
-      out.push(line("That's per day", money(f.harm_usd / 365)));
-      if (f.total_deaths) {
-        out.push(line("Deaths linked to one year of its pollution",
-          `about ${deathsText(f.total_deaths)} (range ${deathsText(f.total_deaths_lo || 0)}–${deathsText(f.total_deaths_hi)})` +
-          rank(f.death_rank, "impacts")));
-        const parts = [];
-        if (f.deaths) parts.push(`${deathsText(f.deaths)} from air pollution, mostly in and near Indiana`);
-        if (f.climate_deaths) parts.push(`${deathsText(f.climate_deaths)} from climate change, worldwide through 2100`);
-        out.push(p(parts.join(" · ")));
+      if (one && BY_KEY.get(decodeURIComponent(one[1]))) {
+        const f = BY_KEY.get(decodeURIComponent(one[1]));
+        map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 10) });
+        select(f, true);
       }
-      const ill = [[f.ill_lung_cancer, "lung cancers"], [f.ill_heart_stroke, "heart attacks and strokes"],
-                   [f.ill_asthma, "new asthma cases"], [f.ill_hospital, "ER visits and hospital stays"]]
-        .filter(([n]) => n >= 1).map(([n, label]) => `${fmt(n)} ${label}`);
-      if (ill.length) out.push(line("Also linked to, each year", ill.join(" · ")));
-      if (f.health_usd) out.push(line("Health damage", money(f.health_usd)));
-      if (f.climate_usd) out.push(line("Climate damage", `${money(f.climate_usd)} (range ${money(f.climate_lo)}–${money(f.climate_hi)})`));
-      if (f.removal_lo) out.push(line("Cost to remove its CO2 from the air", `${money(f.removal_lo)}–${money(f.removal_hi)}`));
-      if (f.eq_cars) out.push(line("Same CO2 as", `${big(f.eq_cars)} cars driven for a year, or ${big(f.eq_homes)} homes' energy use`));
-      out.push(line("Penalties in the last 5 years", f.penalties_usd ? money(f.penalties_usd) : "$0 on this record"));
-      if (f.harm_outlier) out.push(note(f.harm_outlier));
-      out.push(note("Screening estimates using EPA and IPCC factors, for comparing facilities. Covers deaths and illness from air pollution, and climate damage; toxic chemicals and water pollution aren't included."));
-      return out;
     }
 
-    // One section per extra data source -- only shown when the facility has that data.
-    function extraSections(f) {
-      const out = [];
-
-      if (f.tri_lb !== undefined) {   // toxic releases
-        out.push(heading(`Toxic chemical releases (TRI ${year("tri")})`));
-        if (f.tri_lb > 0) {
-          out.push(line("Released", `${fmt(f.tri_lb)} lbs${rank(f.tri_rank, "tri")}`));
-          out.push(line("Where", `air ${fmt(f.tri_air_lb || 0)} · water ${fmt(f.tri_water_lb || 0)} · ` +
-                                 `land ${fmt(f.tri_land_lb || 0)} · sent off-site ${fmt(f.tri_offsite_lb || 0)} lbs`));
-          if (f.tri_carcinogen_lb > 0) out.push(line("Of which cancer-causing", `${fmt(f.tri_carcinogen_lb)} lbs`));
-          if (f.tri_top_chemical) out.push(line("Largest", f.tri_top_chemical.split(" (")[0]));
-        } else {
-          out.push(p("Reported, but no release amounts"));
-        }
-        if (f.tri_form_a > 0) out.push(note(`${f.tri_form_a} chemical(s) filed on EPA's short form, which doesn't state amounts.`));
-      }
-
-      if (f.rsei_score !== undefined) {   // risk-weighted toxics
-        out.push(heading(`Toxic risk score (EPA RSEI ${year("rsei")})`));
-        out.push(line("Risk rank", `#${f.rsei_rank} of ${sources.rsei?.ranked?.toLocaleString()} in Indiana`));
-        if (f.rsei_cancer_pct !== undefined) out.push(line("From cancer-causing chemicals", `${f.rsei_cancer_pct}%`));
-        out.push(note("Weighs each release by toxicity and how many people may be exposed. A screening estimate, not a measured health risk."));
-      }
-
-      if (f.ghg_t !== undefined) {   // greenhouse gases
-        out.push(heading(`Greenhouse gases (${year("ghg")})`));
-        out.push(line("Emitted", `${fmt(f.ghg_t)} metric tons CO2-equivalent${rank(f.ghg_rank, "ghg")}`));
-      }
-
-      if (f.nei_pm25_t !== undefined || f.nei_so2_t !== undefined || f.nei_nox_t !== undefined) {   // air pollutants
-        out.push(heading(`Air pollutants (EPA NEI ${year("nei")})`));
-        if (f.nei_pm25_t !== undefined) out.push(line("Fine particles (PM2.5)", `${f.nei_pm25_t.toLocaleString()} tons${rank(f.nei_pm25_rank, "nei")}`));
-        if (f.nei_so2_t !== undefined) out.push(line("Sulfur dioxide", `${f.nei_so2_t.toLocaleString()} tons`));
-        if (f.nei_nox_t !== undefined) out.push(line("Nitrogen oxides", `${f.nei_nox_t.toLocaleString()} tons`));
-        if (f.nei_hap_lb > 0) out.push(line("Toxic air pollutants", `${fmt(f.nei_hap_lb)} lbs`));
-      }
-
-      if (f.water_twpe !== undefined || f.water_exceedances > 0) {   // water
-        out.push(heading(`Water discharges (${year("water")})`));
-        if (f.water_twpe > 0) out.push(line("Toxic-weighted discharge", `${fmt(f.water_twpe)} lb-equivalents${rank(f.water_twpe_rank, "water")}`));
-        if (f.water_lb > 0) out.push(line("All pollutants", `${fmt(f.water_lb)} lbs`));
-        out.push(line("Permit limits exceeded", `${f.water_exceedances || 0} time(s)`));
-        if (f.water_late_reports > 0) out.push(line("Late or missing reports", f.water_late_reports));
-        if (f.water_impaired) out.push(line("Discharges into impaired water", f.water_impaired));
-      }
-
-      return out;
+    // ------------------------------------------------------------------ 2. facility
+    function shareButton(f, cls) {
+      const b = el("button", cls ? { class: cls } : {}, "Share this polluter");
+      b.onclick = async () => {
+        const url = new URL(`p/${f.slug}.html`, location.href.split("#")[0]).href;
+        const text = f.deaths >= 0.1 ? `${f.name} is linked to an estimated ${deathsText(f.deaths)} deaths a year.` : `${f.name}: what it releases.`;
+        try {
+          if (navigator.share) return await navigator.share({ title: f.name, text, url });
+          await navigator.clipboard.writeText(url);
+          b.textContent = "Link copied";
+        } catch { b.textContent = "Copy failed"; }
+        setTimeout(() => b.textContent = "Share this polluter", 2000);
+      };
+      return b;
+    }
+    // The biggest harms as big-number tiles: up to five, then always its fines
+    function tiles(f) {
+      const ill = f.ill, t = f.toxic, w = f.water, out = [];
+      const num = (n) => n >= 10 ? n0(n) : n >= 1 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(1);
+      const add = (ok, v, l, sub, hot) => { if (ok) out.push({ v, l, sub, hot }); };
+      add(f.damage >= 1, short(money(f.damage)), "damage a year", f.offset_hi ? `${offsetText(f)} more to pull its CO2 back out of the air` : "health harm in dollars", true);
+      add(ill.new_asthma_cases >= 1, n0(ill.new_asthma_cases), "new asthma cases", "a year");
+      const cancers = (ill.lung_cancers || 0) + (f.toxic_cancers || 0);
+      add(cancers >= 0.1, num(cancers), cancers >= 0.95 && cancers < 1.5 ? "cancer" : "cancers", f.toxic_cancers >= 0.1 ? "a year, from soot and toxic chemicals" : "a year, lung cancers from soot");
+      add(ill.heart_attacks + ill.strokes >= 1, n0(ill.heart_attacks + ill.strokes), "heart attacks and strokes", "a year");
+      add(f.toxic_illnesses >= 1, n0(f.toxic_illnesses), "other toxic illnesses", f.toxic_chem ? `a year, mostly from ${f.toxic_chem}` : "a year");
+      add(t && t.lb >= 1, lbs(t?.lb || 0), "lbs of toxic chemicals", t?.carcinogen_lb >= 1 ? `${lbs(t.carcinogen_lb)} lbs cause cancer` : "released a year");
+      add(f.co2e_t >= 1, big(f.co2e_t), "tons of greenhouse gases", `a year, like ${big(f.cars)} cars`);
+      add(w && w.exceedances >= 1, n0(w?.exceedances || 0), "water permit violations", "last year");
+      const shown = out.slice(0, 3);
+      shown.push({ v: money(f.fines).replace(" million", "M").replace(" billion", "B"), l: "fined in 5 years",
+        sub: f.fines && f.damage ? `${pct(f.fines / f.damage)} of one year's damage` : f.qtrs_violation ? `out of compliance ${f.qtrs_violation} of the last 12 quarters` : "no penalties on record", hot: !f.fines && f.damage > 1e6 });
+      return shown.map(x => el("div", { class: `tile${x.hot ? " hot" : ""}` }, el("div", { class: "v num" }, x.v), el("div", { class: "l" }, x.l), el("div", { class: "s" }, x.sub)));
+    }
+    function shareButton(f, cls) {
+      const b = el("button", cls ? { class: cls } : {}, "Share this polluter");
+      b.onclick = async () => {
+        const url = new URL(`p/${f.slug}.html`, location.href.split("#")[0]).href;
+        const text = f.deaths >= 0.1 ? `${f.name} is linked to an estimated ${deathsText(f.deaths)} deaths a year.` : `${f.name}: what it releases.`;
+        try {
+          if (navigator.share) return await navigator.share({ title: f.name, text, url });
+          await navigator.clipboard.writeText(url);
+          b.textContent = "Link copied";
+        } catch { b.textContent = "Copy failed"; }
+        setTimeout(() => b.textContent = "Share this polluter", 2000);
+      };
+      return b;
+    }
+    function renderFacility(f) {
+      const box = document.getElementById("facility");
+      const part = (v, cls) => { const i = el("i", cls ? { class: cls } : {}); i.style.width = `${f.deaths ? 100 * v / f.deaths : 0}%`; return i; };
+      const trends = [spark(f.trend_ghg, "Greenhouse gases, and so climate deaths"), spark(f.trend_tri, "Toxic releases")].filter(Boolean);
+      const traffic = vsTraffic(f.air_deaths);
+      box.replaceChildren(
+        el("div", { class: "fac-top" }, el("a", { class: "back", href: "#/" }, "← Back to the map"), shareButton(f, "share")),
+        el("div", { class: "fac-head" },
+          f.deaths ? el("span", { class: "rank-pill" }, `#${f.rank} deadliest in Indiana`) : null,
+          el("h1", {}, f.name),
+          el("div", { class: "meta" }, [f.kind, f.city, f.owner && `owned by ${f.owner}`].filter(Boolean).join(" · "))),
+        el("div", { class: "hero" },
+          el("div", { class: "value num" }, deathsText(f.deaths)),
+          el("div", { class: "label" }, "estimated deaths a year"),
+          f.deaths >= 1 ? el("div", { class: "per" }, `That's ${perDay(f.deaths)}.`,
+            townForPlant(f) ? el("div", { class: "town" }, `Each year, about ${townForPlant(f).line}.`) : null)
+            : el("div", { class: "per" }, f.deaths ? "Its pollution is linked to a small share of a death each year." : "No deaths estimated: its harm is illness from toxic chemicals."),
+          ),
+        el("div", { class: "tiles" }, ...tiles(f)),
+        el("details", { class: "more-info" }, el("summary", {}, "More details"),
+          el("div", { class: "impacts" },
+            f.deaths ? el("div", {}, el("b", {}, "Deaths from"), el("div", {},
+              el("div", { class: "split-bar" }, part(f.air_deaths), part(f.toxic_deaths, "t"), part(f.climate_deaths, "c")),
+              el("div", { class: "chips" },
+                el("span", {}, el("span", { class: "key a" }), el("b", { class: "num" }, deathsText(f.air_deaths)), " air pollution"),
+                el("span", {}, el("span", { class: "key t" }), el("b", { class: "num" }, deathsText(f.toxic_deaths)), " toxic chemicals"),
+                el("span", {}, el("span", { class: "key b" }), el("b", { class: "num" }, deathsText(f.climate_deaths)), " climate change")))) : null,
+            ...impacts(f).map(x => el("div", {}, el("b", {}, x.label), el("span", {}, x.text))),
+            traffic ? el("div", {}, el("b", {}, "Compared"), el("span", {}, `Its air pollution alone: ${traffic} (898 in 2023).`)) : null,
+            trends.length ? el("div", {}, el("b", {}, "Trend"), el("div", {}, ...trends)) : null,
+            el("div", {}, el("b", {}, "How sure"), el("span", {}, `${deathsText(f.deaths_lo) === deathsText(f.deaths_hi) ? "" : `Deaths could be ${deathsText(f.deaths_lo)} to ${deathsText(f.deaths_hi)}. `}${f.outlier || ""} These are model estimates for 2023, not counted deaths.`)))),
+        el("div", { class: "act" }, el("h3", {}, "What you can do"),
+          el("div", { class: "act-links" },
+            el("a", { href: "https://www.in.gov/idem/contact/file-a-complaint", target: "_blank", rel: "noopener" }, "Report a problem to the state ↗"),
+            el("a", { href: "https://www.in.gov/idem/public-notices", target: "_blank", rel: "noopener" }, "Comment on its permits ↗"),
+            el("a", { href: "https://www.in.gov/idem/legal/public-records/virtual-file-cabinet", target: "_blank", rel: "noopener" }, "Read its state files ↗"),
+            shareButton(f))),
+        el("p", { class: "note" }, el("a", { href: "#/method" }, "How we estimate"),
+          f.report ? " · " : "", f.report ? el("a", { href: f.report, target: "_blank", rel: "noopener" }, "EPA's full report ↗") : null),
+      );
+      window.scrollTo(0, 0);
     }
 
-    function showPopup(f, coordinates) {
-      const box = document.createElement("div");
-
-      const h = document.createElement("h2");
-      h.textContent = f.name;
-      box.append(h);
-      if (f.address) box.append(line("Address", f.address));
-      box.append(line("Industry", f.industry || "Not reported"));
-      box.append(line("Regulated for", f.programs || "None listed"));
-
-      let status = f.status || "Not available";
-      if (f.qtrs_violation > 0) status += ` (in violation ${f.qtrs_violation} of the last 12 quarters)`;
-      box.append(line("Compliance", status));
-      box.append(line("Major facility", f.major ? "Yes" : "No"));
-      if (!f.active) box.append(line("Permits", "Inactive"));
-      box.append(...harmSection(f), ...extraSections(f));
-
-      if (f.report_url) {
-        const a = document.createElement("a");
-        a.href = f.report_url;
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = "Full EPA facility report ↗";
-        const para = document.createElement("p");
-        para.append(a);
-        box.append(para);
-      }
-
-      // focusAfterOpen: false -- otherwise MapLibre focuses the report link at the bottom and the
-      // popup opens scrolled down past the facility name.
-      new maplibregl.Popup({ maxWidth: "320px", focusAfterOpen: false })
-        .setLngLat(coordinates).setDOMContent(box).addTo(map);
+    // ------------------------------------------------------------------ router
+    function route() {
+      const h = location.hash || "#/";
+      const show = (id, nav) => {
+        document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+        document.querySelectorAll("header nav a").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
+      };
+      const f = h.startsWith("#/f/") && BY_KEY.get(decodeURIComponent(h.slice(4)));
+      if (f) { show("screen-facility", null); renderFacility(f); }
+      else if (h.startsWith("#/method")) { show("screen-method", "method"); }
+      else { show("screen-home", null); initMap().then(() => { if (ready) { map.resize(); applyHash(); updateBoard(); } }); }
     }
-
-    // Top-20 dots sit above the ordinary dots, so check them first; one popup per click.
-    map.on("click", (e) => {
-      const hits = map.queryRenderedFeatures(e.point, { layers: ["top-dots", "facilities"].filter(l => map.getLayer(l)) });
-      if (hits.length) showPopup(hits[0].properties, hits[0].geometry.coordinates);
-    });
-    for (const layer of ["facilities", "top-dots"]) {
-      map.on("mouseenter", layer, () => map.getCanvas().style.cursor = "pointer");
-      map.on("mouseleave", layer, () => map.getCanvas().style.cursor = "");
-    }
+    window.addEventListener("hashchange", route);
+    route();
   </script>
 </body>
 </html>

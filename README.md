@@ -1,12 +1,11 @@
-# PolluterMap — Indiana
+# PolluterMap — Indiana's Deadliest Polluters
 
-An easy-to-read public map of regulated polluting facilities in Indiana.
-Zoom in, click a facility, and see what it is, what it releases, and its
-compliance record.
+A public map and leaderboard of Indiana's polluters, ranked by the deaths linked to their pollution
+(air pollution, toxic chemicals and climate change), with the damage in dollars, what it would cost
+to offset, and what's near you. Built only from public government data and published methods.
 
-> **Status:** Phase 1 complete (EPA ECHO data → clean database → basic map).
-> Phase 2 data gathered (toxic releases, risk scores, greenhouse gases, air emissions, water
-> discharges and violations, all linked to facilities); not on the map yet.
+> **Status:** the site (`site/index.html`) is ready to publish with GitHub Pages; see
+> [Publishing](#publishing). The earlier all-facilities map is kept at `site/classic/`.
 
 ## Project layout
 
@@ -27,18 +26,31 @@ PolluterMap/
 │   ├── build_nei_indiana.py    National Emissions Inventory (PM2.5, SO2, NOx...).
 │   ├── build_water_indiana.py  Water discharges (loadings) and permit-limit violations.
 │   ├── build_rsei_indiana.py   RSEI toxicity- and exposure-weighted risk scores.
+│   ├── build_toxic_impacts_indiana.py  Toxic releases to air, water, land → disease cases (EPA TRACI).
 │   ├── export_map_data.py      Database → GeoJSON for the map.
+│   ├── export_site_data.py     Database → the site's data, ZIP centers, towns and share pages.
 │   └── common.py               Shared helpers (downloading, Excel reading, database).
-├── site/             The static web map (plain HTML/JS/CSS, no build step).
-│   ├── index.html    The map page (MapLibre GL JS + OpenFreeMap basemap). If OpenFreeMap
-│   │                 can't load (offline, or a network filter blocks it), it falls back to
-│   │                 OpenStreetMap's own tiles, then to a plain background; the dots
-│   │                 always show.
+├── site/             The static website (plain HTML/JS/CSS, no build step). This folder is
+│   │                 what gets published.
+│   ├── index.html    "Indiana's Deadliest Polluters": map + deaths leaderboard, a page per
+│   │                 polluter, and "How we estimate". MapLibre GL JS + OpenFreeMap's dark
+│   │                 basemap; if OpenFreeMap can't load (offline, or a network filter blocks
+│   │                 it), it falls back to OpenStreetMap's own tiles, then to a plain
+│   │                 background; the dots always show.
+│   ├── site-data.js  One record per polluter (deaths, damage, impacts, trends).
+│   ├── zips.js       Center of each Indiana ZIP code (Census 2023 ZCTA gazetteer).
+│   ├── towns.js      Every incorporated Indiana city and town: location and 2024 population
+│   │                 (Census population estimates + 2024 places gazetteer).
+│   ├── p/            One page per polluter for sharing: link previews read its title and
+│   │                 description, and visitors are sent to that polluter's page.
+│   ├── classic/      The earlier map of all 58,000 regulated facilities (not linked from
+│   │                 the main page).
 │   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
 │   │                 page doesn't depend on an outside download site.
-│   └── data/         GeoJSON exported from data/processed/ for the map. Each facility
-│                     carries its newest year of TRI, RSEI, GHG, NEI and water data,
-│                     its estimated harm (when it has them) and its Indiana rank.
+│   └── data/         GeoJSON for the classic map. Each facility carries its newest year of
+│                     TRI, RSEI, GHG, NEI and water data, its estimated harm and its rank.
+├── .github/workflows/pages.yml  Publishes site/ to GitHub Pages on every push to main
+│                     (only once the repository is public).
 ├── .gitignore        Tells git which files to skip (raw downloads, etc.).
 └── README.md         This file.
 ```
@@ -100,6 +112,8 @@ Everything links on **`registry_id`** — EPA's Facility Registry ID.
 | `impact_factors` | one published factor (social cost of carbon, value of a statistical life, removal cost, everyday-equivalence) with unit, dollar year and source | `build_impact_factors.py` |
 | `health_factors` | sector × pollutant × pathway × outcome: EPA cases per ton (low, high) for Indiana — deaths, lung cancers, heart attacks, strokes, asthma, ER visits, hospital admissions, lost work/school days | `build_impact_factors.py` |
 | `cpi` | year → Consumer Price Index, for converting dollars | `build_impact_factors.py` |
+| `toxicity_factors` | chemical: EPA TRACI 2.2 cancer and noncancer cases per kg released to air, fresh water, soil | `build_toxic_impacts_indiana.py` |
+| `toxic_release_cases` | report (TRI, NEI or water monitoring) × chemical × where released (2023): pounds, cancer cases, other disease cases | `build_toxic_impacts_indiana.py` |
 | `facility_impacts` | facility (2023): estimated deaths and illnesses, health and climate damage in dollars, cost to remove its CO2, everyday comparisons | `build_impacts_indiana.py` |
 | `metadata` | source × fact (URL, data date, build date) | all |
 
@@ -124,16 +138,36 @@ All dollars are 2024 dollars; every estimate has a low / central / high range.
   Nature Communications): 2.26 × 10⁻⁴ expected heat-related deaths worldwide, 2020–2100, per ton
   (one per 4,434 tons; range −1.71 to 6.78 × 10⁻⁴, with the negative low end floored at zero).
   Counts heat deaths only — not disease, food supply, flooding or conflict.
-- **Death toll** (the map's single "deaths" number) = air-pollution deaths + climate deaths, i.e.
+- **Toxic chemicals (deaths, illness, dollars):** every chemical a facility released in 2023 — TRI
+  releases to air, water and land, NEI hazardous air pollutants (benzene, chromium, lead, mercury…),
+  and toxic metals, cyanide and benzene in water discharge monitoring — × EPA's
+  [TRACI 2.2](https://www.epa.gov/chemical-research/tool-reduction-and-assessment-chemicals-and-other-environmental-impacts-traci)
+  human-health factors (from the UN Environment/SETAC USEtox model): cancer cases and other disease
+  cases in the whole population per kg, following the chemical through air, water, soil and food.
+  Cancer deaths = cancer cases × 0.306, the US ratio of cancer deaths to new cases (611,720 / 2,001,140,
+  American Cancer Society, *Cancer Facts & Figures 2024*); dollars = deaths × value of a statistical
+  life. Low = air and water releases; central = + chemicals spread on land or put in ponds (such as
+  coal ash ponds); high = + non-hazardous landfills. Hazardous-waste landfills, injection wells and
+  off-site transfers aren't counted. Where TRI and NEI (air) or TRI and water monitoring report the
+  same chemical for one plant, the larger figure is used. Air uses TRACI's "rural air" factors, lower
+  than its "urban air" ones. Chromium counts as chromium(III) unless reported as hexavalent. Metals
+  dominate the result and EPA marks all metal factors "interim" (less certain); TRACI also counts
+  harm over an unlimited time, since metals never break down. Indiana total, central: about 5.5
+  deaths (4.7–12), 18 cancers and 3,600 other illnesses — small next to air pollution, because
+  TRACI's per-pound factors are small for most chemicals.
+- **Death toll** (the map's single "deaths" number) = air-pollution deaths + toxic-chemical cancer
+  deaths + climate deaths, i.e.
   deaths linked to one year of a facility's pollution. Climate deaths are counted, not valued
   again in dollars — EPA's social cost of carbon already includes them.
 
 **Not included, and why:**
-- *Cancer and other harm from toxic chemicals (TRI/RSEI):* EPA models facility-level cancer risk
-  (AirToxScreen) but shares it only with state agencies; the public alternative, RSEI's
-  facility-by-neighborhood data, is 22 GB per year. An Indiana extract can be requested from EPA.
-- *Lead:* EPA's only valuation (2008 lead standard) gives statewide totals, not a per-ton value.
-- *Water and land discharges:* no accepted damage-per-pound method; shown as violations instead.
+- *Deaths from noncancer toxic illness:* TRACI counts cases, not deaths, so these (including lead's
+  harm to the heart and brain) are counted as illnesses only and not valued in dollars.
+- *Chemicals with no TRACI factor:* manganese (9 million lbs in 2023), nitrates, sulfuric and
+  hydrochloric acid, ammonia, sodium nitrite and carbonyl sulfide score zero.
+- *Water permit violations as such:* a violation isn't a pollutant; the extra pollution it releases is
+  in the discharge loads above. Conventional water pollutants (sediment, nutrients, oxygen demand)
+  have no TRACI factor.
 - *Dollar cost of nonfatal illness:* illness is counted in cases, not dollars — EPA's illness dollar
   tables document their dollar year inconsistently (2015 vs 2016 vs 2019). Deaths are most of
   EPA's health dollars, so health dollars are slightly conservative.
@@ -168,15 +202,28 @@ This downloads ~1 GB from EPA and the Census Bureau into `data/raw/` (the RSEI
 file alone is 430 MB and EPA's server is slow — allow up to an hour the first
 time), filters
 everything to Indiana, links it together, and writes the CSVs and
-`data/processed/indiana.sqlite`, then `site/data/facilities.geojson` for the map.
+`data/processed/indiana.sqlite`, then the site's data files (`site/site-data.js`, `zips.js`,
+`towns.js`, the share pages in `site/p/`) and `site/data/facilities.geojson` for the classic map.
 
 Running it again reuses the downloaded files. To get EPA's latest data first,
 add `--force`. Each script can also be run on its own, in the order listed in
 `build_all.py` (later ones link to tables made by earlier ones).
 
-### 2. View the map
+### 2. View the site
 
-What the map can do:
+What the site does:
+
+- **The death total for what's on screen:** estimated deaths a year from the polluters in view, split
+  into air pollution, toxic chemicals and climate change, with the damage in dollars, the cost to
+  offset their CO2, and a town in view with about that many people. It updates as you pan, zoom or search.
+- **Leaderboard + map:** the deadliest polluters in view, ranked (or ranked by damage); the top 5 are
+  numbered on the map. Clicking a row or a dot links the two.
+- **Search** by polluter, owner or town, an Indiana ZIP code, or a street address (looked up by the
+  Census Bureau); the location button finds polluters near you.
+- **A page per polluter:** its death count, its biggest harms as big numbers, trends, its record,
+  what you can do (state complaint form, permit notices, public files) and a share button.
+
+The classic map, at `/classic/`:
 
 - **Dots or Heatmap** ("Show"). The heatmap glows where the chosen measure is concentrated and
   fades into clickable dots once you zoom in to town level.
@@ -194,7 +241,8 @@ What the map can do:
 python3 -m http.server 8000 --directory site
 ```
 
-Open <http://localhost:8000>. Stop the server with Ctrl+C.
+Open <http://localhost:8000> (the classic map is at <http://localhost:8000/classic/>). Stop the
+server with Ctrl+C.
 
 The map has to be opened through this local server, not by double-clicking
 `index.html`: browsers block pages opened straight from disk from loading
@@ -271,10 +319,31 @@ Found while adding impact estimates:
   have no linked air-pollution record, so they show no air deaths. Some of those are mostly methane,
   but POET Shelbyville, Advanced Magnesium Alloys and Nestlé Anderson likely have air emissions that
   are missing.
-- **Toxics and water reports in the mockup:** a report filed under a facility's own Registry ID is
-  used as is. Otherwise `export_mockup_data.py` looks within 3 km for a report whose name shares a
+- **Toxics and water reports on the site:** a report filed under a facility's own Registry ID is
+  used as is. Otherwise `export_site_data.py` looks within 3 km for a report whose name shares a
   distinctive word (not the town name), and never uses a report twice, so some real matches are
   missed in favor of never showing another company's data.
+- **Search by ZIP or address:** a 5-digit Indiana ZIP uses the ZIP's center from `zips.js`
+  (no lookup). A street address is sent to the US Census Bureau's free geocoder when the visitor
+  presses Enter; the Census service only allows browser requests as JSONP, so it's loaded as a
+  script. Either way, the site shows polluters within 10 miles.
+- **Comparisons:** "deaths for every day of its pollution" is a year's estimated deaths ÷ 365.
+  The traffic comparison (in a polluter's "More details") uses air-pollution deaths only (local and near-term, unlike climate deaths)
+  against Indiana's 898 traffic deaths in 2023 (NHTSA, *Overview of Motor Vehicle Traffic Crashes in
+  2023*, Table 9, FARS 2023 annual report file). Trend lines use each polluter's greenhouse gas
+  reports (2011–2023) and TRI toxic releases (2015–2024).
+- **Town comparisons:** a death count (20 or more) is compared with the Indiana city or town
+  whose 2024 population is closest to it, among the towns visible on the map (or, on a polluter's
+  page, within 25 miles of the plant, widening to 50 and 100 miles if nothing is within 50%). Within
+  25% it reads "as many people as live in …"; otherwise "N times" or "N% of" that town's population.
+- **Links** use each polluter's EPA Registry ID (or its air or greenhouse-gas ID), not its
+  rank, so shared links keep working after a data refresh.
+- **Toxic reports in the death count:** `build_impacts_indiana.py` joins each TRI report and water
+  permit to a plant by EPA's TRI–air-record link, then by Registry ID, then by location: within 3 km
+  sharing a distinctive name word, or within 1 km sharing any word, town names included (EPA's
+  registry and air records sometimes put one plant several km apart, so both spots are tried).
+  Reports with no match become polluters of their own (about 360, mostly small platers, galvanizers
+  and sewage plants), which brings the list to 1,200.
 - **EPA outlier flags:** EPA flags nine Indiana facilities' figures. Six are the PM2.5 values of big
   steel mills and coal plants, over EPA's 500-ton "National" screening level. Those six rank in the
   top 40 of about 78,000 US facilities, and their 2023 values are in line with or below the 2017 and
@@ -286,3 +355,22 @@ Found while adding impact estimates:
   but remain the most recent peer-reviewed U.S. government estimate.
 - **Carbon-removal prices:** current market prices are higher than the IPCC's at-scale projection;
   the market surveys (CDR.fyi) couldn't be checked from the network used to build this.
+
+## Publishing
+
+The site is published with **GitHub Pages**, free, at <https://olivergollapudi.github.io/PolluterMap/>.
+`.github/workflows/pages.yml` uploads the `site/` folder on every push to `main`. It only runs once
+the repository is public (free GitHub Pages needs a public repository); while it's private, the
+job is skipped.
+
+To go live:
+
+1. Make the repository public: GitHub → the repository → **Settings** → **General** → *Danger Zone*
+   → **Change visibility** → Public. Everything in it (code, data, commit history, and the email on
+   each commit) becomes public.
+2. Turn on Pages: **Settings** → **Pages** → *Build and deployment* → Source: **GitHub Actions**.
+3. Push to `main` (or re-run the "Publish site" workflow under **Actions**). The site appears at the
+   address above within a minute or two.
+
+To update the data, run `python3 scripts/build_all.py`, commit and push.
+
