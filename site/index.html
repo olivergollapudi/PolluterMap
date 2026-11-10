@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Indiana's Deadliest Polluters</title>
-  <meta name="description" content="An estimated 26,000 deaths a year are linked to pollution from Indiana's regulated polluters. See which ones, near you, from public EPA data.">
-  <meta property="og:title" content="Indiana's Deadliest Polluters"><meta property="og:type" content="website">
+  <title>Indiana Pollution Map: Indiana's Deadliest Polluters</title>
+  <meta name="description" content="Indiana pollution, mapped: which power plants, steel mills and factories are linked to the most deaths, the damage in dollars, and what's near you. From public EPA data.">
+  <link rel="canonical" href="https://indianapollution.org/">
+  <meta property="og:title" content="Indiana's Deadliest Polluters"><meta property="og:type" content="website"><meta property="og:url" content="https://indianapollution.org/">
   <meta property="og:description" content="Which Indiana polluters are linked to the most deaths, and what's near you. Built from public EPA data.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
   <!-- Indiana's Deadliest Polluters. Data: site-data.js, zips.js and towns.js, made by
@@ -70,6 +71,8 @@
     header nav a { color: var(--muted); text-decoration: none; margin-right: 16px; font-size: 15px; }
     header nav a:hover, header nav a.active { color: var(--ink); }
     .screen { display: none; }
+    header .short { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .screen.active { display: block; }
     .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 64px; }
     .eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
@@ -167,7 +170,8 @@
       .wrap { padding: 20px 16px 48px; }
       header { gap: 12px; padding: 12px 16px; }
       header .logo { font-size: 16px; white-space: nowrap; }
-      header nav a { margin-right: 0; font-size: 14px; white-space: nowrap; }
+      header nav a { margin-right: 10px; font-size: 14px; white-space: nowrap; }
+      header .full { display: none; } header .short { display: inline; }
       #screen-home { top: 44px; }
       .total, .controls { padding-left: 16px; padding-right: 16px; }
       .killer { padding: 12px 16px; }
@@ -230,11 +234,13 @@
   <header>
     <a class="logo" href="#/">Indiana's <span>Deadliest</span> Polluters</a>
     <nav>
-      <a href="#/method" data-nav="method">How we estimate</a>
+      <a href="p/"><span class="full">All polluters</span><span class="short">List</span></a>
+      <a href="#/method" data-nav="method"><span class="full">How we estimate</span><span class="short">Method</span></a>
     </nav>
   </header>
 
   <!-- ===================== 1. MAP + LEADERBOARD ===================== -->
+  <h1 class="sr-only">Indiana pollution: the deaths and damage linked to Indiana's polluters, on a map</h1>
   <section id="screen-home" class="screen">
     <div id="side">
       <div class="total" id="total"></div>

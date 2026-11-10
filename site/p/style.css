@@ -1,0 +1,19 @@
+*{box-sizing:border-box}html,body{margin:0;background:#0d0e11;color:#f3efe8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:#f3efe8;text-decoration-color:#9b968e;text-underline-offset:3px}
+header{display:flex;align-items:center;gap:20px;padding:12px 24px;border-bottom:1px solid #2a2e37}
+header .logo{font-weight:900;font-size:18px;text-decoration:none}header .logo span{color:#ff4b3a}header a.nav{color:#9b968e;text-decoration:none;font-size:15px}
+main{max-width:900px;margin:0 auto;padding:28px 24px 64px}
+.pill{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#c4281b;padding:4px 10px;border-radius:999px}
+h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-spacing:-.02em}.meta{color:#9b968e;font-size:16px}
+.big{font-size:clamp(64px,11vw,108px);font-weight:900;line-height:.95;margin-top:26px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.label{font-size:15px;font-weight:800;color:#ff4b3a;text-transform:uppercase;letter-spacing:.08em;margin-top:8px}
+.per{font-size:18px;margin-top:12px}.from{color:#9b968e;margin-top:6px}
+.harms{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 16px;margin:26px 0}
+.harm{border-top:1px solid #2a2e37;padding:14px 0}.harm b{display:block;font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.harm span{display:block;font-weight:700;font-size:14px;margin-top:4px}.harm small{display:block;color:#9b968e;font-size:12px;margin-top:3px;line-height:1.4}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}.btns a{border:1px solid #2a2e37;border-radius:999px;padding:8px 14px;text-decoration:none;font-size:14px}
+.btns a.primary{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
+h2{font-size:18px;margin:26px 0 10px}.note{color:#9b968e;font-size:13px;line-height:1.55}
+ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
+ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}
+@media(max-width:640px){header{padding:12px 16px;gap:12px}header .logo{font-size:15px}header a.nav{font-size:13px}main{padding:20px 16px 48px}}

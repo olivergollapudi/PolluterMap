@@ -41,8 +41,9 @@ PolluterMap/
 │   ├── zips.js       Center of each Indiana ZIP code (Census 2023 ZCTA gazetteer).
 │   ├── towns.js      Every incorporated Indiana city and town: location and 2024 population
 │   │                 (Census population estimates + 2024 places gazetteer).
-│   ├── p/            One page per polluter for sharing: link previews read its title and
-│   │                 description, and visitors are sent to that polluter's page.
+│   ├── p/            A page per polluter that search engines can read and link previews use
+│   │                 (with a button to open it on the map), and p/index.html listing them all.
+│   ├── sitemap.xml, robots.txt  Point search engines at the home page and every polluter page.
 │   ├── classic/      The earlier map of all 58,000 regulated facilities (not linked from
 │   │                 the main page).
 │   ├── vendor/       A local copy of MapLibre 4.7.1 (from its official npm package), so the
@@ -358,7 +359,9 @@ Found while adding impact estimates:
 
 ## Publishing
 
-The site is published with **GitHub Pages**, free, at <https://olivergollapudi.github.io/PolluterMap/>.
+The site is published with **GitHub Pages**, free. Its own address is meant to be
+<https://indianapollution.org> (set in `SITE_URL` in `export_site_data.py`, used for search engines and
+link previews); until that domain is connected it's at <https://olivergollapudi.github.io/PolluterMap/>.
 `.github/workflows/pages.yml` uploads the `site/` folder on every push to `main`. It only runs once
 the repository is public (free GitHub Pages needs a public repository); while it's private, the
 job is skipped.

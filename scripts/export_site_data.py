@@ -7,9 +7,9 @@ Writes:
     "polluters near 46204" works without any lookup service
   - site/towns.js: every incorporated Indiana city and town with its location and 2024
     population (Census), so a death count can be compared with a town in view
-  - site/p/<name>-<id>.html: one small page per polluter for sharing. Link previews
-    (texts, social media) read its title and description; people who open it go straight to
-    that polluter on the site.
+  - site/p/<name>-<id>.html: a page per polluter that search engines can read and link previews
+    use, with a button to open it on the interactive map; site/p/index.html lists them all
+  - site/sitemap.xml and site/robots.txt, pointing search engines at those pages
 
 One record per polluter with an impact estimate: a readable name and owner, what kind of
 place it is, how it pollutes (air, toxic chemicals, water, climate) and what that costs
@@ -33,6 +33,7 @@ from common import DB_PATH, RAW_DIR, ROOT, download
 OUT = ROOT / "site" / "site-data.js"
 ZIPS_OUT = ROOT / "site" / "zips.js"
 PAGES = ROOT / "site" / "p"
+SITE_URL = "https://indianapollution.org"   # the site's own address, for search engines and link previews
 ZCTA_URL = "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2023_Gazetteer/2023_Gaz_zcta_national.zip"
 ZCTA_FILE = RAW_DIR / "census" / "2023_Gaz_zcta_national.zip"
 TOWNS_OUT = ROOT / "site" / "towns.js"
@@ -122,38 +123,173 @@ def write_towns():
 
 
 def deaths_words(n):
-    return f"{n:,.0f}" if n >= 10 else f"{n:.1f}" if n >= 0.1 else "under 0.1" if n > 0 else "no"
+    """Same rounding as the site: 2,600 / 54 / 1.1 / under 0.1 / 0."""
+    if not n:
+        return "0"
+    if n >= 100:
+        return f"{float(f'{n:.2g}'):,.0f}"
+    return f"{n:,.0f}" if n >= 10 else f"{n:.1f}" if n >= 0.1 else "under 0.1"
 
 
 def money_words(n):
     return f"${n / 1e9:,.1f} billion" if n >= 1e9 else f"${n / 1e6:,.0f} million" if n >= 1e6 else f"${n:,.0f}"
 
 
-def write_pages(out):
-    """One shareable page per polluter. Old pages are removed so renamed polluters don't linger."""
-    PAGES.mkdir(parents=True, exist_ok=True)
-    for old in PAGES.glob("*.html"):
-        old.unlink()
-    for f in out:
-        title = f"{f['name']}: {deaths_words(f['deaths'])} deaths a year" if f["deaths"] >= 0.1 else f"{f['name']}: what it releases"
-        desc = (f"#{f['rank']} of Indiana's deadliest polluters. Estimated deaths linked to one year of its pollution "
-                f"(air pollution, toxic chemicals and climate change), plus {money_words(f['damage'])} in damage a year."
-                if f["deaths"] >= 0.1 else f"{f['kind']} in {f['city'] or 'Indiana'}: its toxic releases, the illness linked to them, and its record.")
-        e = html.escape
-        PAGES.joinpath(f"{f['slug']}.html").write_text(f"""<!doctype html>
+def money_short(n):
+    if n >= 1e9:
+        return f"${n / 1e9:.{0 if n >= 1e10 else 1}f}B"
+    if n >= 1e6:
+        return f"${n / 1e6:.{0 if n >= 1e7 else 1}f}M"
+    return f"${round(n / 1e3):,}K" if n >= 1e3 else f"${n:,.0f}"
+
+
+def amount(n):
+    """Pounds or tons: 19.2 million / 110,000 / 47."""
+    return f"{n / 1e6:.1f} million" if n >= 1e6 else f"{float(f'{n:.2g}'):,.0f}" if n >= 100 else f"{n:,.0f}"
+
+
+def per_day(n):
+    if n / 365 >= 1.5:
+        return f"about {round(n / 365)} deaths for every day of its pollution"
+    if n / 365 >= 0.75:
+        return "about one death for every day of its pollution"
+    return f"one death for every {round(365 / n)} days of its pollution" if n >= 1 else None
+
+
+def harms(f):
+    """The polluter's harms as (big number, label, note), biggest first, from every dataset."""
+    ill, t, w, out = f["ill"], f["toxic"], f["water"], []
+    # round halves up, like the site does (Python's own rounding sends 398.5 to 398)
+    count = lambda n: f"{int(n + 0.5):,}" if n >= 10 else f"{int(n * 10 + 0.5) / 10:.1f}".removesuffix(".0")
+    if f["damage"] >= 1:
+        out.append((money_short(f["damage"]), "in damage a year",
+                    f"plus {money_short(f['offset_lo'])}–{money_short(f['offset_hi'])} to pull its CO2 back out of the air" if f["offset_hi"] else "health harm in dollars"))
+    if ill["new_asthma_cases"] >= 1:
+        out.append((count(ill["new_asthma_cases"]), "new asthma cases a year", ""))
+    cancers = ill["lung_cancers"] + f["toxic_cancers"]
+    if cancers >= 0.1:
+        out.append((count(cancers), "cancers a year", "lung cancers from soot" + (", and cancers from toxic chemicals" if f["toxic_cancers"] >= 0.1 else "")))
+    if ill["heart_attacks"] + ill["strokes"] >= 1:
+        out.append((count(ill["heart_attacks"] + ill["strokes"]), "heart attacks and strokes a year", ""))
+    if ill["er_visits"] + ill["hospital_admissions"] >= 1:
+        out.append((count(ill["er_visits"] + ill["hospital_admissions"]), "ER visits and hospital stays a year", ""))
+    if f["toxic_illnesses"] >= 1:
+        out.append((count(f["toxic_illnesses"]), "other illnesses from toxic chemicals a year", f"mostly from {f['toxic_chem']}" if f["toxic_chem"] else ""))
+    if t and t["lb"] >= 1:
+        out.append((amount(t["lb"]), "lbs of toxic chemicals released", f"{amount(t['carcinogen_lb'])} lbs of them cause cancer" if t["carcinogen_lb"] >= 1 else ""))
+    if f["co2e_t"] >= 1:
+        out.append((amount(f["co2e_t"]), "tons of greenhouse gases a year", f"as much as {amount(f['cars'])} cars"))
+    if w and w["exceedances"]:
+        out.append((f"{w['exceedances']:,}", "water permit violations last year",
+                    f"discharges into {w['impaired'].split(', ')[0]}, already listed as polluted" if w["impaired"] else ""))
+    out.append((money_short(f["fines"]), "in fines over 5 years",
+                (f"out of compliance {f['qtrs_violation']} of the last 12 quarters" if f["qtrs_violation"] else "")))
+    return out
+
+
+PAGE_CSS = """*{box-sizing:border-box}html,body{margin:0;background:#0d0e11;color:#f3efe8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:#f3efe8;text-decoration-color:#9b968e;text-underline-offset:3px}
+header{display:flex;align-items:center;gap:20px;padding:12px 24px;border-bottom:1px solid #2a2e37}
+header .logo{font-weight:900;font-size:18px;text-decoration:none}header .logo span{color:#ff4b3a}header a.nav{color:#9b968e;text-decoration:none;font-size:15px}
+main{max-width:900px;margin:0 auto;padding:28px 24px 64px}
+.pill{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#c4281b;padding:4px 10px;border-radius:999px}
+h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-spacing:-.02em}.meta{color:#9b968e;font-size:16px}
+.big{font-size:clamp(64px,11vw,108px);font-weight:900;line-height:.95;margin-top:26px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.label{font-size:15px;font-weight:800;color:#ff4b3a;text-transform:uppercase;letter-spacing:.08em;margin-top:8px}
+.per{font-size:18px;margin-top:12px}.from{color:#9b968e;margin-top:6px}
+.harms{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 16px;margin:26px 0}
+.harm{border-top:1px solid #2a2e37;padding:14px 0}.harm b{display:block;font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.harm span{display:block;font-weight:700;font-size:14px;margin-top:4px}.harm small{display:block;color:#9b968e;font-size:12px;margin-top:3px;line-height:1.4}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}.btns a{border:1px solid #2a2e37;border-radius:999px;padding:8px 14px;text-decoration:none;font-size:14px}
+.btns a.primary{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
+h2{font-size:18px;margin:26px 0 10px}.note{color:#9b968e;font-size:13px;line-height:1.55}
+ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
+ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}
+@media(max-width:640px){header{padding:12px 16px;gap:12px}header .logo{font-size:15px}header a.nav{font-size:13px}main{padding:20px 16px 48px}}
+"""
+
+
+def page_shell(title, desc, url, body):
+    e = html.escape
+    return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
+<link rel="canonical" href="{e(url)}">
 <meta property="og:type" content="article"><meta property="og:site_name" content="Indiana's Deadliest Polluters">
-<meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
+<meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{e(url)}">
 <meta name="twitter:card" content="summary">
-<script>location.replace("../#/f/{e(f['key'])}");</script>
-</head><body style="font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px">
-<h1>{e(title)}</h1><p>{e(desc)}</p><p><a href="../#/f/{e(f['key'])}">See the details</a></p>
-</body></html>
-""", encoding="utf-8")
-    print(f"Wrote {len(out)} share pages to {PAGES.relative_to(ROOT)}/")
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="./">All polluters</a><a class="nav" href="../#/method">How we estimate</a></header>
+<main>
+{body}
+</main></body></html>
+"""
+
+
+def write_pages(out):
+    """A real page per polluter (search engines can read it, link previews use its title), an index
+    of all of them, plus sitemap.xml and robots.txt. Old pages are removed so renamed polluters don't linger."""
+    e = html.escape
+    PAGES.mkdir(parents=True, exist_ok=True)
+    for old in PAGES.glob("*.html"):
+        old.unlink()
+    (PAGES / "style.css").write_text(PAGE_CSS, encoding="utf-8")
+    for f in out:
+        url = f"{SITE_URL}/p/{f['slug']}.html"
+        place = ", ".join(x for x in (f["city"], "Indiana") if x)
+        if f["deaths"] >= 0.1:
+            title = f"{f['name']} ({place}): an estimated {deaths_words(f['deaths'])} deaths a year from its pollution"
+            desc = (f"#{f['rank']} of Indiana's deadliest polluters. {f['kind']} in {place}, linked to an estimated "
+                    f"{deaths_words(f['deaths'])} deaths a year from air pollution, toxic chemicals and climate change, and "
+                    f"{money_words(f['damage'])} in damage. From public EPA data.")
+        else:
+            title = f"{f['name']} ({place}): pollution, toxic releases and record"
+            desc = f"{f['kind']} in {place}: its toxic releases, the illness linked to them, and its compliance record. From public EPA data."
+        parts = [x for x in ((f["air_deaths"], "air pollution"), (f["toxic_deaths"], "toxic chemicals"), (f["climate_deaths"], "climate change")) if x[0]]
+        pd = per_day(f["deaths"])
+        body = "\n".join(x for x in (
+            f'<span class="pill">#{f["rank"]} deadliest in Indiana</span>' if f["deaths"] >= 0.1 else "",
+            f"<h1>{e(f['name'])}</h1>",
+            f'<div class="meta">{e(" · ".join(x for x in (f["kind"], place, f["county"] and f["county"] + " County", f["owner"] and "owned by " + f["owner"]) if x))}</div>',
+            f'<div class="big">{deaths_words(f["deaths"])}</div><div class="label">estimated deaths a year</div>',
+            f'<div class="per">That\'s {pd}.</div>' if pd else "",
+            f'<div class="from">From {e(", ".join(f"{deaths_words(v)} {k}" for v, k in parts))}.</div>' if parts else "",
+            '<div class="harms">' + "".join(f'<div class="harm"><b>{e(v)}</b><span>{e(l)}</span>{f"<small>{e(n)}</small>" if n else ""}</div>' for v, l, n in harms(f)) + "</div>",
+            f'<div class="btns"><a class="primary" href="../#/f/{e(f["key"])}">Open on the interactive map</a>'
+            f'<a href="https://www.in.gov/idem/contact/file-a-complaint" rel="noopener">Report a problem to the state ↗</a>'
+            f'<a href="https://www.in.gov/idem/public-notices" rel="noopener">Comment on its permits ↗</a>'
+            + (f'<a href="{e(f["report"])}" rel="noopener">EPA\'s full report ↗</a>' if f["report"] else "") + "</div>",
+            f'<p class="note">Estimates for one year of pollution (2023), in 2024 dollars: model estimates from EPA data and published '
+            f'methods, not counted deaths. Deaths could be {deaths_words(f["deaths_lo"])} to {deaths_words(f["deaths_hi"])}. '
+            f'{e(f["outlier"] or "")} <a href="../#/method">How we estimate</a></p>',
+        ) if x)
+        (PAGES / f"{f['slug']}.html").write_text(page_shell(title, desc, url, body), encoding="utf-8")
+
+    # All polluters, ranked: one page that links to every polluter page
+    rows = "\n".join(
+        f'<li><span class="r">{f["rank"]}</span><span class="n"><a href="{e(f["slug"])}.html">{e(f["name"])}</a>'
+        f'<small>{e(" · ".join(x for x in (f["kind"], f["city"]) if x))}</small></span><b>{deaths_words(f["deaths"])}</b></li>' for f in out)
+    total = sum(f["deaths"] for f in out)
+    body = (f"<h1>Indiana's polluters, ranked by deaths</h1>"
+            f'<div class="meta">All {len(out):,} Indiana polluters with an estimate, linked to about {deaths_words(total)} deaths a year '
+            f"from air pollution, toxic chemicals and climate change. Estimated deaths a year, from one year of pollution (2023).</div>"
+            f'<div class="btns" style="margin-top:16px"><a class="primary" href="../">Open the map</a></div><ol class="list">{rows}</ol>')
+    (PAGES / "index.html").write_text(page_shell(
+        "Indiana pollution: all polluters ranked by deaths | Indiana's Deadliest Polluters",
+        f"Every Indiana polluter with an estimate, ranked by the deaths linked to its pollution: {len(out):,} power plants, "
+        "steel mills, refineries and factories. From public EPA data.", f"{SITE_URL}/p/", body), encoding="utf-8")
+
+    # Tell search engines what to read
+    urls = [f"{SITE_URL}/", f"{SITE_URL}/p/"] + [f"{SITE_URL}/p/{f['slug']}.html" for f in out]
+    (ROOT / "site" / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(f"  <url><loc>{e(u)}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    (ROOT / "site" / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
+    print(f"Wrote {len(out)} polluter pages and an index to {PAGES.relative_to(ROOT)}/, plus sitemap.xml and robots.txt")
 
 
 def main():
