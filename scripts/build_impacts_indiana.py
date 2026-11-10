@@ -15,17 +15,23 @@ published factors from build_impact_factors.py:
   Everyday comparisons = CO2-equivalent as cars, homes, gallons of gasoline, forest acres.
   Climate deaths = tons CO2-equivalent  x  Bressler (2021) "mortality cost of carbon": expected
             heat-related deaths worldwide, 2020-2100, per ton (low estimate floored at 0).
-  Total death toll = air-pollution deaths + climate deaths. (Dollars are not added again: EPA's
-            social cost of carbon already values climate deaths.)
+  Toxic chemicals = each chemical released to air, water or land (TRI, NEI hazardous air
+            pollutants, water discharge monitoring) x EPA TRACI cases per kg (build_toxic_impacts_indiana.py)
+            -> cancer cases and other disease cases; cancer cases x the US ratio of cancer deaths to new
+            cases -> toxic deaths; deaths x value of a statistical life -> dollars.
+            Low = air and water releases; central = + chemicals spread on land or put in ponds;
+            high = + landfills (partly contained, so only in the high estimate).
+  Total death toll = air-pollution deaths + toxic-chemical deaths + climate deaths. (Climate
+            dollars are not added again: EPA's social cost of carbon already values climate deaths.)
 
 Every number is an estimate with a low / central / high range. "Central" health is the
 midpoint of EPA's low and high estimates; central climate uses EPA's central 2% rate.
 
-NOT included: toxic chemicals (TRI/RSEI) -- EPA's facility-level cancer modeling isn't public,
-and RSEI's facility-by-neighborhood data is 22 GB a year; lead -- no per-ton valuation; water and
-land discharges -- no accepted damage-per-pound method; the dollar cost of nonfatal illness -- EPA's
-illness dollar values come in tables whose dollar year is inconsistently documented, so illness is
-counted in cases, not dollars (deaths are most of EPA's health dollars).
+NOT included: deaths from noncancer toxic illness (TRACI counts cases, not deaths; lead's heart and
+brain harm is in these cases); chemicals TRACI has no factor for (manganese, nitrates, acids,
+ammonia); water permit violations as such (the extra pollution they release is in the discharge
+loads); the dollar cost of nonfatal illness -- EPA's illness dollar values come in tables whose
+dollar year is inconsistently documented, so illness is counted in cases, not dollars.
 
 Each facility is matched to one of EPA's 21 industrial sectors from its industry code
 (NAICS) and NEI source type; facilities that don't fit a sector (e.g. airports, factories
@@ -33,7 +39,7 @@ burning fuel) use EPA's Indiana "industrial boilers" values and are flagged as a
 
 Writes data/processed/impacts_indiana_facilities.csv + table facility_impacts.
 
-Run after build_echo, build_ghg, build_nei and build_impact_factors.
+Run after build_echo, build_ghg, build_nei, build_toxic_impacts and build_impact_factors.
     python3 scripts/build_impacts_indiana.py
 """
 
@@ -54,6 +60,16 @@ ILLNESSES = ["lung_cancers", "heart_attacks", "strokes", "cardiac_arrests", "new
 OTHER_GHG = ["hfc", "pfc", "sf6", "nf3", "other_fluorinated", "hfe", "short_lived", "other_ghg"]
 PROXY_SECTOR = "industrial boilers"
 SAME_SITE_KM = 1.0   # a GHG and an NEI record this close together with different IDs = same plant
+TOXIC_SAME_SITE_KM = 3.0   # a TRI or water report this close to a row, sharing a name word = same plant
+# Share of new cancer cases that end in death: US estimates for 2024, 611,720 deaths / 2,001,140 new
+# cases (American Cancer Society, Cancer Facts & Figures 2024)
+CANCER_DEATHS_PER_CASE = 611720 / 2001140
+# Words too common in plant names to show two reports are the same plant
+GENERIC = {"ENERGY", "INDIANA", "POWER", "PLANT", "STATION", "GENERATING", "GENERATION", "COMPANY", "CORP",
+           "CORPORATION", "STEEL", "SERVICES", "PRODUCTS", "NORTH", "AMERICA", "FACILITY", "WORKS", "MILL",
+           "ELECTRIC", "COUNTY", "INDUSTRIES", "MANUFACTURING", "INTERNATIONAL", "HARBOR", "DUKE", "CLEVELAND",
+           "CLIFFS", "UNITED", "STATES", "DIVISION", "OPERATIONS", "WATER", "TREATMENT", "CUSTOM", "SERVICE",
+           "BURNS", "CUMMINS", "CITY", "TOWN", "WASTEWATER", "MUNICIPAL", "SANITARY", "DISTRICT", "LLC"}
 # Plants whose GHG and NEI records are farther apart than that, checked by hand against the street
 # addresses in EPA's files: {GHG facility ID: NEI facility ID}. Deliberately NOT listed, because they
 # are different plants: Nucor Fastener / Nucor Vulcraft (St. Joe), Duke's power plant at Purdue / Purdue.
@@ -102,6 +118,13 @@ def outlier_note(eis_id, flags):
     if all(x.endswith("(Low)") for x in flags):
         return "EPA flags one of this facility's emission figures as unusually low, so this estimate may be too low."
     return "EPA flags one of this facility's emission figures as unusually high compared with facilities nationwide."
+
+
+def name_words(s, close=False):
+    """Distinctive words in a name. close=True (reports under 1 km apart) also allows town names and
+    "generating station", which only show it's the same plant when the two are that close."""
+    skip = GENERIC - {"GENERATING", "STATION"} if close else GENERIC
+    return {w for w in re.findall(r"[A-Z]{4,}", (s or "").upper()) if w not in skip}
 
 
 def km_apart(lat1, lon1, lat2, lon2):
@@ -274,6 +297,80 @@ def main():
     print(f"  {merged} greenhouse-gas records merged into the air-pollution record at the same location, "
           f"{confirmed} more from the checked list (SAME_PLANT)")
 
+    # ---------------------------------------------------------------- toxic chemicals (TRACI)
+    # Which row each TRI facility and water permit belongs to: the air-pollution record EPA links
+    # it to, else its own registry ID if that already has a row, else a row within
+    # TOXIC_SAME_SITE_KM whose name shares a distinctive word, else a row of its own.
+    tri_to_nei = {r["tri_facility_id"]: nei_keys[r["eis_facility_id"]] for r in nei if r["tri_facility_id"]}
+    row_of_registry = {k: k for k in rows}
+    for k, regs in merged_registries.items():
+        for x in regs:
+            row_of_registry.setdefault(x, k)
+    def row_names(k, close=False):
+        e = echo.get(k)
+        return name_words(f"{info.get(k, {}).get('name') or ''} {e['name'] if e else ''}", close)
+    # A row can sit at two spots (EPA's registry and the air-pollution record disagree): try both
+    sites = [(k, lat, lon, row_names(k) - name_words(i.get("city")), row_names(k, True))
+             for k, i in info.items()
+             for lat, lon in {(i.get("lat"), i.get("lon")), ((echo[k]["lat"], echo[k]["lon"]) if k in echo else (None, None))}
+             if lat is not None]
+    linked = defaultdict(int)
+    def toxic_row(r):
+        if r["source"] == "nei":
+            return nei_keys[r["source_id"]]
+        if r["source"] == "tri" and r["source_id"] in tri_to_nei:
+            linked["air record"] += 1
+            return tri_to_nei[r["source_id"]]
+        if r["registry_id"] in row_of_registry:
+            linked["registry ID"] += 1
+            return row_of_registry[r["registry_id"]]
+        mine, mine_close = name_words(r["facility_name"]) - name_words(r["city"]), name_words(r["facility_name"], True)
+        if "CONTRACTOR" not in (r["facility_name"] or "").upper():
+            dist = ((km_apart(r["lat"], r["lon"], lat, lon), k, bool(mine & words), bool(mine_close & close))
+                    for k, lat, lon, words, close in sites)
+            near = min(((d, k) for d, k, far_ok, close_ok in dist if far_ok or (close_ok and d <= 1.0)),
+                       default=(float("inf"), None))
+            if near[0] <= TOXIC_SAME_SITE_KM:
+                linked["location and name"] += 1
+                return near[1]
+        linked["own row"] += 1
+        return r["registry_id"] or f"{r['source']}:{r['source_id']}"
+    try:
+        toxic = con.execute("SELECT * FROM toxic_release_cases WHERE year = ?", (YEAR,)).fetchall()
+    except sqlite3.OperationalError as e:
+        sys.exit(f"ERROR: {e}. Run build_toxic_impacts_indiana.py first.")
+    if not toxic:
+        sys.exit(f"ERROR: no toxic release cases for {YEAR}. Run build_toxic_impacts_indiana.py first.")
+    row_for_source = {}
+    # cases[row][(chemical, compartment)][source] = [cancer, noncancer]
+    cases = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [0.0, 0.0])))
+    for r in toxic:
+        sid = (r["source"], r["source_id"])
+        if sid not in row_for_source:
+            row_for_source[sid] = toxic_row(r)
+            k = row_for_source[sid]
+            if k not in info:
+                info[k] = {"name": r["facility_name"], "city": r["city"], "lat": r["lat"], "lon": r["lon"]}
+        if r["traci_key"]:
+            c = cases[row_for_source[sid]][(r["traci_key"], r["compartment"])][r["source"]]
+            c[0] += r["cancer_cases"]
+            c[1] += r["noncancer_cases"]
+    print("  toxic reports joined to a plant by " + ", ".join(f"{how}: {n}" for how, n in linked.items()))
+    for k, chems in cases.items():
+        top = defaultdict(float)
+        for (chem, comp), by_source in chems.items():
+            # TRI and NEI (air) or TRI and DMR (water) can report the same release: keep the larger
+            cancer, other = max(by_source.values(), key=lambda x: x[0] * 100 + x[1])
+            levels = {"air": ("low", "central", "high"), "water": ("low", "central", "high"),
+                      "land_open": ("central", "high"), "landfill": ("high",)}[comp]
+            for lvl in levels:
+                rows[k][f"toxic_cancers_{lvl}"] += cancer
+                rows[k][f"toxic_illnesses_{lvl}"] += other
+            if "central" in levels:
+                top[chem] += cancer * 100 + other
+        if top:
+            info[k]["toxic_top_chemical"] = max(top, key=top.get)
+
     # ---------------------------------------------------------------- combine
     out = []
     for k, v in rows.items():
@@ -311,16 +408,21 @@ def main():
             "eq_gallons_gasoline": co2e / f["eq_gallon_gasoline"], "eq_forest_acres": co2e / f["eq_forest_acre_year"],
             "eq_coal_plants": co2e / f["eq_coal_plant_year"],
             "penalties_5yr_usd": sum(penalties) if penalties else None,
+            "toxic_top_chemical": i.get("toxic_top_chemical"),
+            "toxic_cancers": v.get("toxic_cancers_central", 0.0), "toxic_illnesses": v.get("toxic_illnesses_central", 0.0),
         }
         for lvl in ("low", "central", "high"):
-            row[f"total_usd_{lvl}"] = row[f"health_usd_{lvl}"] + row[f"climate_usd_{lvl}"]
+            row[f"toxic_deaths_{lvl}"] = v.get(f"toxic_cancers_{lvl}", 0.0) * CANCER_DEATHS_PER_CASE
+            row[f"toxic_usd_{lvl}"] = row[f"toxic_deaths_{lvl}"] * vsl
+        for lvl in ("low", "central", "high"):
+            row[f"total_usd_{lvl}"] = row[f"health_usd_{lvl}"] + row[f"toxic_usd_{lvl}"] + row[f"climate_usd_{lvl}"]
         row["total_usd_per_day_central"] = row["total_usd_central"] / 365
         # Climate deaths: worldwide, heat-related, spread over 2020-2100 (Bressler 2021)
         for lvl in ("low", "central", "high"):
             row[f"climate_deaths_{lvl}"] = max(0.0, co2e * f[f"mcc_{lvl}"])
-            row[f"total_deaths_{lvl}"] = row[f"deaths_{lvl}"] + row[f"climate_deaths_{lvl}"]
+            row[f"total_deaths_{lvl}"] = row[f"deaths_{lvl}"] + row[f"toxic_deaths_{lvl}"] + row[f"climate_deaths_{lvl}"]
         out.append(row)
-    out.sort(key=lambda r: -r["total_usd_central"])
+    out.sort(key=lambda r: (-r["total_usd_central"], -r["toxic_illnesses"]))
 
     # ---------------------------------------------------------------- report
     print("  health sectors used: " + ", ".join(f"{s} ({b}) {n}" for (s, b), n in sorted(sector_counts.items(), key=lambda x: -x[1])))
@@ -329,18 +431,20 @@ def main():
     print(f"    premature deaths: {tot('deaths_low'):,.0f} - {tot('deaths_high'):,.0f} (central {tot('deaths_central'):,.0f})")
     print(f"    climate deaths (worldwide, 2020-2100): {tot('climate_deaths_low'):,.0f} - {tot('climate_deaths_high'):,.0f} "
           f"(central {tot('climate_deaths_central'):,.0f}); total death toll central {tot('total_deaths_central'):,.0f}")
+    print(f"    toxic chemicals: cancer deaths {tot('toxic_deaths_low'):,.1f} - {tot('toxic_deaths_high'):,.1f} (central "
+          f"{tot('toxic_deaths_central'):,.1f}); {tot('toxic_cancers'):,.1f} cancers and {tot('toxic_illnesses'):,.0f} other illnesses (central)")
     print("    illness: " + ", ".join(f"{ill.replace('_', ' ')} {tot(ill):,.0f}" for ill in ILLNESSES))
     print(f"    health damage: ${tot('health_usd_low') / 1e9:,.1f}B - ${tot('health_usd_high') / 1e9:,.1f}B")
     print(f"    climate damage: ${tot('climate_usd_low') / 1e9:,.1f}B - ${tot('climate_usd_high') / 1e9:,.1f}B (central ${tot('climate_usd_central') / 1e9:,.1f}B)")
     print("  top 8 by central estimated harm:")
     for r in out[:8]:
-        print(f"    {r['facility_name'][:38]:38} {r['city'] or '':14} deaths {r['deaths_low']:5.1f}-{r['deaths_high']:5.1f}  "
+        print(f"    {(r['facility_name'] or '')[:38]:38} {r['city'] or '':14} deaths {r['deaths_low']:5.1f}-{r['deaths_high']:5.1f}  "
               f"health ${r['health_usd_central'] / 1e6:7,.0f}M  climate ${r['climate_usd_central'] / 1e6:7,.0f}M  [{r['health_sector']}]")
 
     cols = list(out[0].keys())
     types = {c: "TEXT" if c in ("registry_id", "in_echo", "facility_name", "city", "nei_eis_id", "ghg_facility_id",
                                 "health_sector", "health_sector_basis", "health_factor_fallbacks",
-                                "epa_outlier_values", "outlier_note", "merged_records")
+                                "epa_outlier_values", "outlier_note", "merged_records", "toxic_top_chemical")
              else "INTEGER" if c == "year" else "REAL" for c in cols}
     print("Writing:")
     write_csv(PROCESSED_DIR / "impacts_indiana_facilities.csv", cols, out)
@@ -348,7 +452,7 @@ def main():
     replace_table(w, "facility_impacts", [(c, types[c]) for c in cols], out, indexes=["(registry_id)"])
     set_metadata(w, "impacts", {"year": YEAR, "dollar_year": dollar_year, "vsl_usd": round(vsl),
                                 "scc_central_usd": round(sc["co2"][1], 2),
-                                "excludes": "toxics (TRI/RSEI), water, nonfatal illness"})
+                                "excludes": "noncancer toxic deaths, chemicals without a TRACI factor, nonfatal illness dollars"})
     w.commit()
     w.close()
     print("  table 'facility_impacts' in data/processed/indiana.sqlite")

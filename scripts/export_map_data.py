@@ -133,7 +133,8 @@ def source_summaries(con):
                health_usd_central, climate_usd_central, climate_usd_low, climate_usd_high,
                removal_usd_low, removal_usd_high, eq_cars, eq_homes, eq_forest_acres, outlier_note,
                lung_cancers, heart_attacks + strokes + cardiac_arrests, new_asthma_cases, er_visits + hospital_admissions,
-               total_deaths_central, total_deaths_low, total_deaths_high, climate_deaths_central
+               total_deaths_central, total_deaths_low, total_deaths_high, climate_deaths_central,
+               toxic_deaths_central, toxic_cancers, toxic_illnesses
         FROM facility_impacts WHERE registry_id IS NOT NULL""")
     death_rank = ranks({k: r[21] for k, r in impacts.items()})
     harm_rank = ranks({k: r[1] for k, r in impacts.items()})
@@ -150,9 +151,12 @@ def source_summaries(con):
             # nonfatal illness per year (rounded to 1 decimal; most small facilities are well under 1)
             "ill_lung_cancer": round(r[17] or 0, 1) or None, "ill_heart_stroke": round(r[18] or 0, 1) or None,
             "ill_asthma": round(r[19] or 0, 1) or None, "ill_hospital": round(r[20] or 0, 1) or None,
-            # total death toll = air-pollution deaths + climate deaths (worldwide, 2020-2100)
+            # total death toll = air-pollution deaths + toxic-chemical cancer deaths + climate deaths
+            # (worldwide, 2020-2100)
             "total_deaths": round(r[21] or 0, 2) or None, "total_deaths_lo": round(r[22] or 0, 2),
             "total_deaths_hi": round(r[23] or 0, 2) or None, "climate_deaths": round(r[24] or 0, 2) or None,
+            "toxic_deaths": round(r[25] or 0, 2) or None, "ill_toxic_cancer": round(r[26] or 0, 1) or None,
+            "ill_toxic_other": round(r[27] or 0, 1) or None,
             "death_rank": death_rank.get(k),
         })
     meta["impacts"] = {"year": int(imp_year), "dollar_year": int(imp_dollars), "ranked": len(harm_rank)}
