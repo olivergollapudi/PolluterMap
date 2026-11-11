@@ -640,7 +640,7 @@
         el("div", { class: "big num" }, deathsText(f.deaths), el("small", {}, "deaths a year")),
         el("div", { class: "line" }, `${f.deaths ? `#${RANKS.deaths.get(f.id)} in Indiana · ` : ""}${short(money(f.damage))} damage a year`),
         ...stand.map(x => el("div", { class: "flag" }, x.replace(/\.$/, ""))),
-        el("div", { class: "links" }, el("a", { href: `#/f/${f.key}` }, "See its impact →"), zoom));
+        el("div", { class: "links" }, el("a", { href: `p/${f.slug}.html` }, "See its impact →"), zoom));
     }
     function select(f, scrollList) {
       popup?.remove();
@@ -854,7 +854,7 @@
         document.querySelectorAll("header nav a").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
       };
       const f = h.startsWith("#/f/") && BY_KEY.get(decodeURIComponent(h.slice(4)));
-      if (f) { show("screen-facility", null); renderFacility(f); }
+      if (f) { location.replace(`p/${f.slug}.html`); return; }   // each polluter has its own page now (old #/f/ links still work)
       else if (h.startsWith("#/method")) { show("screen-method", "method"); }
       else { show("screen-home", null); initMap().then(() => { if (ready) { map.resize(); applyHash(); updateBoard(); } }); }
     }

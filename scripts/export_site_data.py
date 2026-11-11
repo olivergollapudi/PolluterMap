@@ -27,7 +27,6 @@ import math
 import re
 import sqlite3
 import zipfile
-from urllib.parse import quote
 
 from common import DB_PATH, RAW_DIR, ROOT, download
 from places import counties, county_of, slug as place_slug
@@ -190,36 +189,13 @@ def harms(f):
     return out
 
 
-PAGE_CSS = """*{box-sizing:border-box}html,body{margin:0;background:#0d0e11;color:#f3efe8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-a{color:#f3efe8;text-decoration-color:#9b968e;text-underline-offset:3px}
-header{display:flex;align-items:center;gap:20px;padding:12px 24px;border-bottom:1px solid #2a2e37}
-header .logo{font-weight:900;font-size:18px;text-decoration:none}header .logo span{color:#ff4b3a}header a.nav{color:#9b968e;text-decoration:none;font-size:15px}
-main{max-width:900px;margin:0 auto;padding:28px 24px 64px}
-.pill{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#c4281b;padding:4px 10px;border-radius:999px}
-h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-spacing:-.02em}.meta{color:#9b968e;font-size:16px}
-.big{font-size:clamp(64px,11vw,108px);font-weight:900;line-height:.95;margin-top:26px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.label{font-size:15px;font-weight:800;color:#ff4b3a;text-transform:uppercase;letter-spacing:.08em;margin-top:8px}
-.per{font-size:18px;margin-top:12px}.from{color:#9b968e;margin-top:6px}
-.harms{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 16px;margin:26px 0}
-.harm{border-top:1px solid #2a2e37;padding:14px 0}.harm b{display:block;font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
-.harm span{display:block;font-weight:700;font-size:14px;margin-top:4px}.harm small{display:block;color:#9b968e;font-size:12px;margin-top:3px;line-height:1.4}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}.btns a{border:1px solid #2a2e37;border-radius:999px;padding:8px 14px;text-decoration:none;font-size:14px}
-.btns a.primary{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
-.share{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px 0 4px}.share span{color:#9b968e;font-size:14px;margin-right:4px}
-.share a,.share button{font:inherit;font-size:14px;color:#f3efe8;background:#1c1f26;border:1px solid #2a2e37;border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
-.share a:hover,.share button:hover{border-color:#9b968e}.share button{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
-h2{font-size:18px;margin:26px 0 10px}.crumbs{color:#9b968e;font-size:14px;margin-bottom:14px}.crumbs a{color:#9b968e}
-.meta a{color:#9b968e}.towns{line-height:1.9;color:#9b968e}.towns a{white-space:nowrap}.note{color:#9b968e;font-size:13px;line-height:1.55}
-ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
-ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}
-@media(max-width:640px){header{padding:12px 16px;gap:12px}header .logo{font-size:15px}header a.nav{font-size:13px}main{padding:20px 16px 48px}}
-"""
-
-
-def page_shell(title, desc, url, body, image):
-    """A page around body. image is its link-preview picture in p/img/, made by make_share_images.py."""
+def page_shell(title, desc, url, body, image, detail=False):
+    """A page around body. image is its link-preview picture in p/img/, made by make_share_images.py.
+    detail pages (a polluter, town or county) run full width with a satellite headline and charts."""
     e = html.escape
     img = f"{SITE_URL}/p/img/{image}.png"
+    main = body if detail else f"<main>\n{body}\n</main>"
+    scripts = '<script src="../p/ranks.js" defer></script><script src="../p/page.js" defer></script>' if detail else '<script src="../p/page.js" defer></script>'
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -233,83 +209,72 @@ def page_shell(title, desc, url, body, image):
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{e(img)}">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="../p/style.css">
+{scripts}
 </head><body>
 <header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="../p/">Polluters</a><a class="nav" href="../county/">Places</a><a class="nav" href="../#/method">Method</a></header>
-<main>
-{body}
-</main>
-<script>
-// Share: the phone's own share sheet where there is one, else copy the link
-const sheet = navigator.share && matchMedia("(pointer: coarse)").matches;
-document.querySelectorAll("[data-share]").forEach(b => {{ if (sheet) b.textContent = "Share"; }});
-document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click", async () => {{
-  const data = {{ title: document.title, text: b.dataset.text, url: b.dataset.share }};
-  if (sheet) {{ try {{ await navigator.share(data); }} catch (_) {{}} return; }}
-  let ok = false;
-  try {{ await navigator.clipboard.writeText(b.dataset.share); ok = true; }}
-  catch (_) {{   // older browsers: copy from a hidden text box
-    const t = Object.assign(document.createElement("textarea"), {{ value: b.dataset.share }});
-    document.body.append(t); t.select(); try {{ ok = document.execCommand("copy"); }} catch (_) {{}} t.remove();
-  }}
-  b.textContent = ok ? "Link copied" : b.dataset.share;
-}}));
-</script>
+{main}
 </body></html>
 """
 
 
-def write_pages(out, town_names):
-    """A real page per polluter (search engines can read it, link previews use its title), an index
-    of all of them, plus sitemap.xml and robots.txt. Old pages are removed so renamed polluters don't linger."""
+def write_pages(out, towns):
+    """A real page per polluter (search engines can read it, link previews use its title), and an index
+    of all of them. Old pages are removed so renamed polluters don't linger."""
+    import page_parts as pp   # it imports this file's helpers
     e = html.escape
+    town_names = {t[0] for t in towns}
     PAGES.mkdir(parents=True, exist_ok=True)
     for old in PAGES.glob("*.html"):
         old.unlink()
-    (PAGES / "style.css").write_text(PAGE_CSS, encoding="utf-8")
+    (PAGES / "style.css").write_text(pp.PAGE_CSS, encoding="utf-8")
     for f in out:
         url = f"{SITE_URL}/p/{f['slug']}.html"
         place = ", ".join(x for x in (f["city"], "Indiana") if x)
-        if f["deaths"] >= 0.1:
+        deadly = f["deaths"] >= 0.1
+        if deadly:
             title = f"{f['name']} ({place}): an estimated {deaths_words(f['deaths'])} deaths a year from its pollution"
             desc = (f"#{f['rank']} of Indiana's deadliest polluters. {f['kind']} in {place}, linked to an estimated "
                     f"{deaths_words(f['deaths'])} deaths a year from air pollution, toxic chemicals and climate change, and "
                     f"{money_words(f['damage'])} in damage. From public EPA data.")
+            say = f"{f['name']} in {place} is linked to an estimated {deaths_words(f['deaths'])} deaths a year from its pollution."
+            value, label = deaths_words(f["deaths"]), "estimated deaths a year"
+            pd, like = per_day(f["deaths"]), pp.town_compare(f["deaths"], f["lat"], f["lon"], towns)
+            lines = [(f"That's {pd}." if pd else "") + (f" Each year, {like}." if like else "")]
         else:
             title = f"{f['name']} ({place}): pollution, toxic releases and record"
             desc = f"{f['kind']} in {place}: its toxic releases, the illness linked to them, and its compliance record. From public EPA data."
-        parts = [x for x in ((f["air_deaths"], "air pollution"), (f["toxic_deaths"], "toxic chemicals"), (f["climate_deaths"], "climate change")) if x[0]]
-        pd = per_day(f["deaths"])
-        if f["deaths"] >= 0.1:
-            say = f"{f['name']} in {place} is linked to an estimated {deaths_words(f['deaths'])} deaths a year from its pollution."
-        else:
-            v, label, _ = harms(f)[0]
-            say = f"{f['name']} in {place}: {v} {label}."
-        q, qs = quote(url, safe=""), quote(say, safe="")
-        share = (f'<div class="share"><span>Share this</span>'
-                 f'<button type="button" data-share="{e(url)}" data-text="{e(say)}">Copy link</button>'
-                 f'<a href="https://www.facebook.com/sharer/sharer.php?u={q}" rel="noopener" target="_blank">Facebook</a>'
-                 f'<a href="https://x.com/intent/post?text={qs}&amp;url={q}" rel="noopener" target="_blank">X</a>'
-                 f'<a href="https://www.reddit.com/submit?url={q}&amp;title={qs}" rel="noopener" target="_blank">Reddit</a>'
-                 f'<a href="sms:?&amp;body={quote(say + " " + url, safe="")}">Text</a>'
-                 f'<a href="mailto:?subject={quote(f["name"] + " and its pollution", safe="")}&amp;body={quote(say + chr(10) + chr(10) + url, safe="")}">Email</a></div>')
-        body = "\n".join(x for x in (
-            f'<span class="pill">#{f["rank"]} deadliest in Indiana</span>' if f["deaths"] >= 0.1 else "",
+            value, label, _ = harms(f)[0]
+            say = f"{f['name']} in {place}: {value} {label}."
+            lines = ["Its pollution is linked to less than a tenth of a death a year. This is its biggest harm."]
+        t = pp.sum_toll([f])
+        crumbs = " › ".join(x for x in (
+            '<a href="../county/">Indiana</a>',
+            f'<a href="../county/{place_slug(f["county"])}.html">{e(f["county"])} County</a>' if f["county"] else "",
+            f'<a href="../town/{place_slug(f["city"])}.html">{e(f["city"])}</a>' if f["city"] in town_names else e(f["city"] or "")) if x)
+        inner = "".join((
+            f'<div class="crumbs">{crumbs}</div>',
+            f'<span class="pill">#{f["rank"]} deadliest in Indiana</span>' if deadly else "",
             f"<h1>{e(f['name'])}</h1>",
-            f'<div class="meta">{" · ".join(x for x in (e(f["kind"]), (f'<a href="../town/{place_slug(f["city"])}.html">{e(place)}</a>' if f["city"] in town_names else e(place)), f["county"] and f'<a href="../county/{place_slug(f["county"])}.html">{e(f["county"])} County</a>', f["owner"] and e("owned by " + f["owner"])) if x)}</div>',
-            f'<div class="big">{deaths_words(f["deaths"])}</div><div class="label">estimated deaths a year</div>',
-            f'<div class="per">That\'s {pd}.</div>' if pd else "",
-            f'<div class="from">From {e(", ".join(f"{deaths_words(v)} {k}" for v, k in parts))}.</div>' if parts else "",
-            share,
-            '<div class="harms">' + "".join(f'<div class="harm"><b>{e(v)}</b><span>{e(l)}</span>{f"<small>{e(n)}</small>" if n else ""}</div>' for v, l, n in harms(f)) + "</div>",
-            f'<div class="btns"><a class="primary" href="../#/f/{e(f["key"])}">Open on the interactive map</a>'
-            f'<a href="https://www.in.gov/idem/contact/file-a-complaint" rel="noopener">Report a problem to the state ↗</a>'
-            f'<a href="https://www.in.gov/idem/public-notices" rel="noopener">Comment on its permits ↗</a>'
-            + (f'<a href="{e(f["report"])}" rel="noopener">EPA\'s full report ↗</a>' if f["report"] else "") + "</div>",
-            f'<p class="note">Estimates for one year of pollution (2023), in 2024 dollars: model estimates from EPA data and published '
+            f'<div class="meta">{e(" · ".join(x for x in (f["kind"], f["owner"] and "owned by " + f["owner"]) if x))}</div>',
+            pp.headline(value, label, deadly, lines),
+            pp.share_row(url, say, f"{f['name']} and its pollution"),
+        ))
+        trends = pp.spark(f["trend_ghg"], "Greenhouse gases, tons a year", "tons") + pp.spark(f["trend_tri"], "Toxic releases, lbs a year", "lbs")
+        extra = ['<a href="https://www.in.gov/idem/legal/public-records/virtual-file-cabinet" rel="noopener" target="_blank">Read its state files ↗</a>']
+        if f["report"]:
+            extra.append(f'<a href="{e(f["report"])}" rel="noopener" target="_blank">EPA\'s full report ↗</a>')
+        body = "\n".join((
+            pp.hero("polluter", f["lat"], f["lon"], inner),
+            '<div class="wrap">',
+            pp.causes(t), pp.damage_squares(t), pp.sick_tiles(t), pp.facts(pp.record_rows(t, f), trends),
+            pp.strip("polluters", f["rank"] - 1, "polluters", len(out)),
+            pp.actions(f"../#/?f={f['key']}", extra),
+            f'<section><p class="note">Estimates for one year of pollution (2023), in 2024 dollars: model estimates from EPA data and published '
             f'methods, not counted deaths. Deaths could be {deaths_words(f["deaths_lo"])} to {deaths_words(f["deaths_hi"])}. '
-            f'{e(f["outlier"] or "")} <a href="../#/method">How we estimate</a></p>',
-        ) if x)
-        (PAGES / f"{f['slug']}.html").write_text(page_shell(title, desc, url, body, f["slug"]), encoding="utf-8")
+            f'{e(f["outlier"] or "")} <a href="../#/method">How we estimate</a></p></section>',
+            "</div>",
+        ))
+        (PAGES / f"{f['slug']}.html").write_text(page_shell(title, desc, url, body, f["slug"], detail=True), encoding="utf-8")
 
     # All polluters, ranked: one page that links to every polluter page
     rows = "\n".join(
@@ -493,9 +458,13 @@ def main():
     print(f"Wrote {len(out)} polluters to {OUT.relative_to(ROOT)} ({OUT.stat().st_size / 1e3:.0f} KB)")
     write_zips()
     towns = write_towns()
-    urls = write_pages(out, {t[0] for t in towns})
+    urls = write_pages(out, towns)
     from export_place_pages import write_place_pages   # it imports this file's helpers
-    urls += write_place_pages(out, [[*t, county_of(t[1], t[2], shapes)] for t in towns])
+    place_urls, ranks = write_place_pages(out, [[*t, county_of(t[1], t[2], shapes)] for t in towns])
+    urls += place_urls
+    # Every polluter, town and county with its deaths a year, deadliest first, for the ranking strips
+    ranks["polluters"] = [[f["name"], round(f["deaths"], 2)] for f in out]
+    (PAGES / "ranks.js").write_text("window.RANKS = " + json.dumps(ranks, separators=(",", ":")) + ";\n", encoding="utf-8")
     write_sitemap(urls)
     for f in out[:8]:
         print(f"  #{f['rank']} {f['name']} ({f['kind']}, {f['owner']}) - {f['deaths']:.0f} deaths")
