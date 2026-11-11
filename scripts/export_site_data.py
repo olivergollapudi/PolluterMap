@@ -27,6 +27,7 @@ import math
 import re
 import sqlite3
 import zipfile
+from urllib.parse import quote
 
 from common import DB_PATH, RAW_DIR, ROOT, download
 
@@ -202,6 +203,9 @@ h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-sp
 .harm span{display:block;font-weight:700;font-size:14px;margin-top:4px}.harm small{display:block;color:#9b968e;font-size:12px;margin-top:3px;line-height:1.4}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}.btns a{border:1px solid #2a2e37;border-radius:999px;padding:8px 14px;text-decoration:none;font-size:14px}
 .btns a.primary{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px 0 4px}.share span{color:#9b968e;font-size:14px;margin-right:4px}
+.share a,.share button{font:inherit;font-size:14px;color:#f3efe8;background:#1c1f26;border:1px solid #2a2e37;border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
+.share a:hover,.share button:hover{border-color:#9b968e}.share button{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
 h2{font-size:18px;margin:26px 0 10px}.note{color:#9b968e;font-size:13px;line-height:1.55}
 ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
 ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}
@@ -209,8 +213,10 @@ ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{dis
 """
 
 
-def page_shell(title, desc, url, body):
+def page_shell(title, desc, url, body, image):
+    """A page around body. image is its link-preview picture in p/img/, made by make_share_images.py."""
     e = html.escape
+    img = f"{SITE_URL}/p/img/{image}.png"
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -219,14 +225,33 @@ def page_shell(title, desc, url, body):
 <link rel="canonical" href="{e(url)}">
 <meta property="og:type" content="article"><meta property="og:site_name" content="Indiana's Deadliest Polluters">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{e(url)}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="{e(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{e(desc)}">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{e(img)}">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head><body>
 <header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="./">All polluters</a><a class="nav" href="../#/method">How we estimate</a></header>
 <main>
 {body}
-</main></body></html>
+</main>
+<script>
+// Share: the phone's own share sheet where there is one, else copy the link
+const sheet = navigator.share && matchMedia("(pointer: coarse)").matches;
+document.querySelectorAll("[data-share]").forEach(b => {{ if (sheet) b.textContent = "Share"; }});
+document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click", async () => {{
+  const data = {{ title: document.title, text: b.dataset.text, url: b.dataset.share }};
+  if (sheet) {{ try {{ await navigator.share(data); }} catch (_) {{}} return; }}
+  let ok = false;
+  try {{ await navigator.clipboard.writeText(b.dataset.share); ok = true; }}
+  catch (_) {{   // older browsers: copy from a hidden text box
+    const t = Object.assign(document.createElement("textarea"), {{ value: b.dataset.share }});
+    document.body.append(t); t.select(); try {{ ok = document.execCommand("copy"); }} catch (_) {{}} t.remove();
+  }}
+  b.textContent = ok ? "Link copied" : b.dataset.share;
+}}));
+</script>
+</body></html>
 """
 
 
@@ -251,6 +276,19 @@ def write_pages(out):
             desc = f"{f['kind']} in {place}: its toxic releases, the illness linked to them, and its compliance record. From public EPA data."
         parts = [x for x in ((f["air_deaths"], "air pollution"), (f["toxic_deaths"], "toxic chemicals"), (f["climate_deaths"], "climate change")) if x[0]]
         pd = per_day(f["deaths"])
+        if f["deaths"] >= 0.1:
+            say = f"{f['name']} in {place} is linked to an estimated {deaths_words(f['deaths'])} deaths a year from its pollution."
+        else:
+            v, label, _ = harms(f)[0]
+            say = f"{f['name']} in {place}: {v} {label}."
+        q, qs = quote(url, safe=""), quote(say, safe="")
+        share = (f'<div class="share"><span>Share this</span>'
+                 f'<button type="button" data-share="{e(url)}" data-text="{e(say)}">Copy link</button>'
+                 f'<a href="https://www.facebook.com/sharer/sharer.php?u={q}" rel="noopener" target="_blank">Facebook</a>'
+                 f'<a href="https://x.com/intent/post?text={qs}&amp;url={q}" rel="noopener" target="_blank">X</a>'
+                 f'<a href="https://www.reddit.com/submit?url={q}&amp;title={qs}" rel="noopener" target="_blank">Reddit</a>'
+                 f'<a href="sms:?&amp;body={quote(say + " " + url, safe="")}">Text</a>'
+                 f'<a href="mailto:?subject={quote(f["name"] + " and its pollution", safe="")}&amp;body={quote(say + chr(10) + chr(10) + url, safe="")}">Email</a></div>')
         body = "\n".join(x for x in (
             f'<span class="pill">#{f["rank"]} deadliest in Indiana</span>' if f["deaths"] >= 0.1 else "",
             f"<h1>{e(f['name'])}</h1>",
@@ -258,6 +296,7 @@ def write_pages(out):
             f'<div class="big">{deaths_words(f["deaths"])}</div><div class="label">estimated deaths a year</div>',
             f'<div class="per">That\'s {pd}.</div>' if pd else "",
             f'<div class="from">From {e(", ".join(f"{deaths_words(v)} {k}" for v, k in parts))}.</div>' if parts else "",
+            share,
             '<div class="harms">' + "".join(f'<div class="harm"><b>{e(v)}</b><span>{e(l)}</span>{f"<small>{e(n)}</small>" if n else ""}</div>' for v, l, n in harms(f)) + "</div>",
             f'<div class="btns"><a class="primary" href="../#/f/{e(f["key"])}">Open on the interactive map</a>'
             f'<a href="https://www.in.gov/idem/contact/file-a-complaint" rel="noopener">Report a problem to the state ↗</a>'
@@ -267,7 +306,7 @@ def write_pages(out):
             f'methods, not counted deaths. Deaths could be {deaths_words(f["deaths_lo"])} to {deaths_words(f["deaths_hi"])}. '
             f'{e(f["outlier"] or "")} <a href="../#/method">How we estimate</a></p>',
         ) if x)
-        (PAGES / f"{f['slug']}.html").write_text(page_shell(title, desc, url, body), encoding="utf-8")
+        (PAGES / f"{f['slug']}.html").write_text(page_shell(title, desc, url, body, f["slug"]), encoding="utf-8")
 
     # All polluters, ranked: one page that links to every polluter page
     rows = "\n".join(
@@ -281,7 +320,7 @@ def write_pages(out):
     (PAGES / "index.html").write_text(page_shell(
         "Indiana pollution: all polluters ranked by deaths | Indiana's Deadliest Polluters",
         f"Every Indiana polluter with an estimate, ranked by the deaths linked to its pollution: {len(out):,} power plants, "
-        "steel mills, refineries and factories. From public EPA data.", f"{SITE_URL}/p/", body), encoding="utf-8")
+        "steel mills, refineries and factories. From public EPA data.", f"{SITE_URL}/p/", body, "home"), encoding="utf-8")
 
     # Tell search engines what to read
     urls = [f"{SITE_URL}/", f"{SITE_URL}/p/"] + [f"{SITE_URL}/p/{f['slug']}.html" for f in out]

@@ -13,6 +13,9 @@ h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-sp
 .harm span{display:block;font-weight:700;font-size:14px;margin-top:4px}.harm small{display:block;color:#9b968e;font-size:12px;margin-top:3px;line-height:1.4}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}.btns a{border:1px solid #2a2e37;border-radius:999px;padding:8px 14px;text-decoration:none;font-size:14px}
 .btns a.primary{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px 0 4px}.share span{color:#9b968e;font-size:14px;margin-right:4px}
+.share a,.share button{font:inherit;font-size:14px;color:#f3efe8;background:#1c1f26;border:1px solid #2a2e37;border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
+.share a:hover,.share button:hover{border-color:#9b968e}.share button{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
 h2{font-size:18px;margin:26px 0 10px}.note{color:#9b968e;font-size:13px;line-height:1.55}
 ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
 ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}

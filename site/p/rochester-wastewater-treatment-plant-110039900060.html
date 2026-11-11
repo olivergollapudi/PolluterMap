@@ -6,7 +6,9 @@
 <link rel="canonical" href="https://indianapollution.org/p/rochester-wastewater-treatment-plant-110039900060.html">
 <meta property="og:type" content="article"><meta property="og:site_name" content="Indiana's Deadliest Polluters">
 <meta property="og:title" content="Rochester Wastewater Treatment Plant (Rochester, Indiana): pollution, toxic releases and record"><meta property="og:description" content="Sewage Treatment Facilities in Rochester, Indiana: its toxic releases, the illness linked to them, and its compliance record. From public EPA data."><meta property="og:url" content="https://indianapollution.org/p/rochester-wastewater-treatment-plant-110039900060.html">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://indianapollution.org/p/img/rochester-wastewater-treatment-plant-110039900060.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sewage Treatment Facilities in Rochester, Indiana: its toxic releases, the illness linked to them, and its compliance record. From public EPA data.">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://indianapollution.org/p/img/rochester-wastewater-treatment-plant-110039900060.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head><body>
@@ -15,7 +17,25 @@
 <h1>Rochester Wastewater Treatment Plant</h1>
 <div class="meta">Sewage Treatment Facilities · Rochester, Indiana · Fulton County</div>
 <div class="big">0</div><div class="label">estimated deaths a year</div>
+<div class="share"><span>Share this</span><button type="button" data-share="https://indianapollution.org/p/rochester-wastewater-treatment-plant-110039900060.html" data-text="Rochester Wastewater Treatment Plant in Rochester, Indiana: $988 in damage a year.">Copy link</button><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Findianapollution.org%2Fp%2Frochester-wastewater-treatment-plant-110039900060.html" rel="noopener" target="_blank">Facebook</a><a href="https://x.com/intent/post?text=Rochester%20Wastewater%20Treatment%20Plant%20in%20Rochester%2C%20Indiana%3A%20%24988%20in%20damage%20a%20year.&amp;url=https%3A%2F%2Findianapollution.org%2Fp%2Frochester-wastewater-treatment-plant-110039900060.html" rel="noopener" target="_blank">X</a><a href="https://www.reddit.com/submit?url=https%3A%2F%2Findianapollution.org%2Fp%2Frochester-wastewater-treatment-plant-110039900060.html&amp;title=Rochester%20Wastewater%20Treatment%20Plant%20in%20Rochester%2C%20Indiana%3A%20%24988%20in%20damage%20a%20year." rel="noopener" target="_blank">Reddit</a><a href="sms:?&amp;body=Rochester%20Wastewater%20Treatment%20Plant%20in%20Rochester%2C%20Indiana%3A%20%24988%20in%20damage%20a%20year.%20https%3A%2F%2Findianapollution.org%2Fp%2Frochester-wastewater-treatment-plant-110039900060.html">Text</a><a href="mailto:?subject=Rochester%20Wastewater%20Treatment%20Plant%20and%20its%20pollution&amp;body=Rochester%20Wastewater%20Treatment%20Plant%20in%20Rochester%2C%20Indiana%3A%20%24988%20in%20damage%20a%20year.%0A%0Ahttps%3A%2F%2Findianapollution.org%2Fp%2Frochester-wastewater-treatment-plant-110039900060.html">Email</a></div>
 <div class="harms"><div class="harm"><b>$988</b><span>in damage a year</span><small>health harm in dollars</small></div><div class="harm"><b>$0</b><span>in fines over 5 years</span><small>out of compliance 6 of the last 12 quarters</small></div></div>
 <div class="btns"><a class="primary" href="../#/f/110039900060">Open on the interactive map</a><a href="https://www.in.gov/idem/contact/file-a-complaint" rel="noopener">Report a problem to the state ↗</a><a href="https://www.in.gov/idem/public-notices" rel="noopener">Comment on its permits ↗</a><a href="https://echo.epa.gov/detailed-facility-report?fid=110039900060" rel="noopener">EPA's full report ↗</a></div>
 <p class="note">Estimates for one year of pollution (2023), in 2024 dollars: model estimates from EPA data and published methods, not counted deaths. Deaths could be 0 to 0.  <a href="../#/method">How we estimate</a></p>
-</main></body></html>
+</main>
+<script>
+// Share: the phone's own share sheet where there is one, else copy the link
+const sheet = navigator.share && matchMedia("(pointer: coarse)").matches;
+document.querySelectorAll("[data-share]").forEach(b => { if (sheet) b.textContent = "Share"; });
+document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click", async () => {
+  const data = { title: document.title, text: b.dataset.text, url: b.dataset.share };
+  if (sheet) { try { await navigator.share(data); } catch (_) {} return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(b.dataset.share); ok = true; }
+  catch (_) {   // older browsers: copy from a hidden text box
+    const t = Object.assign(document.createElement("textarea"), { value: b.dataset.share });
+    document.body.append(t); t.select(); try { ok = document.execCommand("copy"); } catch (_) {} t.remove();
+  }
+  b.textContent = ok ? "Link copied" : b.dataset.share;
+}));
+</script>
+</body></html>
