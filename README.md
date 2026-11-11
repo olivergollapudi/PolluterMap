@@ -29,7 +29,9 @@ PolluterMap/
 │   ├── build_toxic_impacts_indiana.py  Toxic releases to air, water, land → disease cases (EPA TRACI).
 │   ├── export_map_data.py      Database → GeoJSON for the map.
 │   ├── export_site_data.py     Database → the site's data, ZIP centers, towns and share pages.
-│   ├── make_share_images.py    The link-preview picture for every polluter page (needs Pillow).
+│   ├── export_place_pages.py   A page per county and per city/town (called by export_site_data.py).
+│   ├── places.py               County outlines (Census) and which county a point is in.
+│   ├── make_share_images.py    The link-preview picture for every page (needs Pillow).
 │   ├── fonts/                  Inter, the font in those pictures (SIL Open Font License).
 │   └── common.py               Shared helpers (downloading, Excel reading, database).
 ├── site/             The static website (plain HTML/JS/CSS, no build step). This folder is
@@ -47,6 +49,10 @@ PolluterMap/
 │   │                 (with a button to open it on the map), and p/index.html listing them all.
 │   │                 p/img/ holds each page's link-preview picture (1200x630), shown when a
 │   │                 link is shared on Facebook, X, Reddit, iMessage and so on.
+│   ├── county/       A page per county: its polluters, their combined toll, its rank of 92;
+│   │                 county/index.html ranks all 92.
+│   ├── town/         A page per city and town: the polluters within 10 miles of it;
+│   │                 town/index.html lists every town.
 │   ├── sitemap.xml, robots.txt  Point search engines at the home page and every polluter page.
 │   ├── classic/      The earlier map of all 58,000 regulated facilities (not linked from
 │   │                 the main page).

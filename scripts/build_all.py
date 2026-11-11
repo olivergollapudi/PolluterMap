@@ -11,7 +11,7 @@ Rebuild everything, in the right order:
   9. Impact factors (health, climate, removal cost, everyday comparisons, inflation)
  10. Per-facility impact estimates (dollars, deaths, comparisons)
  11. Classic map data (site/data/facilities.geojson)
- 12. Website data (site/site-data.js, zips.js, towns.js, share pages in site/p/)
+ 12. Website data (site/site-data.js, zips.js, towns.js, polluter, county and town pages)
  13. Link-preview images for those pages (site/p/img/; needs Pillow)
 
     python3 scripts/build_all.py           # reuse downloaded files

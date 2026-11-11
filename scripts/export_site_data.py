@@ -30,6 +30,7 @@ import zipfile
 from urllib.parse import quote
 
 from common import DB_PATH, RAW_DIR, ROOT, download
+from places import counties, county_of, slug as place_slug
 
 OUT = ROOT / "site" / "site-data.js"
 ZIPS_OUT = ROOT / "site" / "zips.js"
@@ -121,6 +122,7 @@ def write_towns():
         towns.append([name, *where[geoid], int(r["POPESTIMATE2024"])])
     TOWNS_OUT.write_text("window.IN_TOWNS = " + json.dumps(towns, separators=(",", ":")) + ";\n", encoding="utf-8")
     print(f"Wrote {len(towns)} Indiana cities and towns to {TOWNS_OUT.relative_to(ROOT)}")
+    return towns
 
 
 def deaths_words(n):
@@ -206,7 +208,8 @@ h1{font-size:clamp(30px,4.5vw,44px);line-height:1.08;margin:12px 0 6px;letter-sp
 .share{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px 0 4px}.share span{color:#9b968e;font-size:14px;margin-right:4px}
 .share a,.share button{font:inherit;font-size:14px;color:#f3efe8;background:#1c1f26;border:1px solid #2a2e37;border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
 .share a:hover,.share button:hover{border-color:#9b968e}.share button{background:#ff4b3a;border-color:#ff4b3a;color:#fff;font-weight:700}
-h2{font-size:18px;margin:26px 0 10px}.note{color:#9b968e;font-size:13px;line-height:1.55}
+h2{font-size:18px;margin:26px 0 10px}.crumbs{color:#9b968e;font-size:14px;margin-bottom:14px}.crumbs a{color:#9b968e}
+.meta a{color:#9b968e}.towns{line-height:1.9;color:#9b968e}.towns a{white-space:nowrap}.note{color:#9b968e;font-size:13px;line-height:1.55}
 ol.list{padding:0;margin:0;list-style:none}ol.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #2a2e37}
 ol.list .r{color:#9b968e;width:3em;flex:none}ol.list .n{flex:1}ol.list small{display:block;color:#9b968e}ol.list b{font-variant-numeric:tabular-nums}
 @media(max-width:640px){header{padding:12px 16px;gap:12px}header .logo{font-size:15px}header a.nav{font-size:13px}main{padding:20px 16px 48px}}
@@ -229,9 +232,9 @@ def page_shell(title, desc, url, body, image):
 <meta property="og:image:alt" content="{e(desc)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{e(img)}">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../p/style.css">
 </head><body>
-<header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="./">All polluters</a><a class="nav" href="../#/method">How we estimate</a></header>
+<header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="../p/">Polluters</a><a class="nav" href="../county/">Places</a><a class="nav" href="../#/method">Method</a></header>
 <main>
 {body}
 </main>
@@ -255,7 +258,7 @@ document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click
 """
 
 
-def write_pages(out):
+def write_pages(out, town_names):
     """A real page per polluter (search engines can read it, link previews use its title), an index
     of all of them, plus sitemap.xml and robots.txt. Old pages are removed so renamed polluters don't linger."""
     e = html.escape
@@ -292,7 +295,7 @@ def write_pages(out):
         body = "\n".join(x for x in (
             f'<span class="pill">#{f["rank"]} deadliest in Indiana</span>' if f["deaths"] >= 0.1 else "",
             f"<h1>{e(f['name'])}</h1>",
-            f'<div class="meta">{e(" · ".join(x for x in (f["kind"], place, f["county"] and f["county"] + " County", f["owner"] and "owned by " + f["owner"]) if x))}</div>',
+            f'<div class="meta">{" · ".join(x for x in (e(f["kind"]), (f'<a href="../town/{place_slug(f["city"])}.html">{e(place)}</a>' if f["city"] in town_names else e(place)), f["county"] and f'<a href="../county/{place_slug(f["county"])}.html">{e(f["county"])} County</a>', f["owner"] and e("owned by " + f["owner"])) if x)}</div>',
             f'<div class="big">{deaths_words(f["deaths"])}</div><div class="label">estimated deaths a year</div>',
             f'<div class="per">That\'s {pd}.</div>' if pd else "",
             f'<div class="from">From {e(", ".join(f"{deaths_words(v)} {k}" for v, k in parts))}.</div>' if parts else "",
@@ -322,13 +325,18 @@ def write_pages(out):
         f"Every Indiana polluter with an estimate, ranked by the deaths linked to its pollution: {len(out):,} power plants, "
         "steel mills, refineries and factories. From public EPA data.", f"{SITE_URL}/p/", body, "home"), encoding="utf-8")
 
-    # Tell search engines what to read
-    urls = [f"{SITE_URL}/", f"{SITE_URL}/p/"] + [f"{SITE_URL}/p/{f['slug']}.html" for f in out]
+    print(f"Wrote {len(out)} polluter pages and an index to {PAGES.relative_to(ROOT)}/")
+    return [f"{SITE_URL}/", f"{SITE_URL}/p/"] + [f"{SITE_URL}/p/{f['slug']}.html" for f in out]
+
+
+def write_sitemap(urls):
+    """Tell search engines what to read."""
+    e = html.escape
     (ROOT / "site" / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + "".join(f"  <url><loc>{e(u)}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
     (ROOT / "site" / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
-    print(f"Wrote {len(out)} polluter pages and an index to {PAGES.relative_to(ROOT)}/, plus sitemap.xml and robots.txt")
+    print(f"Wrote sitemap.xml ({len(urls):,} pages) and robots.txt")
 
 
 def main():
@@ -474,13 +482,21 @@ def main():
             f["key"] += "x"
         seen.add(f["key"])
         f["slug"] = f"{slugify(f['name'])}-{f['key']}"
+    # Every polluter's county from where it is (EPA's county field is blank for some and spelled
+    # differently by others), so county pages and the map agree
+    shapes = counties()
+    for f in out:
+        f["county"] = county_of(f["lon"], f["lat"], shapes)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("window.SITE_DATA = " + json.dumps({"facilities": out, "year": 2023, "dollar_year": 2024},
                                                         separators=(",", ":")) + ";\n", encoding="utf-8")
     print(f"Wrote {len(out)} polluters to {OUT.relative_to(ROOT)} ({OUT.stat().st_size / 1e3:.0f} KB)")
     write_zips()
-    write_towns()
-    write_pages(out)
+    towns = write_towns()
+    urls = write_pages(out, {t[0] for t in towns})
+    from export_place_pages import write_place_pages   # it imports this file's helpers
+    urls += write_place_pages(out, [[*t, county_of(t[1], t[2], shapes)] for t in towns])
+    write_sitemap(urls)
     for f in out[:8]:
         print(f"  #{f['rank']} {f['name']} ({f['kind']}, {f['owner']}) - {f['deaths']:.0f} deaths")
 

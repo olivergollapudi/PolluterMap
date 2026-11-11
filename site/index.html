@@ -238,6 +238,7 @@
     <a class="logo" href="#/">Indiana's <span>Deadliest</span> Polluters</a>
     <nav>
       <a href="p/"><span class="full">All polluters</span><span class="short">List</span></a>
+      <a href="county/"><span class="full">Counties &amp; towns</span><span class="short">Places</span></a>
       <a href="#/method" data-nav="method"><span class="full">How we estimate</span><span class="short">Method</span></a>
     </nav>
   </header>
@@ -745,10 +746,8 @@
     };
     function applyHash() {     // links like #/?near=Gary and #/?f=12
       const near = location.hash.match(/near=([^&]+)/), one = location.hash.match(/[?&]f=([^&]+)/);
-      if (near && TOWNS[decodeURIComponent(near[1])]) {
-        const t = decodeURIComponent(near[1]);
-        setCenter(TOWNS[t], t);
-      }
+      const t = near && decodeURIComponent(near[1]), town = t && TOWN_LIST.find(x => x.name === t);
+      if (t && (TOWNS[t] || town)) setCenter(TOWNS[t] || [town.lon, town.lat], t);
       if (one && BY_KEY.get(decodeURIComponent(one[1]))) {
         const f = BY_KEY.get(decodeURIComponent(one[1]));
         map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 10) });

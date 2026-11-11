@@ -6,9 +6,12 @@ Each image (1200 x 630, the size every network expects) shows the polluter's nam
 estimated deaths a year, next to a dot map of every Indiana polluter with this one glowing red.
 Polluters with almost no deaths lead with their biggest other harm instead.
 
-Reads site/site-data.js (made by export_site_data.py) and writes:
+Reads site/site-data.js and data/processed/site_places.json (both made by export_site_data.py)
+and writes:
   - site/p/img/<slug>.png, one per polluter page
-  - site/p/img/home.png, for the home page and the list of all polluters
+  - site/p/img/county-<name>.png and town-<name>.png, one per county and town page: that place's
+    polluters lit up (and the county's outline)
+  - site/p/img/home.png, for the home page and the lists
 
 Needs Pillow (pip install pillow), the one non-standard library in the project, because Python
 can't draw text into images by itself. Uses the Inter font (SIL Open Font License, in
@@ -25,10 +28,12 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 sys.path.insert(0, str(Path(__file__).parent))
 from export_site_data import deaths_words, harms  # same wording and rounding as the pages
+from places import counties
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT = Path(__file__).parent / "fonts" / "Inter.ttf"
 DATA = ROOT / "site" / "site-data.js"
+PLACES = ROOT / "data" / "processed" / "site_places.json"
 OUT = ROOT / "site" / "p" / "img"
 W, H = 1200, 630
 LEFT_W = 700                                   # text column; the map sits to its right
@@ -116,11 +121,11 @@ def marker(img, xy):
     d.ellipse((x - 26, y - 26, x + 26, y + 26), outline=RED, width=3)
 
 
-def base(everyone):
-    """The background every image shares: the dot map of all polluters and the site's name."""
+def base(everyone, statewide=True):
+    """The background images share: the site's name, and the dot map of all polluters."""
     img = Image.new("RGBA", (W, H), (*BG, 255))
     d = ImageDraw.Draw(img)
-    for o in everyone:
+    for o in everyone if statewide else ():
         if o["lat"] and o["lon"]:
             x, y = map_xy(o["lat"], o["lon"])
             r = 2 + min(10, (o["deaths"] or 0) ** 0.4 / 2)
@@ -193,6 +198,55 @@ def home_image(everyone, background):
     return img
 
 
+def local_map(img, bbox, everyone, shapes, lit, county=None, center=None):
+    """A close-up map in MAP_BOX: county lines, every polluter in view, this place's lit up red."""
+    x0, y0, x1, y1 = MAP_BOX
+    bw, bh = x1 - x0, y1 - y0
+    lon0, lat0, lon1, lat1 = bbox
+    k = 0.76                                          # a degree of longitude is shorter than one of latitude
+    s = min(bw / ((lon1 - lon0) * k), bh / (lat1 - lat0))
+    cx, cy = (lon0 + lon1) / 2, (lat0 + lat1) / 2
+    xy = lambda lon, lat: (bw / 2 + (lon - cx) * k * s, bh / 2 - (lat - cy) * s)
+    layer = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for name, rings in shapes.items():
+        for ring in rings:
+            pts = [xy(lon, lat) for lon, lat in ring]
+            if name == county:
+                d.polygon(pts, fill=(*RED, 28))
+            d.line(pts + pts[:1], fill=(*RED, 255) if name == county else (52, 56, 66, 255), width=3 if name == county else 1)
+    for f in sorted(everyone, key=lambda f: f["id"] in lit):
+        x, y = xy(f["lon"], f["lat"])
+        r = 3 + min(14, f["deaths"] ** 0.4 / 1.5)
+        if f["id"] in lit:
+            glow(layer, (x, y), r * 2, RED, 8, 110)
+            ImageDraw.Draw(layer).ellipse((x - r, y - r, x + r, y + r), fill=RED)
+        else:
+            d.ellipse((x - r, y - r, x + r, y + r), fill=DOT)
+    if center:
+        x, y = xy(*center)
+        r = 10 / 69 * s                               # the 10-mile circle
+        ImageDraw.Draw(layer).ellipse((x - r, y - r, x + r, y + r), outline=INK, width=3)
+        ImageDraw.Draw(layer).ellipse((x - 5, y - 5, x + 5, y + 5), fill=INK)
+    img.alpha_composite(layer, (x0, y0))
+
+
+def place_image(p, everyone, _unused, shapes, background):
+    """A county or town: a close-up map with its polluters lit up."""
+    img = background.copy()
+    if p.get("county"):
+        pts = [pt for ring in shapes[p["county"]] for pt in ring]
+        lons, lats = [x for x, _ in pts], [y for _, y in pts]
+        pad = max(max(lons) - min(lons), max(lats) - min(lats)) * 0.25
+        bbox = (min(lons) - pad, min(lats) - pad, max(lons) + pad, max(lats) + pad)
+    else:
+        lon, lat = p["center"]
+        bbox = (lon - 18 / 53, lat - 18 / 69, lon + 18 / 53, lat + 18 / 69)   # 18 miles each way
+    local_map(img, bbox, everyone, shapes, set(p["lit"]), p.get("county"), p.get("center"))
+    text_block(img, "", p["title"], p["sub"], p["value"], p["label"], not p.get("quiet"))
+    return img
+
+
 def save(img, path):
     # 256 colors is plenty for these flat pictures and keeps each file small
     img.convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(path, optimize=True)
@@ -201,7 +255,8 @@ def save(img, path):
 def main():
     everyone = load()
     OUT.mkdir(parents=True, exist_ok=True)
-    keep = {f"{f['slug']}.png" for f in everyone} | {"home.png"}
+    places = json.loads(PLACES.read_text(encoding="utf-8"))
+    keep = {f"{f['slug']}.png" for f in everyone} | {f"{p['image']}.png" for p in places} | {"home.png"}
     for old in OUT.glob("*.png"):           # drop images of polluters that were renamed or removed
         if old.name not in keep:
             old.unlink()
@@ -211,8 +266,11 @@ def main():
         save(polluter_image(f, background), OUT / f"{f['slug']}.png")
         if i % 200 == 0:
             print(f"  {i:,} of {len(everyone):,}")
+    shapes, plain = counties(), base(everyone, statewide=False)
+    for p in places:
+        save(place_image(p, everyone, None, shapes, plain), OUT / f"{p['image']}.png")
     total = sum(p.stat().st_size for p in OUT.glob("*.png"))
-    print(f"Wrote {len(everyone) + 1:,} share images ({total / 1e6:.0f} MB) to {OUT.relative_to(ROOT)}/")
+    print(f"Wrote {len(everyone) + len(places) + 1:,} share images ({total / 1e6:.0f} MB) to {OUT.relative_to(ROOT)}/")
 
 
 if __name__ == "__main__":
