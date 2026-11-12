@@ -35,6 +35,8 @@ OUT = ROOT / "site" / "site-data.js"
 ZIPS_OUT = ROOT / "site" / "zips.js"
 PAGES = ROOT / "site" / "p"
 SITE_URL = "https://indianapollution.org"   # the site's own address, for search engines and link previews
+GOATCOUNTER = "indianapollution"   # visitor counts at https://indianapollution.goatcounter.com (no cookies)
+COUNTER_TAG = f'<script data-goatcounter="https://{GOATCOUNTER}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>'
 ZCTA_URL = "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2023_Gazetteer/2023_Gaz_zcta_national.zip"
 ZCTA_FILE = RAW_DIR / "census" / "2023_Gaz_zcta_national.zip"
 TOWNS_OUT = ROOT / "site" / "towns.js"
@@ -210,6 +212,7 @@ def page_shell(title, desc, url, body, image, detail=False):
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff4b3a'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="../p/style.css">
 {scripts}
+{COUNTER_TAG}
 </head><body>
 <header><a class="logo" href="../">Indiana's <span>Deadliest</span> Polluters</a><a class="nav" href="../">Map</a><a class="nav" href="../p/">Polluters</a><a class="nav" href="../county/">Places</a><a class="nav" href="../#/method">Method</a></header>
 {main}

@@ -232,6 +232,7 @@
       if (t !== "ink") document.documentElement.dataset.theme = t;
     })();
   </script>
+  <script data-goatcounter="https://indianapollution.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>   <!-- visitor counts, no cookies -->
 </head>
 <body>
   <header>
@@ -855,7 +856,10 @@
       };
       const f = h.startsWith("#/f/") && BY_KEY.get(decodeURIComponent(h.slice(4)));
       if (f) { location.replace(`p/${f.slug}.html`); return; }   // each polluter has its own page now (old #/f/ links still work)
-      else if (h.startsWith("#/method")) { show("screen-method", "method"); }
+      else if (h.startsWith("#/method")) {
+        show("screen-method", "method");
+        if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "/#/method", title: "Method" });   // a view change, not a page load
+      }
       else { show("screen-home", null); initMap().then(() => { if (ready) { map.resize(); applyHash(); updateBoard(); } }); }
     }
     window.addEventListener("hashchange", route);
